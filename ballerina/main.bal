@@ -1,7 +1,7 @@
-import ballerina/io;
+public function read(string tomlString) {
+    
+}
 
-// Prints `Hello, World!`.
+public function readFile(string filePath) {
 
-public function main() {
-    io:println("Hello, World!");
 }
