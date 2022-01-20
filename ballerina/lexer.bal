@@ -1,38 +1,48 @@
 public class Lexer {
-    int lastIndex;
+    int index;
     string line;
 
     function init() {
-        self.lastIndex = 0;
+        self.index = 0;
         self.line = "";
     }
 
     function getToken() returns Token {
-        foreach int i in self.lastIndex...self.line.length() {
+        if (self.index >= self.line.length()-1) {
+            self.index = 0;
+            self.line = "";
+            return {token: EOL}; 
+        }
 
-            match self.line[i] {
-                "#" => {       
-                    return {token: COMMENT};
-                }
-                " " => {
-                    self.iterate(i, self.whitespace);
-                    return {token: WHITE_SPACE};
-                }
+        match self.line[self.index] {
+            "#" => {
+                return {token: COMMENT};
+            }
+            " " => {
+                self.iterate(self.whitespace);
+                return {token: WHITE_SPACE};
             }
         }
-        return {token: EOL};
+
+        return {token: ERROR};
     }
 
-    private function whitespace(int i) {
-        if (self.line[i] != " ") {
-            return;
-        }
+    private function whitespace(int i) returns boolean {
+        return self.line[i] != " ";
     }
 
-    private function iterate(int j, function(int) process) {
-        foreach int i in j...self.line.length() {
-            process(i);
+    # Encapsulate a function to run isolatedly on the remaining characters
+    #
+    # + process - Function to be executed on each iteration  
+    private function iterate(function (int) returns boolean process) {
+        foreach int i in self.index ... self.line.length() - 1 {
+            if (process(i)) {
+                self.index = i;
+                return;
+            }
         }
+        self.index = self.line.length()-1;
+        return;
     }
 }
 
@@ -46,5 +56,6 @@ enum TOMLToken {
     COMMENT,
     WHITE_SPACE,
     KEY_VALUE,
-    EOL
+    EOL,
+    ERROR
 }
