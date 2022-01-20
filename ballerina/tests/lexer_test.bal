@@ -26,7 +26,7 @@ function testMultipleWhiteSpaces() {
     Token token;
 
     token = lexer.getToken();
-    test:assertEquals(token.token, WHITE_SPACE);
+    test:assertEquals(token.token, WHITESPACE);
 
     token = lexer.getToken();
     test:assertEquals(token.token, EOL);

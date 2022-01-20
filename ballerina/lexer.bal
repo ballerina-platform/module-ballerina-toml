@@ -20,13 +20,17 @@ public class Lexer {
             }
             " " => {
                 self.iterate(self.whitespace);
-                return {token: WHITE_SPACE};
+                return {token: WHITESPACE};
             }
         }
 
         return {token: ERROR};
     }
 
+    # Check for whitespace and tab lexemes
+    #
+    # + i - Current index
+    # + return - True if end of the token  
     private function whitespace(int i) returns boolean {
         return self.line[i] != " ";
     }
@@ -54,7 +58,7 @@ type Token record {|
 enum TOMLToken {
     EXPRESSION,
     COMMENT,
-    WHITE_SPACE,
+    WHITESPACE,
     KEY_VALUE,
     EOL,
     ERROR
