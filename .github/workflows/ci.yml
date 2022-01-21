@@ -20,3 +20,9 @@ jobs:
         with:
           args: 
              build toml
+
+      - name: Run the tests
+        uses: ballerina-platform/ballerina-action@master
+        with:
+          args: 
+             test toml
