@@ -66,6 +66,27 @@ function testKeyValueSeperator() returns error? {
     test:assertEquals(token4.token, WHITESPACE);
 }
 
+@test:Config {}
+function testBasicString() returns error? {
+    Lexer lexer = setLexerString("somekey = \"somevalue\"");
+
+    Token token1 = check lexer.getToken();
+    test:assertEquals(token1.token, UNQUOTED_KEY);
+
+    Token token2 = check lexer.getToken();
+    test:assertEquals(token2.token, WHITESPACE);
+
+    Token token3 = check lexer.getToken();
+    test:assertEquals(token3.token, KEY_VALUE_SEPERATOR);
+    
+    Token token4 = check lexer.getToken();
+    test:assertEquals(token4.token, WHITESPACE);
+
+    Token token5 = check lexer.getToken();
+    test:assertEquals(token5.token, BASIC_STRING);
+}
+
+
 # Returns a new lexer with the configured line for testing
 #
 # + line - Testing TOML string

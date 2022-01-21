@@ -2,9 +2,9 @@ import ballerina/regex;
 
 enum RegexPatterns {
     UNQUOTED_STRING_PATTERN = "[a-zA-Z0-9\\-\\_]{1}",
-    BASIC_STRING = "[/s\\x21\\x23-\\x5b\\x5d-\\x7e\\x80-\\xd7ff\\xe000-\\xffff]{1}",
-    LITERAL_STRING = "[\\x09\\x20-\\x26\\x28-\\x7e\\x80-\\xd7ff\\xe000-\\xffff]{1}",
-    ESCAPE_STRING = "[\\x22\\x5c\\x62\\x66\\x6e\\x72\\x74\\x75\\x55]{1}"
+    BASIC_STRING_PATTERN = "[/s\\x21\\x23-\\x5b\\x5d-\\x7e\\x80-\\xd7ff\\xe000-\\xffff]{1}",
+    LITERAL_STRING_PATTERN = "[\\x09\\x20-\\x26\\x28-\\x7e\\x80-\\xd7ff\\xe000-\\xffff]{1}",
+    ESCAPE_STRING_PATTERN = "[\\x22\\x5c\\x62\\x66\\x6e\\x72\\x74\\x75\\x55]{1}"
 }
 
 type LexicalError distinct error;
@@ -53,9 +53,28 @@ class Lexer {
             "=" => {
                 return self.generateToken(KEY_VALUE_SEPERATOR);
             }
+            "\"" => {
+                check self.iterate(self.basicString);
+                return self.generateToken(BASIC_STRING);
+            }
         }
 
         return self.generateToken(EOL);
+    }
+
+    # Check for the lexemes to create an basic string.
+    #
+    # + i - Current index
+    # + return - True if the end of the string, An error message for an invalid character.  
+    private function basicString(int i) returns boolean|LexicalError {
+        if (!regex:matches(self.line[i], BASIC_STRING)) {
+            if (self.line[i] == "\"") {
+                return true;
+            }
+            return self.generateError("Invalid character \"" + self.line[i] + "\" for a string");
+        }
+        self.lexeme += self.line[i];
+        return false;
     }
 
     # Check for the lexemes to create an unquoted key token.
