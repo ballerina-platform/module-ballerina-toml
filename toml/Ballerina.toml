@@ -1,0 +1,11 @@
+[package]
+distribution = "slbeta6"
+org="nipunayf"
+name="toml"
+authors=["Nipuna Fernando"]
+repository="https://github.com/nipunayf/module-ballerina-toml"
+license=["Apache-2.0"]
+keywords=["ballerina", "toml", "parser"]
+
+[build-options]
+observabilityIncluded = true

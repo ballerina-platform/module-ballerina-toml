@@ -56,7 +56,7 @@ modules = [
 
 [[package]]
 org = "xenon"
-name = "ballerina"
+name = "toml"
 version = "0.1.0"
 dependencies = [
 	{org = "ballerina", name = "regex"},
@@ -64,7 +64,7 @@ dependencies = [
 	{org = "ballerinai", name = "observe"}
 ]
 modules = [
-	{org = "xenon", packageName = "ballerina", moduleName = "ballerina"}
+	{org = "xenon", packageName = "toml", moduleName = "toml"}
 ]
 
 
