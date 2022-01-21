@@ -23,7 +23,7 @@ class Lexer {
     }
 
     # Generates a Token for the next immediate lexeme.
-    # 
+    #
     # + return - If success, returns a token, else returns a Lexical Error 
     function getToken() returns Token|error {
 
@@ -54,6 +54,7 @@ class Lexer {
                 return self.generateToken(KEY_VALUE_SEPERATOR);
             }
             "\"" => {
+                self.index += 1;
                 check self.iterate(self.basicString);
                 return self.generateToken(BASIC_STRING);
             }
@@ -67,8 +68,9 @@ class Lexer {
     # + i - Current index
     # + return - True if the end of the string, An error message for an invalid character.  
     private function basicString(int i) returns boolean|LexicalError {
-        if (!regex:matches(self.line[i], BASIC_STRING)) {
+        if (!regex:matches(self.line[i], BASIC_STRING_PATTERN)) {
             if (self.line[i] == "\"") {
+                self.index = i;
                 return true;
             }
             return self.generateError("Invalid character \"" + self.line[i] + "\" for a string");
@@ -84,6 +86,7 @@ class Lexer {
     private function unquotedKey(int i) returns boolean|LexicalError {
         if (!regex:matches(self.line[i], UNQUOTED_STRING_PATTERN)) {
             if (self.line[i] == " ") {
+                self.index = i - 1;
                 return true;
             }
             return self.generateError("Invalid character \"" + self.line[i] + "\" for an unquoted key");
@@ -97,7 +100,11 @@ class Lexer {
     # + i - Current index
     # + return - True if end of the token  
     private function whitespace(int i) returns boolean {
-        return self.line[i] != " ";
+        if (self.line[i] == " ") {
+            return false;
+        }
+        self.index = i - 1;
+        return true;
     }
 
     # Encapsulate a function to run isolatedly on the remaining characters. 
@@ -105,10 +112,9 @@ class Lexer {
     #
     # + process - Function to be executed on each iteration
     # + return - Lexical Error if available 
-    private function iterate(function (int) returns boolean|LexicalError process) returns error?{
+    private function iterate(function (int) returns boolean|LexicalError process) returns error? {
         foreach int i in self.index ... self.line.length() - 1 {
             if (check process(i)) {
-                self.index = i-1;
                 return;
             }
         }
@@ -123,9 +129,9 @@ class Lexer {
     # + message - Error message
     # + return - Constructed Lexcial Error message  
     private function generateError(string message) returns LexicalError {
-        string text = "Lexical Error at line " 
-                        + self.lineNumber.toString() + 
-                        " index " 
+        string text = "Lexical Error at line "
+                        + self.lineNumber.toString() +
+                        " index "
                         + self.index.toString()
                         + ": "
                         + message
@@ -139,9 +145,11 @@ class Lexer {
     # + return - Generated lexical token  
     private function generateToken(TOMLToken token) returns Token {
         self.index += 1;
+        string lexemeBuffer = self.lexeme;
+        self.lexeme = "";
         return {
             token: token,
-            value: self.lexeme
+            value: lexemeBuffer
         };
     }
 }

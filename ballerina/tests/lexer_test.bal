@@ -11,10 +11,10 @@ function testFullLineComment() returns error? {
 
 @test:Config {}
 function testEOLComment() returns error? {
-    Lexer lexer = setLexerString("someKey = \"someKey\" # someComment");
+    Lexer lexer = setLexerString("someKey = \"someValue\" # someComment");
     Token token;
 
-    foreach int i in 0 ... 5 {
+    foreach int i in 0 ... 6 {
         token = check lexer.getToken();
     }
     test:assertEquals(token.token, EOL);
@@ -68,7 +68,7 @@ function testKeyValueSeperator() returns error? {
 
 @test:Config {}
 function testBasicString() returns error? {
-    Lexer lexer = setLexerString("somekey = \"somevalue\"");
+    Lexer lexer = setLexerString("someKey = \"someValue\"");
 
     Token token1 = check lexer.getToken();
     test:assertEquals(token1.token, UNQUOTED_KEY);
@@ -84,6 +84,7 @@ function testBasicString() returns error? {
 
     Token token5 = check lexer.getToken();
     test:assertEquals(token5.token, BASIC_STRING);
+    test:assertEquals(token5.value, "someValue");
 }
 
 
