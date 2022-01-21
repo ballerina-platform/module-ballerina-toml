@@ -4,42 +4,46 @@ class Lexer {
     int index;
     int lineNumber;
     string line;
+    string lexeme;
 
     function init() {
         self.index = 0;
         self.lineNumber = 0;
         self.line = "";
+        self.lexeme = "";
     }
 
-    # Generates a Token for the next imediate lexemes.
+    # Generates a Token for the next immediate lexemes.
     # 
     # + return - If success, returns a token, else returns a Lexical Error 
     function getToken() returns Token|error {
+
         // Reset the parameters at the end of the line.
         if (self.index >= self.line.length() - 1) {
             self.index = 0;
-            self.line = "";
             self.lineNumber += 1;
+            self.line = "";
+            self.lexeme = "";
             return {token: EOL};
         }
 
-        // Keys are started at the beginning of the character.
+        // Check for possible tokens for start of a line.
         if (self.index == 0 && regex:matches(self.line[0], UNQUOTED_STRING_PATTERN)) {
             check self.iterate(self.unquotedKey);
-            return {token: KEY};
+            return self.generateToken(UNQUOTED_KEY);
         }
 
         match self.line[self.index] {
             "#" => {
-                return {token: COMMENT};
+                return self.generateToken(EOL);
             }
             " " => {
                 check self.iterate(self.whitespace);
-                return {token: WHITESPACE};
+                return self.generateToken(WHITESPACE);
             }
         }
 
-        return {token: ERROR};
+        return self.generateToken(EOL);
     }
 
     # Check for the lexemes to create an unquoted key token.
@@ -53,6 +57,7 @@ class Lexer {
             }
             return self.generateError("Invalid character \"" + self.line[i] + "\" for an unquoted key");
         }
+        self.lexeme += self.line[i];
         return false;
     }
 
@@ -96,6 +101,17 @@ class Lexer {
                         + ".";
         return error LexicalError(text);
     }
+
+    # Generate a lexical token.
+    #
+    # + token - TOML token
+    # + return - Generated lexical token  
+    private function generateToken(TOMLToken token) returns Token {
+        return {
+            token: token,
+            value: self.lexeme
+        };
+    }
 }
 
 type Token record {|
@@ -105,9 +121,8 @@ type Token record {|
 
 enum TOMLToken {
     EXPRESSION,
-    COMMENT,
     WHITESPACE,
-    KEY,
+    UNQUOTED_KEY,
     EOL,
     ERROR
 }

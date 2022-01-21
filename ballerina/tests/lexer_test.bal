@@ -5,7 +5,7 @@ function testFullLineComment() returns error? {
     Lexer lexer = setLexerString("# someComment");
 
     Token token = check lexer.getToken();
-    test:assertEquals(token.token, COMMENT);
+    test:assertEquals(token.token, EOL);
 
 }
 
@@ -17,7 +17,7 @@ function testEOLComment() returns error? {
     foreach int i in 0 ... 5 {
         token = check lexer.getToken();
     }
-    test:assertEquals(token.token, COMMENT);
+    test:assertEquals(token.token, EOL);
 }
 
 @test:Config {}
@@ -30,6 +30,15 @@ function testMultipleWhiteSpaces() returns error? {
 
     token = check lexer.getToken();
     test:assertEquals(token.token, EOL);
+}
+
+@test:Config {}
+function testUnquotedKey() returns error? {
+    Lexer lexer = setLexerString("somekey = \"Some Value\"");
+
+    Token token  = check lexer.getToken();
+    test:assertEquals(token.token, UNQUOTED_KEY);
+    test:assertEquals(token.value, "somekey");
 }
 
 @test:Config {}
