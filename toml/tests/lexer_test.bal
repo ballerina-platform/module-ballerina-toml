@@ -37,7 +37,7 @@ function testUnquotedKey() returns error? {
     Lexer lexer = setLexerString("somekey = \"Some Value\"");
 
     Token token  = check lexer.getToken();
-    test:assertEquals(token.token, BASIC_STRING);
+    test:assertEquals(token.token, UNQUOTED_KEY);
     test:assertEquals(token.value, "somekey");
 }
 
