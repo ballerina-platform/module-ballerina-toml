@@ -1,5 +1,14 @@
 import ballerina/regex;
 
+enum RegexPatterns {
+    UNQUOTED_STRING_PATTERN = "[a-zA-Z0-9\\-\\_]{1}",
+    BASIC_STRING = "[/s\\x21\\x23-\\x5b\\x5d-\\x7e\\x80-\\xd7ff\\xe000-\\xffff]{1}",
+    LITERAL_STRING = "[\\x09\\x20-\\x26\\x28-\\x7e\\x80-\\xd7ff\\xe000-\\xffff]{1}",
+    ESCAPE_STRING = "[\\x22\\x5c\\x62\\x66\\x6e\\x72\\x74\\x75\\x55]{1}"
+}
+
+type LexicalError distinct error;
+
 class Lexer {
     int index;
     int lineNumber;
@@ -13,7 +22,7 @@ class Lexer {
         self.lexeme = "";
     }
 
-    # Generates a Token for the next immediate lexemes.
+    # Generates a Token for the next immediate lexeme.
     # 
     # + return - If success, returns a token, else returns a Lexical Error 
     function getToken() returns Token|error {
@@ -27,7 +36,7 @@ class Lexer {
             return {token: EOL};
         }
 
-        // Check for possible tokens for start of a line.
+        // Check for possible tokens at the start of a line.
         if (self.index == 0 && regex:matches(self.line[0], UNQUOTED_STRING_PATTERN)) {
             check self.iterate(self.unquotedKey);
             return self.generateToken(UNQUOTED_KEY);
@@ -40,6 +49,9 @@ class Lexer {
             " " => {
                 check self.iterate(self.whitespace);
                 return self.generateToken(WHITESPACE);
+            }
+            "=" => {
+                return self.generateToken(KEY_VALUE_SEPERATOR);
             }
         }
 
@@ -77,7 +89,7 @@ class Lexer {
     private function iterate(function (int) returns boolean|LexicalError process) returns error?{
         foreach int i in self.index ... self.line.length() - 1 {
             if (check process(i)) {
-                self.index = i;
+                self.index = i-1;
                 return;
             }
         }
@@ -107,28 +119,10 @@ class Lexer {
     # + token - TOML token
     # + return - Generated lexical token  
     private function generateToken(TOMLToken token) returns Token {
+        self.index += 1;
         return {
             token: token,
             value: self.lexeme
         };
     }
 }
-
-type Token record {|
-    TOMLToken token;
-    string value = "";
-|};
-
-enum TOMLToken {
-    EXPRESSION,
-    WHITESPACE,
-    UNQUOTED_KEY,
-    EOL,
-    ERROR
-}
-
-enum RegexPatterns {
-    UNQUOTED_STRING_PATTERN = "[a-zA-Z0-9\\-\\_]{1}"
-}
-
-type LexicalError distinct error;

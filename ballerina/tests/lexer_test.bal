@@ -43,10 +43,27 @@ function testUnquotedKey() returns error? {
 
 @test:Config {}
 function testUnquotedKeyWithInvalidChar() {
-    Lexer lexer = setLexerString("key$aco = 21");
+    Lexer lexer = setLexerString("some$value = 1");
 
     Token|error token = lexer.getToken();
     test:assertTrue(token is LexicalError);
+}
+
+@test:Config {}
+function testKeyValueSeperator() returns error? {
+    Lexer lexer = setLexerString("somekey = 1");
+
+    Token token1 = check lexer.getToken();
+    test:assertEquals(token1.token, UNQUOTED_KEY);
+
+    Token token2 = check lexer.getToken();
+    test:assertEquals(token2.token, WHITESPACE);
+
+    Token token3 = check lexer.getToken();
+    test:assertEquals(token3.token, KEY_VALUE_SEPERATOR);
+    
+    Token token4 = check lexer.getToken();
+    test:assertEquals(token4.token, WHITESPACE);
 }
 
 # Returns a new lexer with the configured line for testing
