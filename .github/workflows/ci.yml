@@ -1,4 +1,4 @@
-name: CI build for toml package
+name: CI Build
 
 on: 
     pull_request:

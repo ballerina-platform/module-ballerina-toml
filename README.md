@@ -1,4 +1,3 @@
-# module-ballerina-toml
 # Ballerina TOML Parser
 ![Build](https://github.com/nipunayf/module-ballerina-toml/actions/workflows/ci.yml/badge.svg)
 
