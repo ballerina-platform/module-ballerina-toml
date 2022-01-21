@@ -1,0 +1,22 @@
+name: CI build for toml package
+
+on: 
+    pull_request:
+    push:
+      paths-ignore:
+        - README.md
+        - .gitignore
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: Build Ballerina
+        uses: ballerina/platform/ballerina-action/master
+        with:
+          args: 
+             build toml

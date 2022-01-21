@@ -55,7 +55,7 @@ modules = [
 ]
 
 [[package]]
-org = "xenon"
+org = "nipunayf"
 name = "toml"
 version = "0.1.0"
 dependencies = [
@@ -64,7 +64,7 @@ dependencies = [
 	{org = "ballerinai", name = "observe"}
 ]
 modules = [
-	{org = "xenon", packageName = "toml", moduleName = "toml"}
+	{org = "nipunayf", packageName = "toml", moduleName = "toml"}
 ]
 
 
