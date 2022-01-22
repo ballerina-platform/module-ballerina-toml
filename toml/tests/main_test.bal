@@ -20,3 +20,14 @@ function testInvalidSimpleKey() {
     toml = read("somekey somevalue");
     test:assertTrue(toml is ParsingError);
 }
+
+@test:Config {}
+function testReadFromFile() returns error? {
+    map<any> toml = check readFile("tests/resources/simple_key.toml");
+
+    test:assertTrue(toml.hasKey("simple-key"));
+    test:assertEquals(<string>toml["simple-key"], "some-value");
+
+    test:assertTrue(toml.hasKey("second-key"));
+    test:assertEquals(<string>toml["second-key"], "second-value");
+}

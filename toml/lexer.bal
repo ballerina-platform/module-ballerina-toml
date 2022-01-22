@@ -30,7 +30,6 @@ class Lexer {
         // Reset the parameters at the end of the line.
         if (self.index >= self.line.length() - 1) {
             self.index = 0;
-            self.lineNumber += 1;
             self.line = "";
             self.lexeme = "";
             return {token: EOL};

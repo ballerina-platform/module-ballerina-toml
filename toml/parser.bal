@@ -40,6 +40,9 @@ class Parser {
         // Iterating each document line
         foreach int i in 0 ... self.numLines {
             self.lexer.line = self.lines[i];
+            self.lexer.index = 0;
+            self.lexer.lineNumber = i;
+
             self.currentToken = check self.lexer.getToken();
 
             match self.currentToken.token {
