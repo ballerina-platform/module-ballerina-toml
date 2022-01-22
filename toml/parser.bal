@@ -15,9 +15,6 @@ class Parser {
     # Current token
     private Token currentToken;
 
-    # Previous token
-    private Token prevToken;
-
     # State of the parser
     private ParserState state;
 
@@ -26,47 +23,90 @@ class Parser {
 
     function init(string[] lines) {
         self.lines = lines;
-        self.numLines = lines.length()-1;
+        self.numLines = lines.length() - 1;
         self.tomlObject = {};
         self.lexer = new Lexer();
         self.state = TOMLStart;
+        self.currentToken = {token: EXPRESSION};
     }
 
-    
     # Generates a map object for the TOML document.
     # Initally, considers the predictions for the 'expression'
-    # 
+    #
     # + return - If success, map object for the TOMl document. 
-    #            Else, a lexical or a parser error. 
-    public function parse() returns error? {
+    # Else, a lexical or a parser error. 
+    public function parse() returns map<any>|error {
 
         // Iterating each document line
-        foreach int i in 0...self.numLines {
+        foreach int i in 0 ... self.numLines {
             self.lexer.line = self.lines[i];
             self.currentToken = check self.lexer.getToken();
 
-            while (self.currentToken.token != EOL) {
-                match self.currentToken.token {
-                    UNQUOTED_KEY => {
-                        
-                    }
+            match self.currentToken.token {
+                UNQUOTED_KEY|QUOTED_KEY => {
+                    check self.keyValue();
                 }
             }
         }
+
+        // Return the TOML object
+        return self.tomlObject;
+    }
+
+    # Assert the next lexer token with the predicted token.
+    #
+    # + assertedToken - Predicted token
+    # + errorMessage - Parsing error if expected token not found
+    # + return - Parsing error if not found   
+    private function checkToken(TOMLToken assertedToken, string errorMessage) returns error? {
+        self.currentToken = check self.lexer.getToken();
+
+        if (self.currentToken.token != assertedToken) {
+            return self.generateError(errorMessage);
+        }
+    }
+
+    # Assert the next lexer token with multiple predicted tokens.
+    #
+    # + assertedTokens - Predicted tokens
+    # + errorMessage - Parsing error if expected token not found
+    # + return - Parsing error if not found   
+    private function checkMultipleTokens(TOMLToken[] assertedTokens, string errorMessage) returns error? {
+        self.currentToken = check self.lexer.getToken();
+
+        if (assertedTokens.indexOf(self.currentToken.token) == ()) {
+            return self.generateError(errorMessage);
+        }
+    }
+
+    private function keyValue() returns error? {
+        string key = self.currentToken.value;
+
+        check self.checkToken(WHITESPACE, "Expected a whitespace after a key value");
+        check self.checkToken(KEY_VALUE_SEPERATOR, "Expected a '=' after a key");
+        check self.checkToken(WHITESPACE, "Expected a whitespace after the '='");
+        check self.checkMultipleTokens([
+            BASIC_STRING,
+            LITERAL_STRING
+        ],
+            "Expected a value after '='"
+        );
+
+        self.tomlObject[key] = self.currentToken.value;
     }
 
     # Generates a Parsing Error Error.
     #
     # + message - Error message
     # + return - Constructed Parsing Error message  
-    private function generateError(string message) returns LexicalError {
-        string text = "Parsing Error at line " 
-                        // + self.lineNumber.toString() + 
-                        + " index " 
-                        // + self.index.toString()
+    private function generateError(string message) returns ParsingError {
+        string text = "Parsing Error at line "
+                        + self.lexer.lineNumber.toString()
+                        + " index "
+                        + self.lexer.index.toString()
                         + ": "
                         + message
                         + ".";
-        return error LexicalError(text);
+        return error ParsingError(text);
     }
 }

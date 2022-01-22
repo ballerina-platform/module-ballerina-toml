@@ -6,6 +6,7 @@ type Token record {|
 enum TOMLToken {
     EXPRESSION,
     WHITESPACE,
+    QUOTED_KEY,
     UNQUOTED_KEY,
     KEY_VALUE_SEPERATOR,
     BASIC_STRING,
