@@ -72,7 +72,7 @@ class Lexer {
                 self.index = i;
                 return true;
             }
-            return self.generateError("Invalid character \"" + self.line[i] + "\" for a string");
+            return self.generateError("Invalid character \"" + self.line[i] + "\" for a string", i);
         }
         self.lexeme += self.line[i];
         return false;
@@ -88,7 +88,7 @@ class Lexer {
                 self.index = i - 1;
                 return true;
             }
-            return self.generateError("Invalid character \"" + self.line[i] + "\" for an unquoted key");
+            return self.generateError("Invalid character \"" + self.line[i] + "\" for an unquoted key", i);
         }
         self.lexeme += self.line[i];
         return false;
@@ -125,20 +125,21 @@ class Lexer {
 
     # Generates a Lexical Error.
     #
-    # + message - Error message
-    # + return - Constructed Lexcial Error message  
-    private function generateError(string message) returns LexicalError {
+    # + message - Error message  
+    # + index - Index where the Lexical error occurred
+    # + return - Constructed Lexcial Error message
+    private function generateError(string message, int index) returns LexicalError {
         string text = "Lexical Error at line "
-                        + self.lineNumber.toString() +
-                        " index "
-                        + self.index.toString()
+                        + (self.lineNumber + 1).toString() 
+                        + " index "
+                        + index.toString()
                         + ": "
                         + message
                         + ".";
         return error LexicalError(text);
     }
 
-    # Generate a lexical token.
+    # Generate a lexical token.Ø
     #
     # + token - TOML token
     # + return - Generated lexical token  
