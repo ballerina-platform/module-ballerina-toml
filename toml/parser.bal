@@ -1,9 +1,5 @@
 type ParsingError distinct error;
 
-enum ParserState {
-    TOMLStart
-}
-
 class Parser {
     # Input TOML lines
     private string[] lines;
@@ -15,9 +11,6 @@ class Parser {
     # Current token
     private Token currentToken;
 
-    # State of the parser
-    private ParserState state;
-
     # Lexical analyzer tool for getting the tokens
     private Lexer lexer;
 
@@ -26,7 +19,6 @@ class Parser {
         self.numLines = lines.length() - 1;
         self.tomlObject = {};
         self.lexer = new Lexer();
-        self.state = TOMLStart;
         self.currentToken = {token: EXPRESSION};
     }
 
@@ -82,6 +74,10 @@ class Parser {
         }
     }
 
+    # Checks the rule key_value -> key ws '=' ws value.
+    # Builds a key value of the TOML object.
+    # 
+    # + return - Parsing error  
     private function keyValue() returns error? {
         string key = self.currentToken.value;
 

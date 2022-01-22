@@ -23,7 +23,7 @@ function testInvalidSimpleKey() {
 
 @test:Config {}
 function testReadFromFile() returns error? {
-    map<any> toml = check readFile("tests/resources/simple_key.toml");
+    map<any> toml = check readFile("toml/tests/resources/simple_key.toml");
 
     test:assertTrue(toml.hasKey("simple-key"));
     test:assertEquals(<string>toml["simple-key"], "some-value");
