@@ -76,22 +76,26 @@ class Parser {
 
     # Checks the rule key_value -> key ws '=' ws value.
     # Builds a key value of the TOML object.
-    # 
+    #
     # + return - Parsing error  
     private function keyValue() returns error? {
-        string key = self.currentToken.value;
+        string tomlKey = self.currentToken.value;
 
         check self.checkToken(WHITESPACE, "Expected a whitespace after a key value");
         check self.checkToken(KEY_VALUE_SEPERATOR, "Expected a '=' after a key");
         check self.checkToken(WHITESPACE, "Expected a whitespace after the '='");
-        check self.checkMultipleTokens([
+        check self.checkMultipleTokens([ // TODO: add the remaning values
             BASIC_STRING,
             LITERAL_STRING
         ],
             "Expected a value after '='"
         );
 
-        self.tomlObject[key] = self.currentToken.value;
+        if (self.tomlObject.hasKey(tomlKey)) {
+            return self.generateError("Duplicate key '" + tomlKey + "'");
+        } else {
+            self.tomlObject[tomlKey] = self.currentToken.value;
+        }
     }
 
     # Generates a Parsing Error Error.

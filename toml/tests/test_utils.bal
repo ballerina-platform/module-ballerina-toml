@@ -1,5 +1,7 @@
 import ballerina/test;
 
+const ORIGIN_FILE_PATH = "toml/tests/resources/";
+
 # Returns a new lexer with the configured line for testing
 #
 # + line - Testing TOML string
@@ -70,6 +72,29 @@ function assertKey(map<any> toml, string key, string value) {
 # + text - If isFile is set, file path else TOML string  
 # + isFile - If set, reads the TOML file. default = false.  
 function assertParsingError(string text, boolean isFile = false) {
-    map<any>|error toml = isFile ? readFile(text) : read(text);
+    map<any>|error toml = isFile ? readFile(ORIGIN_FILE_PATH + text + ".toml") : read(text);
     test:assertTrue(toml is ParsingError);
+}
+
+# Assertions to validate the values of the TOML object.  
+class AssertKey {
+    private map<any> toml;
+
+    # Init the AssertKey class.
+    #
+    # + text - If isFile is set, file path else TOML string  
+    # + isFile - If set, reads the TOML file. default = false.    
+    function init(string text, boolean isFile = false) returns error? {
+        self.toml = isFile ? check readFile(ORIGIN_FILE_PATH + text + ".toml") : check read(text);
+    }
+
+    function hasKey(string tomlKey, anydata tomlValue) returns AssertKey {
+        test:assertTrue(self.toml.hasKey(tomlKey));
+        test:assertEquals(<string>self.toml[tomlKey], tomlValue);
+        return self;
+    }
+
+    function close() {
+        return;
+    }
 }

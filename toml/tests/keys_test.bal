@@ -73,12 +73,14 @@ function testInvalidSimpleKey() {
 }
 
 @test:Config {}
-function testReadFromFile() returns error? {
-    map<any> toml = check readFile("toml/tests/resources/simple_key.toml");
+function testDuplicateKeys() {
+    assertParsingError("duplicate_keys", true);
+}
 
-    test:assertTrue(toml.hasKey("simple-key"));
-    test:assertEquals(<string>toml["simple-key"], "some-value");
-
-    test:assertTrue(toml.hasKey("second-key"));
-    test:assertEquals(<string>toml["second-key"], "second-value");
+@test:Config {}
+function testReadMultipleKeys() returns error? {
+    AssertKey ak = check new AssertKey("simple_key", true);
+    ak  .hasKey("first-key", "first-value")
+        .hasKey("second-key", "second-value")
+        .close();
 }
