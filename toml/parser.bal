@@ -38,7 +38,7 @@ class Parser {
             self.currentToken = check self.lexer.getToken();
 
             match self.currentToken.token {
-                UNQUOTED_KEY|QUOTED_KEY => {
+                UNQUOTED_KEY|BASIC_STRING|LITERAL_STRING => {
                     check self.keyValue();
                 }
             }

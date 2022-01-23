@@ -50,6 +50,22 @@ function testSimpleUnquotedKey() returns error? {
 }
 
 @test:Config {}
+function testSimpleQuotedBasicStringKey() returns error? {
+    map<any> toml = check read("\"somekey\" = \"somevalue\"");
+
+    test:assertTrue(toml.hasKey("somekey"));
+    test:assertEquals(<string>toml["somekey"], "somevalue");
+}
+
+@test:Config {}
+function testSimpleQuotedLiteralStringKey() returns error? {
+    map<any> toml = check read("'somekey' = \"somevalue\"");
+
+    test:assertTrue(toml.hasKey("somekey"));
+    test:assertEquals(<string>toml["somekey"], "somevalue");
+}
+
+@test:Config {}
 function testInvalidSimpleKey() {
     assertParsingError("somekey = somevalue");
     assertParsingError("somekey = #somecomment");
