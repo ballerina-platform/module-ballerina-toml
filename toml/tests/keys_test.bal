@@ -39,14 +39,10 @@ function testKeyValueSeperator() returns error? {
     check assertToken(lexer, WHITESPACE);
 }
 
-@test:Config {}
-function testBasicString() returns error? {
-    Lexer lexer = setLexerString("someKey = \"someValue\"");
-    check assertToken(lexer, BASIC_STRING, 5, "someValue");
-}
+// Parsing Testing
 
 @test:Config {}
-function testSimpleKey() returns error? {
+function testSimpleUnquotedKey() returns error? {
     map<any> toml = check read("somekey = \"somevalue\"");
 
     test:assertTrue(toml.hasKey("somekey"));

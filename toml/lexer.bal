@@ -35,7 +35,7 @@ class Lexer {
             return {token: EOL};
         }
 
-        // Check for possible tokens at the start of a line.
+        // Check for bare keys at the start of a line.
         if (self.index == 0 && regex:matches(self.line[0], UNQUOTED_STRING_PATTERN)) {
             check self.iterate(self.unquotedKey);
             return self.generateToken(UNQUOTED_KEY);
@@ -55,7 +55,12 @@ class Lexer {
             "\"" => {
                 self.index += 1;
                 check self.iterate(self.basicString);
-                return self.generateToken(BASIC_STRING);
+                return self.index == 0 ? self.generateToken(QUOTED_KEY) : self.generateToken(BASIC_STRING);
+            }
+            "'" => {
+                self.index += 1;
+                check self.iterate(self.literalString);
+                return self.index == 0 ? self.generateToken(QUOTED_KEY) : self.generateToken(LITERAL_STRING);
             }
         }
 
@@ -72,7 +77,23 @@ class Lexer {
                 self.index = i;
                 return true;
             }
-            return self.generateError("Invalid character \"" + self.line[i] + "\" for a string", i);
+            return self.generateError("Invalid character \"" + self.line[i] + "\" for a basic string", i);
+        }
+        self.lexeme += self.line[i];
+        return false;
+    }
+
+    # Check for the lexemes to create an literal string.
+    #
+    # + i - Current index
+    # + return - True if the end of the string, An error message for an invalid character.  
+    private function literalString(int i) returns boolean|LexicalError {
+        if (!regex:matches(self.line[i], LITERAL_STRING_PATTERN)) {
+            if (self.line[i] == "'") {
+                self.index = i;
+                return true;
+            }
+            return self.generateError("Invalid character \"" + self.line[i] + "\" for a literal string", i);
         }
         self.lexeme += self.line[i];
         return false;
@@ -130,7 +151,7 @@ class Lexer {
     # + return - Constructed Lexcial Error message
     private function generateError(string message, int index) returns LexicalError {
         string text = "Lexical Error at line "
-                        + (self.lineNumber + 1).toString() 
+                        + (self.lineNumber + 1).toString()
                         + " index "
                         + index.toString()
                         + ": "
