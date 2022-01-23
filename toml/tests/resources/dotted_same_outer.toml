@@ -1,0 +1,5 @@
+outer1.inner1 = "value1"
+outer1.inner2 = "value2"
+outer1. inner2.inner3 = "value3"
+outer1 . inner2. inner4 = "value4"
+outer2 = "value5"

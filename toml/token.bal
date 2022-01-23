@@ -4,11 +4,10 @@ type Token record {|
 |};
 
 enum TOMLToken {
-    EXPRESSION,
-    WHITESPACE,
-    QUOTED_KEY,
+    DUMMY,
     UNQUOTED_KEY,
     KEY_VALUE_SEPERATOR,
+    DOT,
     BASIC_STRING,
     LITERAL_STRING,
     EOL

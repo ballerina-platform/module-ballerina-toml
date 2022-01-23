@@ -36,18 +36,18 @@ class Lexer {
         }
 
         // Check for bare keys at the start of a line.
-        if (self.index == 0 && regex:matches(self.line[0], UNQUOTED_STRING_PATTERN)) {
+        if (regex:matches(self.line[self.index], UNQUOTED_STRING_PATTERN)) {
             check self.iterate(self.unquotedKey);
             return self.generateToken(UNQUOTED_KEY);
         }
 
         match self.line[self.index] {
+            " " => {
+                self.index += 1;
+                return check self.getToken();
+            }
             "#" => {
                 return self.generateToken(EOL);
-            }
-            " " => {
-                check self.iterate(self.whitespace);
-                return self.generateToken(WHITESPACE);
             }
             "=" => {
                 return self.generateToken(KEY_VALUE_SEPERATOR);
@@ -55,15 +55,19 @@ class Lexer {
             "\"" => {
                 self.index += 1;
                 check self.iterate(self.basicString);
-                return self.index == 0 ? self.generateToken(QUOTED_KEY) : self.generateToken(BASIC_STRING);
+                return self.generateToken(BASIC_STRING);
             }
             "'" => {
                 self.index += 1;
                 check self.iterate(self.literalString);
-                return self.index == 0 ? self.generateToken(QUOTED_KEY) : self.generateToken(LITERAL_STRING);
+                return self.generateToken(LITERAL_STRING);
+            }
+            "." => {
+                return self.generateToken(DOT);
             }
         }
 
+        //TODO: Generate a lexical error when none of the characters are found.
         return self.generateToken(EOL);
     }
 
@@ -105,7 +109,7 @@ class Lexer {
     # + return - True if the end of the key, An error message for an invalid character.  
     private function unquotedKey(int i) returns boolean|LexicalError {
         if (!regex:matches(self.line[i], UNQUOTED_STRING_PATTERN)) {
-            if (self.line[i] == " ") {
+            if (self.line[i] == " " || self.line[i] == ".") {
                 self.index = i - 1;
                 return true;
             }

@@ -4,7 +4,7 @@ import ballerina/io;
 #
 # + tomlString - Single line of a TOML string
 # + return - TOML map object is sucess. Else, returns an error
-public function read(string tomlString) returns map<any>|error {
+public function read(string tomlString) returns map<anydata>|error {
     string[] lines = [tomlString];
     Parser parser = new Parser(lines);
     return parser.parse();
@@ -14,7 +14,7 @@ public function read(string tomlString) returns map<any>|error {
 #
 # + filePath - Path to the toml file
 # + return - TOML map object is sucess. Else, returns an error
-public function readFile(string filePath) returns map<any>|error {
+public function readFile(string filePath) returns map<anydata>|error {
     string[] lines = check io:fileReadLines(filePath);
     Parser parser = new Parser(lines);
     return parser.parse();
