@@ -1,3 +1,5 @@
+import ballerina/lang.'int;
+
 type ParsingError distinct error;
 
 class Parser {
@@ -89,10 +91,14 @@ class Parser {
     }
 
     # Handles the rule: key -> simple-key | dotted-key
+    # key_value -> key '=' value.
+    # The 'dotted-key' is being called recursively. 
+    # At the terminal, a value is assigned to the last key, 
+    # and nested under the previous key's map if exists.
     #
-    # + alreadyExists - Parameter Description  
-    # + structure - Parameter Description
-    # + return - Return Value Description
+    # + alreadyExists - There is an existing value for the previous key.
+    # + structure - The structure for the previous key. Null if there is no value.
+    # + return - Returns the structure after assigning the value.
     private function keyValue(boolean alreadyExists, map<anydata>? structure) returns map<anydata>|error {
         string tomlKey = self.currentToken.value;
         self.nextToken = check self.lexer.getToken();
@@ -121,7 +127,7 @@ class Parser {
                 if (structure is map<anydata> ? (<map<anydata>>structure).hasKey(tomlKey) : structure != () ? alreadyExists : true && alreadyExists) {
                     return self.generateError("Duplicate key '" + tomlKey + "'");
                 } else {
-                    return self.buildInternalTable(tomlKey, self.currentToken.value, structure);
+                    return self.buildInternalTable(tomlKey, check self.getProcessedValue(), structure);
                 }
             }
             _ => {
@@ -130,10 +136,29 @@ class Parser {
         }
     }
 
-    // # Checks the rule key_value -> key ws '=' ws value.
-    // # Builds a key value of the TOML object.
-    // #
-    // # + return - Parsing error  
+    # Cast the token to the respective Ballerina type.
+    #
+    # + return - returns the Ballerian type  
+    private function getProcessedValue() returns anydata|ParsingError {
+        match self.currentToken.token {
+            BASIC_STRING|LITERAL_STRING => {
+                return self.currentToken.value;
+            }
+            INTEGER => {
+                return self.processTypeCastingError('int:fromString(self.currentToken.value));
+            }
+        }
+    }
+
+    private function processTypeCastingError(anydata|error value) returns anydata|ParsingError {
+        // Check if the type casting has any errors
+        if value is error {
+            return self.generateError("Invalid value for assignment");
+        }
+
+        // Returns the value on success
+        return value;
+    }
 
     # Constructs the internal table of the TOML object.
     #

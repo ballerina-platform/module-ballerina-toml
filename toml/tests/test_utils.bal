@@ -80,7 +80,7 @@ function assertParsingError(string text, boolean isFile = false, boolean isLexic
     } else {
         test:assertTrue(toml is ParsingError);
     }
-    
+
 }
 
 # Assertions to validate the values of the TOML object.  
@@ -111,7 +111,7 @@ class AssertKey {
         test:assertTrue(assertedMap.hasKey(tomlKey));
 
         if (tomlValue != ()) {
-            test:assertEquals(<string>assertedMap[tomlKey], tomlValue);
+            test:assertEquals(<anydata>assertedMap[tomlKey], tomlValue);
         }
         return self;
     }

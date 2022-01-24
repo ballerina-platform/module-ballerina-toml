@@ -232,6 +232,11 @@ class Lexer {
         return;
     }
 
+    # Peeks the character succeeding after k indexes. 
+    # Returns the character after k integers
+    #
+    # + k - Number of characters to peek
+    # + return - Character at the peek if not null  
     private function peek(int k) returns string? {
         return k < self.line.length() ? self.line[self.index + k] : ();
     }

@@ -77,3 +77,9 @@ function testIllegalUnderscoe() {
 function testLeadingZeroDecimal() {
     assertParsingError("somekey = 012", isLexical = true);
 }
+
+@test:Config {}
+function testProcessIntegerValue() returns error? {
+    AssertKey ak = check new AssertKey("somekey = 123");
+    ak.hasKey("somekey", 123).close();
+}
