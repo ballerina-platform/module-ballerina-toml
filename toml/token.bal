@@ -5,10 +5,17 @@ type Token record {|
 
 enum TOMLToken {
     DUMMY,
-    UNQUOTED_KEY,
     KEY_VALUE_SEPERATOR,
     DOT,
+    UNQUOTED_KEY,
     BASIC_STRING,
     LITERAL_STRING,
+    INTEGER,
     EOL
+}
+
+enum State {
+    EXPRESSION_KEY,
+    EXPRESSION_VALUE,
+    MULTILINE
 }

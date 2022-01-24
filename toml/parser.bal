@@ -38,6 +38,8 @@ class Parser {
             self.lexer.line = self.lines[i];
             self.lexer.index = 0;
             self.lexer.lineNumber = i;
+            self.lexer.lexeme = "";
+            self.lexer.state = EXPRESSION_KEY;
 
             self.currentToken = check self.lexer.getToken();
 
@@ -48,6 +50,7 @@ class Parser {
                         self.tomlObject);
                     string tomlKey = output.keys()[0];
                     self.tomlObject[tomlKey] = output[tomlKey];
+                    self.lexer.state = EXPRESSION_KEY;
                 }
             }
         }
@@ -108,9 +111,11 @@ class Parser {
             }
 
             KEY_VALUE_SEPERATOR => {
+                self.lexer.state = EXPRESSION_VALUE;
                 check self.checkMultipleTokens([ // TODO: add the remaning values
                     BASIC_STRING,
-                    LITERAL_STRING
+                    LITERAL_STRING,
+                    INTEGER
                 ], "Expected a value after '='");
 
                 if (structure is map<anydata> ? (<map<anydata>>structure).hasKey(tomlKey) : structure != () ? alreadyExists : true && alreadyExists) {
