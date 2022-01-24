@@ -65,7 +65,7 @@ function testSimpleQuotedLiteralStringKey() returns error? {
 
 @test:Config {}
 function testInvalidSimpleKey() {
-    assertParsingError("somekey = somevalue");
+    assertParsingError("somekey = somevalue", isLexical = true);
     assertParsingError("somekey = #somecomment");
     assertParsingError("somekey somevalue");
 }

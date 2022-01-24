@@ -69,11 +69,11 @@ function testUnderscoreDecimal() returns error? {
 
 @test:Config {}
 function testIllegalUnderscoe() {
-    assertParsingError("somekey = _1");
-    assertParsingError("somekey = 1_");
+    assertParsingError("somekey = _1", isLexical = true);
+    assertParsingError("somekey = 1_", isLexical = true);
 }
 
 @test:Config {}
 function testLeadingZeroDecimal() {
-    assertParsingError("somekey = 012");
+    assertParsingError("somekey = 012", isLexical = true);
 }

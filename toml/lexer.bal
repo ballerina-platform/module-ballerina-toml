@@ -33,14 +33,12 @@ class Lexer {
     # + return - If success, returns a token, else returns a Lexical Error 
     function getToken() returns Token|error {
 
-        // // Reset the parameters at the end of the line.
-        // if (self.index >= self.line.length() - 1) {
-        //     self.index = 0;
-        //     self.line = "";
-        //     self.lexeme = "";
-        //     self.state = EXPRESSION_KEY;
-        //     return {token: EOL};
-        // }
+        // Reset the parameters at the end of the line.
+        if (self.index >= self.line.length()) {
+            self.index = 0;
+            self.line = "";
+            return {token: EOL};
+        }
 
         // Check for bare keys at the start of a line.
         if (self.state == EXPRESSION_KEY && regex:matches(self.line[self.index], UNQUOTED_STRING_PATTERN)) {
@@ -192,10 +190,24 @@ class Lexer {
                 }
 
                 // Both preceding and succeeding chars of the '_' should be digits
-                if (self.line[i] == "_" && regex:matches(self.line[i - 1], digitPattern) && regex:matches(self.line[i + 1], digitPattern)) {
-                    self.lexeme += "_";
-                    return false;
+                if (self.line[i] == "_") {
+                    // '_' should be after a digit
+                    if (self.lexeme.length() > 0) {
+                        string? nextChr = self.peek(1);
+                        // '_' should be before a digit
+                        if (nextChr == ()) {
+                            return self.generateError("A digit must appear after the '_'", self.index + 1);
+                        }
+                        // check if the next character is a digit
+                        if (regex:matches(<string>nextChr, digitPattern)) {
+                            self.lexeme += "_";
+                            return false;
+                        }
+                        return self.generateError("Invalid character \"" + self.line[i] + "\" after '_'", i);
+                    }
+                    return self.generateError("Invalid character \"" + self.line[i] + "\" after '='", i);
                 }
+
                 return self.generateError("Invalid character \"" + self.line[i] + "\" for an integer", i);
             }
             self.lexeme += self.line[i];
