@@ -247,6 +247,11 @@ class Lexer {
         return k < self.line.length() ? self.line[self.index + k] : ();
     }
 
+    # Check if the tokens adhere to the given string.
+    #
+    # + chars - Expected string  
+    # + expectedToken - Output token if succeed
+    # + return - If success, returns the token. Else, returns the parsing error.  
     private function tokensInSequence(string chars, TOMLToken expectedToken) returns Token|LexicalError {
         foreach string char in chars {
             if (self.line[self.index] != char) {

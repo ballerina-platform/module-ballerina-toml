@@ -155,6 +155,10 @@ class Parser {
         }
     }
 
+    # Check errors during type casting to Ballerina types.
+    #
+    # + value - Value to be type casted.
+    # + return - Value as a Ballerina data type  
     private function processTypeCastingError(anydata|error value) returns anydata|ParsingError {
         // Check if the type casting has any errors
         if value is error {
