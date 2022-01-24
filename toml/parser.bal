@@ -43,7 +43,9 @@ class Parser {
 
             match self.currentToken.token {
                 UNQUOTED_KEY|BASIC_STRING|LITERAL_STRING => {
-                    map<anydata> output = check self.keyValue(self.tomlObject.hasKey(self.currentToken.value));
+                    map<anydata> output = check self.keyValue(
+                        self.tomlObject.hasKey(self.currentToken.value),
+                        self.tomlObject);
                     string tomlKey = output.keys()[0];
                     self.tomlObject[tomlKey] = output[tomlKey];
                 }
@@ -85,32 +87,36 @@ class Parser {
 
     # Handles the rule: key -> simple-key | dotted-key
     #
-    # + alreadyExists - Parameter Description
+    # + alreadyExists - Parameter Description  
+    # + structure - Parameter Description
     # + return - Return Value Description
-    private function keyValue(boolean alreadyExists) returns map<anydata>|error {
+    private function keyValue(boolean alreadyExists, map<anydata>? structure) returns map<anydata>|error {
         string tomlKey = self.currentToken.value;
         self.nextToken = check self.lexer.getToken();
 
         match self.nextToken.token {
             DOT => {
                 check self.checkMultipleTokens([UNQUOTED_KEY, BASIC_STRING, LITERAL_STRING], "Expected a key after '.'", true);
-                map<anydata> value = check self.keyValue(self.tomlObject.hasKey(self.currentToken.value) && alreadyExists);
-                map<anydata> returnValue = {};
-                returnValue[tomlKey] = value;
-                return returnValue;
+
+                map<anydata> value = check self.keyValue(
+                    // If the structure exists and already assigned a value that is not a table,
+                    // Then it is invalid to assign a value to it or nested to it.
+                    (structure is map<anydata> ? (<map<anydata>>structure).hasKey(tomlKey) : structure != () && alreadyExists),
+                    structure[tomlKey] is map<anydata> ? <map<anydata>?>structure[tomlKey] : ()
+                    );
+                return self.buildInternalTable(tomlKey, value, structure);
             }
+
             KEY_VALUE_SEPERATOR => {
                 check self.checkMultipleTokens([ // TODO: add the remaning values
                     BASIC_STRING,
                     LITERAL_STRING
                 ], "Expected a value after '='");
 
-                if (alreadyExists) {
+                if (structure is map<anydata> ? (<map<anydata>>structure).hasKey(tomlKey) : structure != () ? alreadyExists : true && alreadyExists) {
                     return self.generateError("Duplicate key '" + tomlKey + "'");
                 } else {
-                    map<anydata> returnValue = {};
-                    returnValue[tomlKey] = self.currentToken.value;
-                    return returnValue;
+                    return self.buildInternalTable(tomlKey, self.currentToken.value, structure);
                 }
             }
             _ => {
@@ -123,6 +129,28 @@ class Parser {
     // # Builds a key value of the TOML object.
     // #
     // # + return - Parsing error  
+
+    # Constructs the internal table of the TOML object.
+    #
+    # + tomlKey - New key of the TOML object  
+    # + tomlValue - Value of the key  
+    # + structure - Already existing internal table
+    # + return - Constructed inner table. 
+    private function buildInternalTable(string tomlKey, anydata tomlValue, map<anydata>? structure) returns map<anydata> {
+
+        // Creates a new structure and add the key value
+        if (structure == ()) {
+            map<anydata> returnValue = {};
+            returnValue[tomlKey] = tomlValue;
+            return returnValue;
+        }
+        
+        // Add the key to the existing strcuture
+        else {
+            structure[tomlKey] = tomlValue;
+            return structure;
+        }
+    }
 
     # Generates a Parsing Error Error.
     #

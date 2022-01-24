@@ -87,7 +87,7 @@ function testReadMultipleKeys() returns error? {
 function testDottedKey() returns error? {
     AssertKey ak = check new AssertKey("outer.inner = 'somevalue'");
     ak.hasKey("outer")
-        .inner("outer")
+        .dive("outer")
         .hasKey("inner", "somevalue")
         .close();
 }
@@ -96,7 +96,7 @@ function testDottedKey() returns error? {
 function testDottedKeyWithWhitespace() returns error? {
     AssertKey ak = check new AssertKey("outer . 'inner' = 'somevalue'");
     ak.hasKey("outer")
-        .inner("outer")
+        .dive("outer")
         .hasKey("inner", "somevalue")
         .close();
 }
@@ -105,12 +105,24 @@ function testDottedKeyWithWhitespace() returns error? {
 function testDottedKeyWithSameOuter() returns error? {
     AssertKey ak = check new AssertKey("dotted_same_outer", true);
     ak.hasKey("outer1")
-        .hasKey("outer2", "value5")
-        .inner("outer1")
+        .hasKey("outer2", "value2")
+        .dive("outer1")
             .hasKey("inner1", "value1")
-            .hasKey("inner2", "value2")
-            .inner("inner2")
+            .dive("inner2")
                 .hasKey("inner3", "value3")
                 .hasKey("inner4", "value4")
+                .hop()
+            .dive("inner5")
+                .hasKey("inner3", "value5")
         .close();
+}
+
+@test:Config {}
+function testDottedAlreadyDefined() {
+    assertParsingError("dotted_already_defined", true);
+}
+
+@test:Config {}
+function testDottedParentAlreadyDefined() {
+    assertParsingError("dotted_parent_already_defined", true);
 }

@@ -81,6 +81,7 @@ function assertParsingError(string text, boolean isFile = false) {
 class AssertKey {
     private map<anydata> toml;
     private map<anydata>? innerData;
+    private string[] stack;
 
     # Init the AssertKey class.
     #
@@ -89,6 +90,7 @@ class AssertKey {
     function init(string text, boolean isFile = false) returns error? {
         self.toml = isFile ? check readFile(ORIGIN_FILE_PATH + text + ".toml") : check read(text);
         self.innerData = ();
+        self.stack = [];
     }
 
     # Assert the key and value of the TOML object.
@@ -112,8 +114,40 @@ class AssertKey {
     #
     # + tomlKey - Inner key
     # + return - AssertKey object to reapply methods.    
-    function inner(string tomlKey) returns AssertKey {
-        self.innerData = <map<anydata>?>self.toml[tomlKey];
+    function dive(string tomlKey) returns AssertKey {
+
+        // If the current node is the root
+        if (self.innerData == ()) {
+            self.innerData = <map<anydata>?>self.toml[tomlKey];
+        }
+
+        // If the current node is nested
+        else {
+            self.innerData = <map<anydata?>>self.innerData[tomlKey];
+        }
+
+        self.stack.push(tomlKey);
+        return self;
+    }
+
+    # Hop out from the current inner key.
+    #
+    # + return - Return Value Description  
+    function hop() returns AssertKey {
+
+        // If the parent node is the root
+        if (self.stack.length() == 1) {
+            self.innerData = ();
+            return self;
+        }
+
+        // Set the innderData to its parent map
+        map<anydata>? targettedObject;
+        foreach int i in 0 ... self.stack.length() - 2 {
+            targettedObject = <map<anydata>?>self.toml[self.stack[i]];
+        }
+        self.innerData = targettedObject;
+
         return self;
     }
 
