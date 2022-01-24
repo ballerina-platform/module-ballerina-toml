@@ -117,6 +117,12 @@ class Lexer {
                     }
                 }
             }
+            "t" => { // Boolean true token
+                return check self.tokensInSequence("true", BOOLEAN);
+            }
+            "f" => { // Boolean false token
+                return check self.tokensInSequence("false", BOOLEAN);
+            }
         }
 
         // Check for values starting with an integer.
@@ -239,6 +245,17 @@ class Lexer {
     # + return - Character at the peek if not null  
     private function peek(int k) returns string? {
         return k < self.line.length() ? self.line[self.index + k] : ();
+    }
+
+    private function tokensInSequence(string chars, TOMLToken expectedToken) returns Token|LexicalError {
+        foreach string char in chars {
+            if (self.line[self.index] != char) {
+                return self.generateError("Invalid character '" + char + "' for a value", self.index);
+            }
+            self.index += 1;
+        }
+        self.lexeme = chars;
+        return self.generateToken(expectedToken);
     }
 
     # Generates a Lexical Error.

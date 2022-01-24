@@ -11,6 +11,7 @@ enum TOMLToken {
     BASIC_STRING,
     LITERAL_STRING,
     INTEGER,
+    BOOLEAN,
     EOL
 }
 

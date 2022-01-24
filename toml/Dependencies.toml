@@ -25,6 +25,17 @@ version = "0.0.0"
 
 [[package]]
 org = "ballerina"
+name = "lang.boolean"
+version = "0.0.0"
+dependencies = [
+	{org = "ballerina", name = "jballerina.java"}
+]
+modules = [
+	{org = "ballerina", packageName = "lang.boolean", moduleName = "lang.boolean"}
+]
+
+[[package]]
+org = "ballerina"
 name = "lang.int"
 version = "0.0.0"
 dependencies = [
@@ -91,6 +102,7 @@ name = "toml"
 version = "0.1.0"
 dependencies = [
 	{org = "ballerina", name = "io"},
+	{org = "ballerina", name = "lang.boolean"},
 	{org = "ballerina", name = "lang.int"},
 	{org = "ballerina", name = "regex"},
 	{org = "ballerina", name = "test"},

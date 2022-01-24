@@ -1,5 +1,6 @@
 import ballerina/test;
 
+// String tokens
 @test:Config {}
 function testBasicString() returns error? {
     Lexer lexer = setLexerString("someKey = \"someValue\"");
@@ -12,6 +13,7 @@ function testLiteralString() returns error? {
     check assertToken(lexer, LITERAL_STRING, 3, "somevalue");
 }
 
+// Integer tokens
 @test:Config {}
 function testPositiveDecimal() returns error? {
     Lexer lexer = setLexerString("+1");
@@ -82,4 +84,22 @@ function testLeadingZeroDecimal() {
 function testProcessIntegerValue() returns error? {
     AssertKey ak = check new AssertKey("somekey = 123");
     ak.hasKey("somekey", 123).close();
+}
+
+// Boolean tokens
+@test:Config {}
+function testBooleanValues() returns error? {
+    Lexer lexer = setLexerString("true");
+    lexer.state = EXPRESSION_VALUE;
+    check assertToken(lexer, BOOLEAN, lexeme = "true");
+
+    lexer = setLexerString("false");
+    lexer.state = EXPRESSION_VALUE;
+    check assertToken(lexer, BOOLEAN, lexeme = "false");
+}
+
+@test:Config {}
+function testProcessBooleanValues() returns error? {
+    AssertKey ak = check new AssertKey("somekey = true");
+    ak.hasKey("somekey", true).close();
 }

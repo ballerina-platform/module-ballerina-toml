@@ -1,4 +1,5 @@
 import ballerina/lang.'int;
+import ballerina/lang.'boolean;
 
 type ParsingError distinct error;
 
@@ -121,7 +122,8 @@ class Parser {
                 check self.checkMultipleTokens([ // TODO: add the remaning values
                     BASIC_STRING,
                     LITERAL_STRING,
-                    INTEGER
+                    INTEGER,
+                    BOOLEAN
                 ], "Expected a value after '='");
 
                 if (structure is map<anydata> ? (<map<anydata>>structure).hasKey(tomlKey) : structure != () ? alreadyExists : true && alreadyExists) {
@@ -146,6 +148,9 @@ class Parser {
             }
             INTEGER => {
                 return self.processTypeCastingError('int:fromString(self.currentToken.value));
+            }
+            BOOLEAN => {
+                return self.processTypeCastingError('boolean:fromString(self.currentToken.value));
             }
         }
     }
