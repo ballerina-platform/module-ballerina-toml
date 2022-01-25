@@ -1,5 +1,4 @@
 import ballerina/test;
-
 // String tokens
 @test:Config {}
 function testBasicString() returns error? {
@@ -11,6 +10,11 @@ function testBasicString() returns error? {
 function testLiteralString() returns error? {
     Lexer lexer = setLexerString("somekey = 'somevalue'");
     check assertToken(lexer, LITERAL_STRING, 3, "somevalue");
+}
+
+@test:Config {}
+function testUnclosedString() {
+    assertLexicalError("'hello");
 }
 
 // Integer tokens
