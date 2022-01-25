@@ -7,6 +7,7 @@ class Parser {
     # Input TOML lines
     private string[] lines;
     private int numLines;
+    private int lineIndex;
 
     # Output TOML object
     private map<anydata> tomlObject;
@@ -22,40 +23,44 @@ class Parser {
 
     function init(string[] lines) {
         self.lines = lines;
-        self.numLines = lines.length() - 1;
+        self.numLines = lines.length();
         self.tomlObject = {};
         self.lexer = new Lexer();
         self.currentToken = {token: DUMMY};
         self.nextToken = {token: DUMMY};
+        self.lineIndex = 0;
     }
 
     # Generates a map object for the TOML document.
-    # Initally, considers the predictions for the 'expression'
+    # Initally, considers the predictions for the 'expression', 'table', and 'array table'
     #
     # + return - If success, map object for the TOMl document. 
     # Else, a lexical or a parser error. 
     public function parse() returns map<anydata>|error {
 
         // Iterating each document line
-        foreach int i in 0 ... self.numLines {
-            self.lexer.line = self.lines[i];
-            self.lexer.index = 0;
-            self.lexer.lineNumber = i;
-            self.lexer.lexeme = "";
+        while self.lineIndex < self.numLines {
+            self.initLexer();
+            self.currentToken = check self.lexer.getToken();
             self.lexer.state = EXPRESSION_KEY;
 
-            self.currentToken = check self.lexer.getToken();
-
             match self.currentToken.token {
-                UNQUOTED_KEY|BASIC_STRING|LITERAL_STRING => {
+                UNQUOTED_KEY|BASIC_STRING|LITERAL_STRING => { // Process a key value
+
                     map<anydata> output = check self.keyValue(
                         self.tomlObject.hasKey(self.currentToken.value),
                         self.tomlObject);
+
+                    // Add the key-value pair to the final TOML object.
                     string tomlKey = output.keys()[0];
                     self.tomlObject[tomlKey] = output[tomlKey];
                     self.lexer.state = EXPRESSION_KEY;
                 }
+                // TODO: Add support for tables
+                // TODO: Add support for table arrays
             }
+
+            self.lineIndex += 1;
         }
 
         // Return the TOML object
@@ -64,31 +69,35 @@ class Parser {
 
     # Assert the next lexer token with the predicted token.
     #
-    # + assertedToken - Predicted token  
+    # + expectedTokens - Predicted token or tokens
     # + errorMessage - Parsing error if expected token not found  
-    # + isNextToken - If flag set, obtains the next token. Else, calls the lexer for new token.
+    # + allowEOL - If flag set, new lines are ignored. Used for processing multiline tokens.
     # + return - Parsing error if not found
-    private function checkToken(TOMLToken assertedToken, string errorMessage, boolean isNextToken = false) returns error? {
+    private function checkToken(TOMLToken|TOMLToken[] expectedTokens, string errorMessage, boolean allowEOL = false) returns error? {
         self.currentToken = check self.lexer.getToken();
 
-        if (self.currentToken.token != assertedToken) {
-            return self.generateError(errorMessage);
-        }
-    }
+        // Ignores the EOL tokens until a another token is received.
+        if (allowEOL) {
+            // Setup the lexer for the next line
+            self.lineIndex += 1;
+            self.initLexer();
 
-    # Assert the next lexer token with multiple predicted tokens.
-    #
-    # + assertedTokens - Predicted tokens  
-    # + errorMessage - Parsing error if expected token not found  
-    # + isNextToken - If flag set, obtains the next token. Else, calls the lexer for new token.
-    # + return - Parsing error if not found
-    private function checkMultipleTokens(TOMLToken[] assertedTokens, string errorMessage, boolean isNextToken = false) returns error? {
-        // self.currentToken = isNextToken ? self.nextToken : check self.lexer.getToken();
-        self.currentToken = check self.lexer.getToken();
-
-        if (assertedTokens.indexOf(self.currentToken.token) == ()) {
-            return self.generateError(errorMessage);
+            while (self.currentToken.token == EOL) {
+                self.currentToken = check self.lexer.getToken();
+            }
         }
+
+        // Generate an error if the expected token differ from the actual token.
+        if (expectedTokens is TOMLToken) {
+            if (self.currentToken.token != expectedTokens) {
+                return self.generateError(errorMessage);
+            }
+        } else {
+            if (expectedTokens.indexOf(self.currentToken.token) == ()) {
+                return self.generateError(errorMessage);
+            }
+        }
+
     }
 
     # Handles the rule: key -> simple-key | dotted-key
@@ -106,7 +115,7 @@ class Parser {
 
         match self.nextToken.token {
             DOT => {
-                check self.checkMultipleTokens([UNQUOTED_KEY, BASIC_STRING, LITERAL_STRING], "Expected a key after '.'", true);
+                check self.checkToken([UNQUOTED_KEY, BASIC_STRING, LITERAL_STRING], "Expected a key after '.'");
 
                 map<anydata> value = check self.keyValue(
                     // If the structure exists and already assigned a value that is not a table,
@@ -119,7 +128,7 @@ class Parser {
 
             KEY_VALUE_SEPERATOR => {
                 self.lexer.state = EXPRESSION_VALUE;
-                check self.checkMultipleTokens([ // TODO: add the remaning values
+                check self.checkToken([ // TODO: add the remaning values
                     BASIC_STRING,
                     LITERAL_STRING,
                     INTEGER,
@@ -189,6 +198,12 @@ class Parser {
             structure[tomlKey] = tomlValue;
             return structure;
         }
+    }
+
+    private function initLexer() {
+        self.lexer.line = self.lines[self.lineIndex];
+        self.lexer.index = 0;
+        self.lexer.lineNumber = self.lineIndex;
     }
 
     # Generates a Parsing Error Error.

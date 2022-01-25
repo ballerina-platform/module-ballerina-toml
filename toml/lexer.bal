@@ -119,12 +119,12 @@ class Lexer {
         }
 
         // Check for values starting with an integer.
-        if (self.state == EXPRESSION_VALUE && regex:matches(self.line[self.index], UNQUOTED_STRING_PATTERN)) {
+        if (self.state == EXPRESSION_VALUE && regex:matches(self.line[self.index], DECIMAL_DIGIT_PATTERN)) {
             return check self.iterate(self.digit(DECIMAL_DIGIT_PATTERN), INTEGER);
         }
 
         //TODO: Generate a lexical error when none of the characters are found.
-        return self.generateToken(EOL);
+        return self.generateError("Invalid character '" + self.line[self.index] + "'", self.index);
     }
 
     # Check for the lexemes to create an basic string.
@@ -251,9 +251,9 @@ class Lexer {
     # Check if the tokens adhere to the given string.
     #
     # + chars - Expected string  
-    # + expectedToken - Output token if succeed
+    # + successToken - Output token if succeed
     # + return - If success, returns the token. Else, returns the parsing error.  
-    private function tokensInSequence(string chars, TOMLToken expectedToken) returns Token|LexicalError {
+    private function tokensInSequence(string chars, TOMLToken successToken) returns Token|LexicalError {
         foreach string char in chars {
             if (self.line[self.index] != char) {
                 return self.generateError("Invalid character '" + char + "' for a value", self.index);
@@ -261,7 +261,7 @@ class Lexer {
             self.index += 1;
         }
         self.lexeme = chars;
-        return self.generateToken(expectedToken);
+        return self.generateToken(successToken);
     }
 
     # Generates a Lexical Error.

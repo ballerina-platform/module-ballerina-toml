@@ -68,6 +68,12 @@ function testInvalidSimpleKey() {
     assertParsingError("somekey = somevalue", isLexical = true);
     assertParsingError("somekey = #somecomment");
     assertParsingError("somekey somevalue");
+    assertParsingError("somekey =");
+}
+
+@test:Config {}
+function testMultipleKeysOneLine() {
+    assertLexicalError("somekey1 = somevalue1 somekey2 = somevalue2");
 }
 
 @test:Config {}
