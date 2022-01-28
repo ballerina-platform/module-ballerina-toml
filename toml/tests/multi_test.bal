@@ -27,10 +27,16 @@ function testValidQuotesWithNewlines() returns error? {
 }
 
 @test:Config {}
-function testMultilineEscapeWhitespaces() returns error? {
+function testMultilineEscape() returns error? {
     Lexer lexer = setLexerString("\"\"\"escape\\  whitespace\"\"\"");
     lexer.state = MULTILINE_STRING;
     check assertToken(lexer, MULTI_STRING_ESCAPE, 3);
+}
+
+@test:Config {}
+function testMultilineEscapeWhitespaces() returns error? {
+    AssertKey ak = check new AssertKey("str1 = \"\"\"escape\\  whitespace\"\"\"");
+    ak.hasKey("str1", "escapewhitespace").close();
 }
 
 @test:Config {}

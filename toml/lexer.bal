@@ -45,7 +45,7 @@ class Lexer {
             return check self.iterate(self.unquotedKey, UNQUOTED_KEY);
         }
 
-        if (self.state == MULTILINE_STRING) {
+        if (self.state == MULTILINE_STRING || self.state == MULTILINE_ESCAPE) {
             // Process the escape symbol
             if (self.line[self.index] == "\\") {
                 return self.generateToken(MULTI_STRING_ESCAPE);
@@ -170,7 +170,6 @@ class Lexer {
     # + return - True if the end of the string, An error message for an invalid character.  
     private function multilineBasicString(int i) returns boolean|LexicalError {
         if (!regex:matches(self.line[i], BASIC_STRING_PATTERN)) {
-
             if (self.line[i] == "\"") {
                 self.index = i;
                 if (self.peek(1) == "\"" && self.peek(2) == "\"") {
@@ -185,6 +184,11 @@ class Lexer {
         if (self.line[i] == "\\") {
             self.index = i - 1;
             return true;
+        }
+
+        // Ignore whitespaces if the multiline escape symbol is detected
+        if (self.state == MULTILINE_ESCAPE && self.line == " ") {
+            return false;
         }
 
         self.lexeme += self.line[i];

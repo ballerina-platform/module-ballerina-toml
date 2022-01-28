@@ -156,6 +156,7 @@ class Parser {
     private function multiBasicString() returns error? {
         self.lexer.state = MULTILINE_STRING;
         self.multiLexeme = "";
+        boolean escape = false;
 
         // Predict the next toknes
         check self.checkToken([
@@ -170,14 +171,19 @@ class Parser {
             match self.currentToken.token {
                 MULTI_STRING_CHARS => { // Regular basic string
                     self.multiLexeme += self.currentToken.value;
+                    escape = false;
+                    self.lexer.state = MULTILINE_STRING;
                 }
                 MULTI_STRING_ESCAPE => { // Escape token
-                    // TODO: implement multi string escape
+                    escape = true;
+                    self.lexer.state = MULTILINE_ESCAPE;
                 }
                 EOL => {
                     self.lineIndex += 1;
                     self.initLexer();
-                    self.multiLexeme += "\\n";
+                    if (!escape) {
+                        self.multiLexeme += "\\n";
+                    }
                 }
             }
             check self.checkToken([
