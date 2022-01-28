@@ -45,6 +45,13 @@ class Lexer {
             return check self.iterate(self.unquotedKey, UNQUOTED_KEY);
         }
 
+        if (self.state == MULTILINE_STRING) {
+            // Process multiline string regular characters
+            if (regex:matches(self.line[self.index], BASIC_STRING_PATTERN)) {
+                return check self.iterate(self.multilineBasicString, MULTI_STRING_CHARS);
+            }
+        }
+
         match self.line[self.index] {
             " " => { // Whitespace
                 self.index += 1;
@@ -61,6 +68,7 @@ class Lexer {
 
                 // Multi-line basic strings
                 if (self.peek(1) == "\"" && self.peek(2) == "\"") {
+                    self.index += 2;
                     return self.generateToken(MULTI_STRING_DELIMETER);
                 }
 
@@ -149,6 +157,26 @@ class Lexer {
         return false;
     }
 
+    # Check for the lexemes to create a basic string for a line in multiline strings.
+    #
+    # + i - Current index
+    # + return - True if the end of the string, An error message for an invalid character.  
+    private function multilineBasicString(int i) returns boolean|LexicalError {
+        if (!regex:matches(self.line[i], BASIC_STRING_PATTERN)) {
+            if (self.line[i] == "\"") {
+                self.index = i;
+                if (self.peek(1) == "\"" && self.peek(2) == "\"") {
+                    return true;
+                }
+            } else {
+                return self.generateError("Invalid character \"" + self.line[i] + "\" for a multi-line string", i);
+            }
+        }
+
+        self.lexeme += self.line[i];
+        return false;
+    }
+
     # Check for the lexemes to create an literal string.
     #
     # + i - Current index
@@ -219,15 +247,16 @@ class Lexer {
         };
     }
 
-    # Encapsulate a function to run isolatedly on the remaining characters. 
+    # Encapsulate a function to run isolatedly on the remaining characters.
     # Function lookaheads to capture the lexems for a targetted token.
     #
-    # + process - Function to be executed on each iteration
-    # + return - Lexical Error if available 
+    # + process - Function to be executed on each iteration  
+    # + successToken - Token to be returned on successful traverse of the characters
+    # + message - Message to display if the end delimeter is not shown
+    # + return - Lexical Error if available
     private function iterate(function (int) returns boolean|LexicalError process,
                             TOMLToken successToken,
-                            string message = "",
-                            boolean isMultiline = false) returns Token|LexicalError {
+                            string message = "") returns Token|LexicalError {
 
         // Iterate the given line to check the DFA
         foreach int i in self.index ... self.line.length() - 1 {
@@ -237,7 +266,7 @@ class Lexer {
         }
 
         // Sends a signal to the parser to provide more lines to return a token.
-        if (isMultiline) {
+        if (self.state == MULTILINE_STRING) {
             return self.generateToken(EOL);
         }
 

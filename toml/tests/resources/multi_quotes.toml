@@ -1,5 +1,5 @@
-str1 = """single astrophe'
-double astrophe''
-single quote"
-double quotes""
+str1 = """single-quote" 
+double-quotes"" 
+single-apastrophe' 
+double-appastrophe'' 
 """

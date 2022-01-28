@@ -18,6 +18,9 @@ class Parser {
     # Next token
     private Token nextToken;
 
+    # Buffer for multi-line values
+    private string multiLexeme;
+
     # Lexical analyzer tool for getting the tokens
     private Lexer lexer;
 
@@ -29,6 +32,7 @@ class Parser {
         self.currentToken = {token: DUMMY};
         self.nextToken = {token: DUMMY};
         self.lineIndex = 0;
+        self.multiLexeme = "";
     }
 
     # Generates a map object for the TOML document.
@@ -60,6 +64,9 @@ class Parser {
                 // TODO: Add support for table arrays
             }
 
+            //TODO: Check remaining tokens
+            check self.checkToken(EOL, "Cannot have anymore tokens in the same line");
+
             self.lineIndex += 1;
         }
 
@@ -71,21 +78,9 @@ class Parser {
     #
     # + expectedTokens - Predicted token or tokens
     # + errorMessage - Parsing error if expected token not found  
-    # + allowEOL - If flag set, new lines are ignored. Used for processing multiline tokens.
     # + return - Parsing error if not found
-    private function checkToken(TOMLToken|TOMLToken[] expectedTokens, string errorMessage, boolean allowEOL = false) returns error? {
+    private function checkToken(TOMLToken|TOMLToken[] expectedTokens, string errorMessage) returns error? {
         self.currentToken = check self.lexer.getToken();
-
-        // Ignores the EOL tokens until a another token is received.
-        if (allowEOL) {
-            // Setup the lexer for the next line
-            self.lineIndex += 1;
-            self.initLexer();
-
-            while (self.currentToken.token == EOL) {
-                self.currentToken = check self.lexer.getToken();
-            }
-        }
 
         // Generate an error if the expected token differ from the actual token.
         if (expectedTokens is TOMLToken) {
@@ -131,9 +126,16 @@ class Parser {
                 check self.checkToken([ // TODO: add the remaning values
                     BASIC_STRING,
                     LITERAL_STRING,
+                    MULTI_STRING_DELIMETER,
                     INTEGER,
                     BOOLEAN
                 ], "Expected a value after '='");
+
+                match self.currentToken.token { // Check for values that span multiple lines
+                    MULTI_STRING_DELIMETER => {
+                        check self.multiBasicString();
+                    }
+                }
 
                 if (structure is map<anydata> ? (<map<anydata>>structure).hasKey(tomlKey) : structure != () ? alreadyExists : true && alreadyExists) {
                     return self.generateError("Duplicate key '" + tomlKey + "'");
@@ -145,6 +147,35 @@ class Parser {
                 return self.generateError("Expected a '.' or a '=' after a key");
             }
         }
+    }
+
+    private function multiBasicString() returns error? {
+        self.multiLexeme = "";
+
+        // Predict the next toknes
+        check self.checkToken([
+            MULTI_STRING_CHARS,
+            MULTI_STRING_ESCAPE,
+            MULTI_STRING_DELIMETER
+        ], "Invalid token inside a multi-line string");
+
+        // Predicting the next tokens until the end of the string.
+        while (self.currentToken.token != MULTI_STRING_DELIMETER) {
+            match self.currentToken.token {
+                MULTI_STRING_CHARS => { // Regular basic string
+                    self.multiLexeme += self.currentToken.value;
+                }
+                MULTI_STRING_ESCAPE => { // Escape token
+                    // TODO: implement multi string escape
+                }
+            }
+            check self.checkToken([
+                MULTI_STRING_CHARS,
+                MULTI_STRING_ESCAPE
+            ], "Invalid token inside a multi-line string");
+        }
+
+        self.lexer.state = EXPRESSION_KEY;
     }
 
     # Cast the token to the respective Ballerina type.
