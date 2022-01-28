@@ -3,7 +3,7 @@ import ballerina/regex;
 enum RegexPatterns {
     UNQUOTED_STRING_PATTERN = "[a-zA-Z0-9\\-\\_]{1}",
     BASIC_STRING_PATTERN = "[\\x20\\x09\\x21\\x23-\\x5b\\x5d-\\x7e\\x80-\\xd7ff\\xe000-\\xffff]{1}",
-    LITERAL_STRING_PATTERN = "[\\x09\\x20-\\x26\\x28-\\x7e\\x80-\\xd7ff\\xe000-\\xffff]{1}",
+    LITERAL_STRING_PATTERN = "[\\x20\\x09-\\x26\\x28-\\x7e\\x80-\\xd7ff\\xe000-\\xffff]{1}",
     ESCAPE_STRING_PATTERN = "[\\x22\\x5c\\x62\\x66\\x6e\\x72\\x74\\x75\\x55]{1}",
     DECIMAL_DIGIT_PATTERN = "[0-9]{1}",
     HEXADECIMAL_DIGIT_PATTERN = "[0-9a-fA-F]{1}",
@@ -46,10 +46,16 @@ class Lexer {
         }
 
         if (self.state == MULTILINE_STRING) {
+            // Process the escape symbol
+            if (self.line[self.index] == "\\") {
+                return self.generateToken(MULTI_STRING_ESCAPE);
+            }
+
             // Process multiline string regular characters
             if (regex:matches(self.line[self.index], BASIC_STRING_PATTERN)) {
                 return check self.iterate(self.multilineBasicString, MULTI_STRING_CHARS);
             }
+
         }
 
         match self.line[self.index] {
@@ -153,6 +159,7 @@ class Lexer {
             }
             return self.generateError("Invalid character \"" + self.line[i] + "\" for a basic string", i);
         }
+
         self.lexeme += self.line[i];
         return false;
     }
@@ -163,6 +170,7 @@ class Lexer {
     # + return - True if the end of the string, An error message for an invalid character.  
     private function multilineBasicString(int i) returns boolean|LexicalError {
         if (!regex:matches(self.line[i], BASIC_STRING_PATTERN)) {
+
             if (self.line[i] == "\"") {
                 self.index = i;
                 if (self.peek(1) == "\"" && self.peek(2) == "\"") {
@@ -171,6 +179,12 @@ class Lexer {
             } else {
                 return self.generateError("Invalid character \"" + self.line[i] + "\" for a multi-line string", i);
             }
+        }
+
+        // Process the escape symbol
+        if (self.line[i] == "\\") {
+            self.index = i - 1;
+            return true;
         }
 
         self.lexeme += self.line[i];
