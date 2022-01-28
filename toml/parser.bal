@@ -140,7 +140,8 @@ class Parser {
                     }
                 }
 
-                if (structure is map<anydata> ? (<map<anydata>>structure).hasKey(tomlKey) : structure != () ? alreadyExists : true && alreadyExists) {
+                if (structure is map<anydata> ? (<map<anydata>>structure).hasKey(tomlKey)
+                : structure != () ? alreadyExists : true && alreadyExists) {
                     return self.generateError("Duplicate key '" + tomlKey + "'");
                 } else {
                     return self.buildInternalTable(tomlKey, check self.getProcessedValue(), structure);
@@ -153,13 +154,15 @@ class Parser {
     }
 
     private function multiBasicString() returns error? {
+        self.lexer.state = MULTILINE_STRING;
         self.multiLexeme = "";
 
         // Predict the next toknes
         check self.checkToken([
             MULTI_STRING_CHARS,
             MULTI_STRING_ESCAPE,
-            MULTI_STRING_DELIMETER
+            MULTI_STRING_DELIMETER,
+            EOL
         ], "Invalid token inside a multi-line string");
 
         // Predicting the next tokens until the end of the string.
@@ -171,10 +174,17 @@ class Parser {
                 MULTI_STRING_ESCAPE => { // Escape token
                     // TODO: implement multi string escape
                 }
+                EOL => {
+                    self.lineIndex += 1;
+                    self.initLexer();
+                    self.multiLexeme += "\\n";
+                }
             }
             check self.checkToken([
                 MULTI_STRING_CHARS,
-                MULTI_STRING_ESCAPE
+                MULTI_STRING_ESCAPE,
+                MULTI_STRING_DELIMETER,
+                EOL
             ], "Invalid token inside a multi-line string");
         }
 
@@ -194,6 +204,9 @@ class Parser {
             }
             BOOLEAN => {
                 return self.processTypeCastingError('boolean:fromString(self.currentToken.value));
+            }
+            MULTI_STRING_DELIMETER => {
+                return self.multiLexeme;
             }
         }
     }

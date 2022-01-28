@@ -2,7 +2,7 @@ import ballerina/regex;
 
 enum RegexPatterns {
     UNQUOTED_STRING_PATTERN = "[a-zA-Z0-9\\-\\_]{1}",
-    BASIC_STRING_PATTERN = "[/s\\x21\\x23-\\x5b\\x5d-\\x7e\\x80-\\xd7ff\\xe000-\\xffff]{1}",
+    BASIC_STRING_PATTERN = "[\\x20\\x09\\x21\\x23-\\x5b\\x5d-\\x7e\\x80-\\xd7ff\\xe000-\\xffff]{1}",
     LITERAL_STRING_PATTERN = "[\\x09\\x20-\\x26\\x28-\\x7e\\x80-\\xd7ff\\xe000-\\xffff]{1}",
     ESCAPE_STRING_PATTERN = "[\\x22\\x5c\\x62\\x66\\x6e\\x72\\x74\\x75\\x55]{1}",
     DECIMAL_DIGIT_PATTERN = "[0-9]{1}",
@@ -35,8 +35,8 @@ class Lexer {
 
         // Reset the parameters at the end of the line.
         if (self.index >= self.line.length()) {
-            self.index = 0;
-            self.line = "";
+            // self.index = 0;
+            // self.line = "";
             return {token: EOL};
         }
 
@@ -265,11 +265,6 @@ class Lexer {
             }
         }
         self.index = self.line.length() - 1;
-
-        // Sends a signal to the parser to provide more lines to return a token.
-        if (self.state == MULTILINE_STRING) {
-            return self.generateToken(EOL);
-        }
 
         // If the lexer does not expect an end delimiter at EOL, returns the token. Else it an error.
         return message.length() == 0 ? self.generateToken(successToken) : self.generateError(message, self.index);

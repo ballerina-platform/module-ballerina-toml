@@ -23,11 +23,11 @@ function testValidQuotesInMultiline() returns error? {
 @test:Config {}
 function testValidQuotesWithNewlines() returns error? {
     AssertKey ak = check new AssertKey("multi_quotes", true);
-    ak.hasKey("str1", "single-quote\" \\ndouble-quotes\"\" \\nsingle-apastrophe' \\ndouble-appastrophe'' ").close();
+    ak.hasKey("str1", "single-quote\" \\ndouble-quotes\"\" \\nsingle-apastrophe' \\ndouble-appastrophe'' \\n").close();
 }
 
 @test:Config {}
-function testEscapeWhitespaces() returns error? {
+function testMultilineEscapeWhitespaces() returns error? {
     Lexer lexer = setLexerString("\"\"\"escape\\  whitespace\"\"\"");
     check assertToken(lexer, MULTI_STRING_CHARS, 2, "escapewhitespace");
 }
