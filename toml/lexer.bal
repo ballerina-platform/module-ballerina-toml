@@ -264,6 +264,7 @@ class Lexer {
                 return self.generateToken(successToken);
             }
         }
+        self.index = self.line.length() - 1;
 
         // Sends a signal to the parser to provide more lines to return a token.
         if (self.state == MULTILINE_STRING) {

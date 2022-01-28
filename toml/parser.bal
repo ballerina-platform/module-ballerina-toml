@@ -64,8 +64,11 @@ class Parser {
                 // TODO: Add support for table arrays
             }
 
-            //TODO: Check remaining tokens
-            check self.checkToken(EOL, "Cannot have anymore tokens in the same line");
+            // Comments and new lines are ignored.
+            // However, other expressions cannot have addtional tokens in their line.
+            if (self.currentToken.token != EOL) {
+                check self.checkToken(EOL, "Cannot have anymore tokens in the same line");
+            }
 
             self.lineIndex += 1;
         }
