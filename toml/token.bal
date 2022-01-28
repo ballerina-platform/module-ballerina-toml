@@ -12,7 +12,8 @@ enum TOMLToken {
     LITERAL_STRING,
     INTEGER,
     BOOLEAN,
-    EOL
+    EOL,
+    MULTI_STRING_DELIMETER
 }
 
 enum State {

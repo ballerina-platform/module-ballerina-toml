@@ -58,6 +58,12 @@ class Lexer {
                 return self.generateToken(KEY_VALUE_SEPERATOR);
             }
             "\"" => { // Basic strings
+
+                // Multi-line basic strings
+                if (self.peek(1) == "\"" && self.peek(2) == "\"") {
+                    return self.generateToken(MULTI_STRING_DELIMETER);
+                }
+
                 self.index += 1;
                 return check self.iterate(self.basicString, BASIC_STRING, "Expected '\"' at the end of the basic string");
             }
