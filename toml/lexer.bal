@@ -173,6 +173,7 @@ class Lexer {
             if (self.line[i] == "\"") {
                 self.index = i;
                 if (self.peek(1) == "\"" && self.peek(2) == "\"") {
+                    self.index = i - 1;
                     return true;
                 }
             } else {
@@ -187,11 +188,12 @@ class Lexer {
         }
 
         // Ignore whitespaces if the multiline escape symbol is detected
-        if (self.state == MULTILINE_ESCAPE && self.line == " ") {
+        if (self.state == MULTILINE_ESCAPE && self.line[i] == " ") {
             return false;
         }
 
         self.lexeme += self.line[i];
+        self.state = MULTILINE_STRING;
         return false;
     }
 
@@ -294,7 +296,7 @@ class Lexer {
     # + k - Number of characters to peek
     # + return - Character at the peek if not null  
     private function peek(int k) returns string? {
-        return k < self.line.length() ? self.line[self.index + k] : ();
+        return self.index + k < self.line.length() ? self.line[self.index + k] : ();
     }
 
     # Check if the tokens adhere to the given string.

@@ -41,8 +41,8 @@ function testMultilineEscapeWhitespaces() returns error? {
 
 @test:Config {}
 function testMultilineEscapeNewlines() returns error? {
-    AssertKey ak = check new AssertKey("multi_escape.toml", true);
-    ak.hasKey("str", "escapewhitespace").close();
+    AssertKey ak = check new AssertKey("multi_escape", true);
+    ak.hasKey("str1", "escapewhitespace").close();
 }
 
 @test:Config {}

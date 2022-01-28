@@ -172,16 +172,14 @@ class Parser {
                 MULTI_STRING_CHARS => { // Regular basic string
                     self.multiLexeme += self.currentToken.value;
                     escape = false;
-                    self.lexer.state = MULTILINE_STRING;
                 }
                 MULTI_STRING_ESCAPE => { // Escape token
-                    escape = true;
                     self.lexer.state = MULTILINE_ESCAPE;
                 }
                 EOL => {
                     self.lineIndex += 1;
                     self.initLexer();
-                    if (!escape) {
+                    if !(self.lexer.state == MULTILINE_ESCAPE) {
                         self.multiLexeme += "\\n";
                     }
                 }
