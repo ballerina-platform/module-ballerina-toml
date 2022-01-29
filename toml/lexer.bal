@@ -72,6 +72,15 @@ class Lexer {
                 self.state = EXPRESSION_VALUE;
                 return self.generateToken(KEY_VALUE_SEPERATOR);
             }
+            "[" => {
+                return self.generateToken(ARRAY_START);
+            }
+            "]" => {
+                return self.generateToken(ARRAY_END);
+            }
+            "," => {
+                return self.generateToken(ARRAY_SEPARATOR);
+            }
             "\"" => { // Basic strings
 
                 // Multi-line basic strings
@@ -114,7 +123,7 @@ class Lexer {
                         self.lexeme = "0b";
                         return check self.iterate(self.digit(BINARY_DIGIT_PATTERN), INTEGER);
                     }
-                    ()|" "|"#"|"." => { // Decimal numbers
+                    ()|" "|"#"|"."|"," => { // Decimal numbers
                         self.lexeme = "0";
                         return self.generateToken(INTEGER);
                     }
@@ -326,8 +335,14 @@ class Lexer {
                 }
 
                 // Float number allows only a decimal number a prefix.
-                // Check for decimal points and exponentials in decimal numbers
-                if (digitPattern == DECIMAL_DIGIT_PATTERN && (self.line[i] == "." || self.line[i] == "e" || self.line[i] == "E")) {
+                // Check for decimal points and exponentials in decimal numbers.
+                // Check for array separators and array end symbol.
+                if (digitPattern == DECIMAL_DIGIT_PATTERN && (
+                                self.line[i] == "." ||
+                                self.line[i] == "e" ||
+                                self.line[i] == "E" ||
+                                self.line[i] == "," ||
+                                self.line[i] == "]")) {
                     self.index = i - 1;
                     return true;
                 }
@@ -384,6 +399,7 @@ class Lexer {
             self.index += 1;
         }
         self.lexeme += chars;
+        self.index -= 1;
         return self.generateToken(successToken);
     }
 

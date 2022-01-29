@@ -20,7 +20,10 @@ enum TOMLToken {
     MULTI_LSTRING_CHARS,
     INFINITY,
     EXPONENTIAL,
-    NAN
+    NAN,
+    ARRAY_START,
+    ARRAY_END,
+    ARRAY_SEPARATOR
 }
     
 enum State {
