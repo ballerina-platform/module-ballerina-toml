@@ -170,7 +170,6 @@ class Lexer {
             return check self.iterate(self.digit(DECIMAL_DIGIT_PATTERN), INTEGER);
         }
 
-        //TODO: Generate a lexical error when none of the characters are found.
         return self.generateError("Invalid character '" + self.line[self.index] + "'", self.index);
     }
 
@@ -375,7 +374,7 @@ class Lexer {
             }
             self.index += 1;
         }
-        self.lexeme = chars;
+        self.lexeme += chars;
         return self.generateToken(successToken);
     }
 

@@ -100,23 +100,23 @@ function testProcessBooleanValues() returns error? {
 @test:Config {}
 function testInfinityToken() returns error? {
     Lexer lexer = setLexerString("inf", EXPRESSION_VALUE);
-    check assertToken(lexer, INFINITY);
+    check assertToken(lexer, INFINITY, lexeme = "+inf");
 
     lexer = setLexerString("+inf");
-    check assertToken(lexer, INFINITY);
+    check assertToken(lexer, INFINITY, lexeme = "+inf");
 
     lexer = setLexerString("-inf");
-    check assertToken(lexer, INFINITY, lexeme = "-");
+    check assertToken(lexer, INFINITY, lexeme = "-inf");
 }
 
 @test:Config {}
 function testNanToken() returns error? {
     Lexer lexer = setLexerString("nan", EXPRESSION_VALUE);
-    check assertToken(lexer, NAN);
+    check assertToken(lexer, NAN, lexeme = "+nan");
 
     lexer = setLexerString("+nan", EXPRESSION_VALUE);
-    check assertToken(lexer, NAN);
+    check assertToken(lexer, NAN, lexeme = "+nan");
 
     lexer = setLexerString("-nan", EXPRESSION_VALUE);
-    check assertToken(lexer, NAN);
+    check assertToken(lexer, NAN, lexeme = "-nan");
 }
