@@ -52,16 +52,16 @@ function testDecimalZero() returns error? {
 @test:Config {}
 function testUnderscoreDecimal() returns error? {
     Lexer lexer = setLexerString("111_222_333", EXPRESSION_VALUE);
-    check assertToken(lexer, INTEGER, lexeme = "111_222_333");
+    check assertToken(lexer, INTEGER, lexeme = "111222333");
 
     lexer = setLexerString("0xdead_beef", EXPRESSION_VALUE);
-    check assertToken(lexer, INTEGER, lexeme = "0xdead_beef");
+    check assertToken(lexer, INTEGER, lexeme = "0xdeadbeef");
 
     lexer = setLexerString("0b001_010", EXPRESSION_VALUE);
-    check assertToken(lexer, INTEGER, lexeme = "0b001_010");
+    check assertToken(lexer, INTEGER, lexeme = "0b001010");
 
     lexer = setLexerString("0o007_610", EXPRESSION_VALUE);
-    check assertToken(lexer, INTEGER, lexeme = "0o007_610");
+    check assertToken(lexer, INTEGER, lexeme = "0o007610");
 }
 
 @test:Config {}

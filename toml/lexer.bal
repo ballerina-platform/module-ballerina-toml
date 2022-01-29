@@ -318,7 +318,6 @@ class Lexer {
                         }
                         // check if the next character is a digit
                         if (regex:matches(<string>nextChr, digitPattern)) {
-                            self.lexeme += "_";
                             return false;
                         }
                         return self.generateError("Invalid character \"" + self.line[i] + "\" after '_'", i);
