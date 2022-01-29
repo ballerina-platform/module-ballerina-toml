@@ -123,7 +123,7 @@ class Lexer {
                         self.lexeme = "0b";
                         return check self.iterate(self.digit(BINARY_DIGIT_PATTERN), INTEGER);
                     }
-                    ()|" "|"#"|"."|"," => { // Decimal numbers
+                    ()|" "|"#"|"."|","|"]" => { // Decimal numbers
                         self.lexeme = "0";
                         return self.generateToken(INTEGER);
                     }

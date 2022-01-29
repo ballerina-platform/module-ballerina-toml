@@ -36,6 +36,23 @@ function testArrayEndingWithSeparator() returns error? {
 
 @test:Config {}
 function testArrayWithDifferentValues() returns error? {
-    AssertKey ak = check new AssertKey("arr = [1, 's', true, [1, 2], 1.0");
+    AssertKey ak = check new AssertKey("arr = [1, 's', true, [1, 2], 1.0]");
     ak.hasKey("arr", [1, "s", true, [1, 2], 1.0]).close();
+}
+
+@test:Config {}
+function testArrayForMultipleLines() returns error? {
+    AssertKey ak = check new AssertKey("array_multi", true);
+    ak.hasKey("arr", [1, "s", true, [1, 2], 1.0]).close();
+}
+
+@test:Config {}
+function testUnclosedArray() {
+    assertParsingError("arr = [1, 2");
+}
+
+@test:Config {}
+function testEmptyArray() returns error? {
+    AssertKey ak = check new AssertKey("arr = []");
+    ak.hasKey("arr",[]).close();
 }
