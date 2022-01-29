@@ -133,6 +133,7 @@ class Parser {
 
             KEY_VALUE_SEPERATOR => {
                 self.lexer.state = EXPRESSION_VALUE;
+
                 check self.checkToken([ // TODO: add the remaning values
                     BASIC_STRING,
                     LITERAL_STRING,
@@ -142,25 +143,7 @@ class Parser {
                     BOOLEAN
                 ], "Expected a value after '='");
 
-                match self.currentToken.token { // Check for values that span multiple lines
-                    MULTI_BSTRING_DELIMITER => {
-                        check self.multiBasicString();
-                        self.value = self.lexemeBuffer;
-                    }
-                    MULTI_LSTRING_DELIMITER => {
-                        check self.multiLiteralString();
-                        self.value = self.lexemeBuffer;
-                    }
-                    INTEGER => {
-                        check self.number();
-                    }
-                    BOOLEAN => {
-                        self.value = check self.processTypeCastingError('boolean:fromString(self.currentToken.value));
-                    }
-                    _ => {
-                        self.value = self.currentToken.value;
-                    }
-                }
+                self.value = check self.dataValue();
 
                 if (structure is map<anydata> ? (<map<anydata>>structure).hasKey(tomlKey)
                 : structure != () ? alreadyExists : true && alreadyExists) {
@@ -171,6 +154,32 @@ class Parser {
             }
             _ => {
                 return self.generateError("Expected a '.' or a '=' after a key");
+            }
+        }
+    }
+
+    private function dataValue() returns anydata|error {
+
+        match self.currentToken.token { // Check for values that span multiple lines
+            MULTI_BSTRING_DELIMITER => {
+                check self.multiBasicString();
+                return self.lexemeBuffer;
+            }
+            MULTI_LSTRING_DELIMITER => {
+                check self.multiLiteralString();
+                return self.lexemeBuffer;
+            }
+            INTEGER => {
+                return check self.number();
+            }
+            BOOLEAN => {
+                return check self.processTypeCastingError('boolean:fromString(self.currentToken.value));
+            }
+            ARRAY_START => {
+                check self.array();
+            }
+            _ => {
+                return self.currentToken.value;
             }
         }
     }
@@ -252,13 +261,13 @@ class Parser {
     #
     # + fractional - Flag is set when processing the fractional segment
     # + return - Parsing error if occurred
-    private function number(boolean fractional = false) returns error? {
+    private function number(boolean fractional = false) returns anydata|error {
         self.lexemeBuffer += self.currentToken.value;
         self.nextToken = check self.lexer.getToken();
 
         match self.nextToken.token {
             EOL => { // Integer 
-                self.value = fractional ? check self.processTypeCastingError('float:fromString(self.lexemeBuffer))
+                return fractional ? check self.processTypeCastingError('float:fromString(self.lexemeBuffer))
                                         : check self.processTypeCastingError('int:fromString(self.lexemeBuffer));
             }
             EXPONENTIAL => { // Handles exponential numbers
@@ -267,7 +276,7 @@ class Parser {
                 // Evaluating the exponential value
                 float exponent = <float>(check self.processTypeCastingError('float:fromString(self.currentToken.value)));
                 float prefix = <float>(check self.processTypeCastingError('float:fromString(self.lexemeBuffer)));
-                self.value = prefix * 'float:pow(10, exponent);
+                return prefix * 'float:pow(10, exponent);
             }
             DOT => { // Handles fractional numbers
                 if (fractional) {
@@ -275,27 +284,35 @@ class Parser {
                 }
                 check self.checkToken(INTEGER, "Expected an integer after the decimal point");
                 self.lexemeBuffer += ".";
-                check self.number(true);
+                return check self.number(true);
             }
         }
     }
 
-    # Cast the token to the respective Ballerina type.
-    #
-    # + return - returns the Ballerian type  
-    private function getProcessedValue() returns anydata|ParsingError {
+    private function array() returns error? {
+        self.value = [];
+
+        check self.checkToken([ // TODO: add the remaning values
+            BASIC_STRING,
+            LITERAL_STRING,
+            MULTI_BSTRING_DELIMITER,
+            MULTI_LSTRING_DELIMITER,
+            INTEGER,
+            BOOLEAN,
+            ARRAY_START,
+            ARRAY_END,
+            EOL
+        ], "Expected a value after '='");
+
         match self.currentToken.token {
-            BASIC_STRING|LITERAL_STRING => {
-                return self.currentToken.value;
+            EOL => {
+                
             }
-            INTEGER => {
-                return self.processTypeCastingError('int:fromString(self.currentToken.value));
+            ARRAY_END => {
+
             }
-            BOOLEAN => {
-                return self.processTypeCastingError('boolean:fromString(self.currentToken.value));
-            }
-            MULTI_BSTRING_DELIMITER|MULTI_LSTRING_DELIMITER => {
-                return self.lexemeBuffer;
+            _ => { // Array value
+                // check self.dataValue();
             }
         }
     }

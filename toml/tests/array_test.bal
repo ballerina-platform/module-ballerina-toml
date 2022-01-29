@@ -27,3 +27,15 @@ function testArraySeparator() returns error? {
     lexer = setLexerString("[[1], 2]", EXPRESSION_VALUE);
     check assertToken(lexer, ARRAY_SEPARATOR, 5);
 }
+
+@test:Config {}
+function testArrayEndingWithSeparator() returns error? {
+    AssertKey ak = check new AssertKey("arr = [1,2,]");
+    ak.hasKey("arr", [1, 2]).close();
+}
+
+@test:Config {}
+function testArrayWithDifferentValues() returns error? {
+    AssertKey ak = check new AssertKey("arr = [1, 's', true, [1, 2], 1.0");
+    ak.hasKey("arr", [1, "s", true, [1, 2], 1.0]).close();
+}
