@@ -1,4 +1,5 @@
 import ballerina/test;
+
 // String tokens
 @test:Config {}
 function testBasicString() returns error? {
@@ -20,56 +21,46 @@ function testUnclosedString() {
 // Integer tokens
 @test:Config {}
 function testPositiveDecimal() returns error? {
-    Lexer lexer = setLexerString("+1");
-    lexer.state = EXPRESSION_VALUE;
+    Lexer lexer = setLexerString("+1", EXPRESSION_VALUE);
     check assertToken(lexer, INTEGER, lexeme = "+1");
 }
 
 @test:Config {}
 function testNegativeDecimal() returns error? {
-    Lexer lexer = setLexerString("-1");
-    lexer.state = EXPRESSION_VALUE;
+    Lexer lexer = setLexerString("-1", EXPRESSION_VALUE);
     check assertToken(lexer, INTEGER, lexeme = "-1");
 }
 
 @test:Config {}
 function testDecimal() returns error? {
-    Lexer lexer = setLexerString("1");
-    lexer.state = EXPRESSION_VALUE;
+    Lexer lexer = setLexerString("1", EXPRESSION_VALUE);
     check assertToken(lexer, INTEGER, lexeme = "1");
 }
 
 @test:Config {}
 function testDecimalZero() returns error? {
-    Lexer lexer = setLexerString("0");
-    lexer.state = EXPRESSION_VALUE;
+    Lexer lexer = setLexerString("0", EXPRESSION_VALUE);
     check assertToken(lexer, INTEGER, lexeme = "0");
 
-    lexer = setLexerString("+0");
-    lexer.state = EXPRESSION_VALUE;
+    lexer = setLexerString("+0", EXPRESSION_VALUE);
     check assertToken(lexer, INTEGER, lexeme = "0");
 
-    lexer = setLexerString("-0");
-    lexer.state = EXPRESSION_VALUE;
+    lexer = setLexerString("-0", EXPRESSION_VALUE);
     check assertToken(lexer, INTEGER, lexeme = "0");
 }
 
 @test:Config {}
 function testUnderscoreDecimal() returns error? {
-    Lexer lexer = setLexerString("111_222_333");
-    lexer.state = EXPRESSION_VALUE;
+    Lexer lexer = setLexerString("111_222_333", EXPRESSION_VALUE);
     check assertToken(lexer, INTEGER, lexeme = "111_222_333");
 
-    lexer = setLexerString("0xdead_beef");
-    lexer.state = EXPRESSION_VALUE;
+    lexer = setLexerString("0xdead_beef", EXPRESSION_VALUE);
     check assertToken(lexer, INTEGER, lexeme = "0xdead_beef");
 
-    lexer = setLexerString("0b001_010");
-    lexer.state = EXPRESSION_VALUE;
+    lexer = setLexerString("0b001_010", EXPRESSION_VALUE);
     check assertToken(lexer, INTEGER, lexeme = "0b001_010");
 
-    lexer = setLexerString("0o007_610");
-    lexer.state = EXPRESSION_VALUE;
+    lexer = setLexerString("0o007_610", EXPRESSION_VALUE);
     check assertToken(lexer, INTEGER, lexeme = "0o007_610");
 }
 
@@ -93,12 +84,10 @@ function testProcessIntegerValue() returns error? {
 // Boolean tokens
 @test:Config {}
 function testBooleanValues() returns error? {
-    Lexer lexer = setLexerString("true");
-    lexer.state = EXPRESSION_VALUE;
+    Lexer lexer = setLexerString("true", EXPRESSION_VALUE);
     check assertToken(lexer, BOOLEAN, lexeme = "true");
 
-    lexer = setLexerString("false");
-    lexer.state = EXPRESSION_VALUE;
+    lexer = setLexerString("false", EXPRESSION_VALUE);
     check assertToken(lexer, BOOLEAN, lexeme = "false");
 }
 
@@ -106,4 +95,28 @@ function testBooleanValues() returns error? {
 function testProcessBooleanValues() returns error? {
     AssertKey ak = check new AssertKey("somekey = true");
     ak.hasKey("somekey", true).close();
+}
+
+@test:Config {}
+function testInfinityToken() returns error? {
+    Lexer lexer = setLexerString("inf", EXPRESSION_VALUE);
+    check assertToken(lexer, INFINITY);
+
+    lexer = setLexerString("+inf");
+    check assertToken(lexer, INFINITY);
+
+    lexer = setLexerString("-inf");
+    check assertToken(lexer, INFINITY, lexeme = "-");
+}
+
+@test:Config {}
+function testNanToken() returns error? {
+    Lexer lexer = setLexerString("nan", EXPRESSION_VALUE);
+    check assertToken(lexer, NAN);
+
+    lexer = setLexerString("+nan", EXPRESSION_VALUE);
+    check assertToken(lexer, NAN);
+
+    lexer = setLexerString("-nan", EXPRESSION_VALUE);
+    check assertToken(lexer, NAN);
 }

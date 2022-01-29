@@ -4,11 +4,13 @@ const ORIGIN_FILE_PATH = "toml/tests/resources/";
 
 # Returns a new lexer with the configured line for testing
 #
-# + line - Testing TOML string
-# + return - Configured lexer  
-function setLexerString(string line) returns Lexer {
+# + line - Testing TOML string  
+# + lexerState - The state for the lexer to be initialized with
+# + return - Configured lexer
+function setLexerString(string line, State lexerState = EXPRESSION_KEY) returns Lexer {
     Lexer lexer = new Lexer();
     lexer.line = line;
+    lexer.state = lexerState;
     return lexer;
 }
 

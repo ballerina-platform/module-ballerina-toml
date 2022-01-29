@@ -33,10 +33,8 @@ class Lexer {
     # + return - If success, returns a token, else returns a Lexical Error 
     function getToken() returns Token|error {
 
-        // Reset the parameters at the end of the line.
+        // Generate EOL token 
         if (self.index >= self.line.length()) {
-            // self.index = 0;
-            // self.line = "";
             return {token: EOL};
         }
 
@@ -134,6 +132,16 @@ class Lexer {
                     () => { // Only '+' and '-' are invalid.
                         return self.generateError("There must me digits after '+'", self.index + 1);
                     }
+                    "n" => { // NAN token
+                        self.lexeme = self.line[self.index];
+                        self.index += 1;
+                        return check self.tokensInSequence("nan", NAN);
+                    }
+                    "i" => {
+                        self.lexeme = self.line[self.index];
+                        self.index += 1;
+                        return check self.tokensInSequence("inf", INFINITY);
+                    }
                     _ => { // Remaining digits of the decimal numbers
                         self.lexeme = self.line[self.index];
                         self.index += 1;
@@ -146,6 +154,14 @@ class Lexer {
             }
             "f" => { // Boolean false token
                 return check self.tokensInSequence("false", BOOLEAN);
+            }
+            "n" => { // NAN token
+                self.lexeme = "+";
+                return check self.tokensInSequence("nan", NAN);
+            }
+            "i" => {
+                self.lexeme = "+";
+                return check self.tokensInSequence("inf", INFINITY);
             }
         }
 
@@ -184,10 +200,12 @@ class Lexer {
             if (self.line[i] == "\"") {
                 self.index = i;
                 if (self.peek(1) == "\"" && self.peek(2) == "\"") {
-                    
-                    // Check if the double quotes are in the end of the line
+
+                    // Check if the double quotes are at the end of the line
                     if (self.peek(3) == "\"" && self.peek(4) == "\"") {
-                        
+                        self.lexeme += "\"\"";
+                        self.index = i + 1;
+                        return true;
                     }
 
                     self.index = i - 1;
@@ -240,7 +258,7 @@ class Lexer {
                 self.index = i;
                 if (self.peek(1) == "'" && self.peek(2) == "'") {
 
-                     // Check if the double quotes are at the end of the line
+                    // Check if the double quotes are at the end of the line
                     if (self.peek(3) == "'" && self.peek(4) == "'") {
                         self.lexeme += "''";
                         self.index = i + 1;
