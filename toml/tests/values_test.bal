@@ -102,10 +102,10 @@ function testInfinityToken() returns error? {
     Lexer lexer = setLexerString("inf", EXPRESSION_VALUE);
     check assertToken(lexer, INFINITY, lexeme = "+inf");
 
-    lexer = setLexerString("+inf");
+    lexer = setLexerString("+inf", EXPRESSION_VALUE);
     check assertToken(lexer, INFINITY, lexeme = "+inf");
 
-    lexer = setLexerString("-inf");
+    lexer = setLexerString("-inf", EXPRESSION_VALUE);
     check assertToken(lexer, INFINITY, lexeme = "-inf");
 }
 

@@ -139,13 +139,13 @@ class Lexer {
                         return check self.tokensInSequence("nan", NAN);
                     }
                     "i" => {
-                        self.index += 1;
                         self.lexeme = self.line[self.index];
+                        self.index += 1;
                         return check self.tokensInSequence("inf", INFINITY);
                     }
                     _ => { // Remaining digits of the decimal numbers
-                        self.index += 1;
                         self.lexeme = self.line[self.index];
+                        self.index += 1;
                         return check self.iterate(self.digit(DECIMAL_DIGIT_PATTERN), INTEGER);
                     }
                 }
