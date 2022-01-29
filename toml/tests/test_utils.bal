@@ -1,6 +1,6 @@
 import ballerina/test;
 
-const ORIGIN_FILE_PATH = "tests/resources/";
+const ORIGIN_FILE_PATH = "toml/tests/resources/";
 
 # Returns a new lexer with the configured line for testing
 #
