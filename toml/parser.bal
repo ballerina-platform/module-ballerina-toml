@@ -262,7 +262,12 @@ class Parser {
                                         : check self.processTypeCastingError('int:fromString(self.lexemeBuffer));
             }
             EXPONENTIAL => { // Handles exponential numbers
+                check self.checkToken(INTEGER, "Expected an integer after the exponential");
 
+                // Evaluating the exponential value
+                float exponent = <float>(check self.processTypeCastingError('float:fromString(self.currentToken.value)));
+                float prefix = <float>(check self.processTypeCastingError('float:fromString(self.lexemeBuffer)));
+                self.value = prefix * 'float:pow(10, exponent);
             }
             DOT => { // Handles fractional numbers
                 if (fractional) {

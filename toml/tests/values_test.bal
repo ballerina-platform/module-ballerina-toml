@@ -131,6 +131,12 @@ function testExponentialToken() returns error? {
 }
 
 @test:Config {}
+function testExponentialTokenWithInteger() returns error? {
+    Lexer lexer = setLexerString("123e2", EXPRESSION_VALUE);
+    check assertToken(lexer, EXPONENTIAL, 2);
+}
+
+@test:Config {}
 function testDecimalToken() returns error? {
     Lexer lexer = setLexerString("123.123", EXPRESSION_VALUE);
     check assertToken(lexer, DOT, 2);
@@ -144,8 +150,8 @@ function testProcessFractionalNumbers() returns error? {
 
 @test:Config {}
 function testPorcessExponentialNumbers() returns error? {
-    AssertKey ak = check new AssertKey("float_fractional");
-    ak.hasKey("fl1", 500.0).hasKey("flt2", 100.0).hasKey("flt3", -0.01).close();
+    AssertKey ak = check new AssertKey("float_exponential", true);
+    ak.hasKey("flt1", 500.0).hasKey("flt2", -0.02).close();
 }
 
 @test:Config {}

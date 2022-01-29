@@ -325,8 +325,9 @@ class Lexer {
                     return self.generateError("Invalid character \"" + self.line[i] + "\" after '='", i);
                 }
 
-                // Check for decimal points in decimal numbers
-                if (digitPattern == DECIMAL_DIGIT_PATTERN && self.line[i] == ".") {
+                // Float number allows only a decimal number a prefix.
+                // Check for decimal points and exponentials in decimal numbers
+                if (digitPattern == DECIMAL_DIGIT_PATTERN && (self.line[i] == "." || self.line[i] == "e" || self.line[i] == "E")) {
                     self.index = i - 1;
                     return true;
                 }
