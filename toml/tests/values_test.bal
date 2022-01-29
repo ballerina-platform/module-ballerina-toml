@@ -112,13 +112,13 @@ function testInfinityToken() returns error? {
 @test:Config {}
 function testNanToken() returns error? {
     Lexer lexer = setLexerString("nan", EXPRESSION_VALUE);
-    check assertToken(lexer, NAN, lexeme = "+nan");
+    check assertToken(lexer, NAN);
 
     lexer = setLexerString("+nan", EXPRESSION_VALUE);
-    check assertToken(lexer, NAN, lexeme = "+nan");
+    check assertToken(lexer, NAN);
 
     lexer = setLexerString("-nan", EXPRESSION_VALUE);
-    check assertToken(lexer, NAN, lexeme = "-nan");
+    check assertToken(lexer, NAN);
 }
 
 @test:Config {}
@@ -131,8 +131,14 @@ function testExponentialToken() returns error? {
 }
 
 @test:Config {}
+function testDecimalToken() returns error? {
+    Lexer lexer = setLexerString("123.123", EXPRESSION_VALUE);
+    check assertToken(lexer, DOT, 2);
+}
+
+@test:Config {}
 function testProcessFractionalNumbers() returns error? {
-    AssertKey ak = check new AssertKey("flaot_fractional", true);
+    AssertKey ak = check new AssertKey("float_fractional", true);
     ak.hasKey("flt1", 1.0).hasKey("flt2", 3.14).hasKey("flt3", -0.1).close();
 }
 
@@ -140,4 +146,17 @@ function testProcessFractionalNumbers() returns error? {
 function testPorcessExponentialNumbers() returns error? {
     AssertKey ak = check new AssertKey("float_fractional");
     ak.hasKey("fl1", 500.0).hasKey("flt2", 100.0).hasKey("flt3", -0.01).close();
+}
+
+@test:Config {}
+function testInvalidDecimalPoint() {
+    assertParsingError("flt = .1");
+    assertParsingError("flt = 1.");
+    assertParsingError("flt = 1.e+20");
+}
+
+@test:Config {}
+function testFloatWithUnderscore() returns error? {
+    AssertKey ak = check new AssertKey("flt = 123_456.123_456");
+    ak.hasKey("flt", 123456.123456).close();
 }

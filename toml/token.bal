@@ -22,7 +22,7 @@ enum TOMLToken {
     EXPONENTIAL,
     NAN
 }
-
+    
 enum State {
     EXPRESSION_KEY,
     EXPRESSION_VALUE,

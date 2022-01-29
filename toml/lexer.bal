@@ -114,19 +114,20 @@ class Lexer {
                         self.lexeme = "0b";
                         return check self.iterate(self.digit(BINARY_DIGIT_PATTERN), INTEGER);
                     }
-                    ()|" "|"#" => { // Decimal numbers
+                    ()|" "|"#"|"." => { // Decimal numbers
                         self.lexeme = "0";
                         return self.generateToken(INTEGER);
                     }
                     _ => {
-                        return self.generateError("Invalid character " + self.line[self.index + 1] + "after '0'", self.index + 1);
+                        return self.generateError("Invalid character '" + self.line[self.index + 1] + "' after '0'", self.index + 1);
                     }
                 }
             }
             "+"|"-" => { // Decimal numbers
                 match self.peek(1) {
                     "0" => { // There cannot be leading zero.
-                        self.lexeme = "0";
+                        self.lexeme = self.line[self.index] + "0";
+                        self.index += 1;
                         return self.generateToken(INTEGER);
                     }
                     () => { // Only '+' and '-' are invalid.
@@ -138,12 +139,10 @@ class Lexer {
                         return check self.tokensInSequence("nan", NAN);
                     }
                     "i" => {
-                        self.lexeme = self.line[self.index];
                         self.index += 1;
                         return check self.tokensInSequence("inf", INFINITY);
                     }
                     _ => { // Remaining digits of the decimal numbers
-                        self.lexeme = self.line[self.index];
                         self.index += 1;
                         return check self.iterate(self.digit(DECIMAL_DIGIT_PATTERN), INTEGER);
                     }
@@ -156,7 +155,6 @@ class Lexer {
                 return check self.tokensInSequence("false", BOOLEAN);
             }
             "n" => { // NAN token
-                self.lexeme = "+";
                 return check self.tokensInSequence("nan", NAN);
             }
             "i" => {
@@ -324,6 +322,12 @@ class Lexer {
                         return self.generateError("Invalid character \"" + self.line[i] + "\" after '_'", i);
                     }
                     return self.generateError("Invalid character \"" + self.line[i] + "\" after '='", i);
+                }
+
+                // Check for decimal points in decimal numbers
+                if (digitPattern == DECIMAL_DIGIT_PATTERN && self.line[i] == ".") {
+                    self.index = i - 1;
+                    return true;
                 }
 
                 return self.generateError("Invalid character \"" + self.line[i] + "\" for an integer", i);

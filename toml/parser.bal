@@ -18,8 +18,11 @@ class Parser {
     # Next token
     private Token nextToken;
 
-    # Buffer for multi-line values
-    private string multiLexeme;
+    # Hold the lexemes until the final value is generated
+    private string lexemeBuffer;
+
+    # Final value of the key currently processing
+    private anydata value;
 
     # Lexical analyzer tool for getting the tokens
     private Lexer lexer;
@@ -32,7 +35,8 @@ class Parser {
         self.currentToken = {token: DUMMY};
         self.nextToken = {token: DUMMY};
         self.lineIndex = 0;
-        self.multiLexeme = "";
+        self.lexemeBuffer = "";
+        self.value = ();
     }
 
     # Generates a map object for the TOML document.
@@ -58,7 +62,10 @@ class Parser {
                     // Add the key-value pair to the final TOML object.
                     string tomlKey = output.keys()[0];
                     self.tomlObject[tomlKey] = output[tomlKey];
+
                     self.lexer.state = EXPRESSION_KEY;
+                    self.lexemeBuffer = "";
+                    self.value = "";
                 }
                 // TODO: Add support for tables
                 // TODO: Add support for table arrays
@@ -142,13 +149,19 @@ class Parser {
                     MULTI_LSTRING_DELIMITER => {
                         check self.multiLiteralString();
                     }
+                    INTEGER => {
+                        check self.number();
+                    }
+                    _ => {
+                        self.value = self.currentToken.value;
+                    }
                 }
 
                 if (structure is map<anydata> ? (<map<anydata>>structure).hasKey(tomlKey)
                 : structure != () ? alreadyExists : true && alreadyExists) {
                     return self.generateError("Duplicate key '" + tomlKey + "'");
                 } else {
-                    return self.buildInternalTable(tomlKey, check self.getProcessedValue(), structure);
+                    return self.buildInternalTable(tomlKey, self.value, structure);
                 }
             }
             _ => {
@@ -159,7 +172,7 @@ class Parser {
 
     private function multiBasicString() returns error? {
         self.lexer.state = MULTILINE_BSTRING;
-        self.multiLexeme = "";
+        self.lexemeBuffer = "";
 
         // Predict the next toknes
         check self.checkToken([
@@ -173,7 +186,7 @@ class Parser {
         while (self.currentToken.token != MULTI_BSTRING_DELIMITER) {
             match self.currentToken.token {
                 MULTI_BSTRING_CHARS => { // Regular basic string
-                    self.multiLexeme += self.currentToken.value;
+                    self.lexemeBuffer += self.currentToken.value;
                 }
                 MULTI_BSTRING_ESCAPE => { // Escape token
                     self.lexer.state = MULTILINE_ESCAPE;
@@ -182,7 +195,7 @@ class Parser {
                     self.lineIndex += 1;
                     self.initLexer();
                     if !(self.lexer.state == MULTILINE_ESCAPE) {
-                        self.multiLexeme += "\\n";
+                        self.lexemeBuffer += "\\n";
                     }
                 }
             }
@@ -199,7 +212,7 @@ class Parser {
 
     private function multiLiteralString() returns error? {
         self.lexer.state = MULITLINE_LSTRING;
-        self.multiLexeme = "";
+        self.lexemeBuffer = "";
 
         // Predict the next toknes
         check self.checkToken([
@@ -212,12 +225,12 @@ class Parser {
         while (self.currentToken.token != MULTI_LSTRING_DELIMITER) {
             match self.currentToken.token {
                 MULTI_LSTRING_CHARS => { // Regular literal string
-                    self.multiLexeme += self.currentToken.value;
+                    self.lexemeBuffer += self.currentToken.value;
                 }
                 EOL => { // Processing new lines
                     self.lineIndex += 1;
                     self.initLexer();
-                    self.multiLexeme += "\\n";
+                    self.lexemeBuffer += "\\n";
                 }
             }
             check self.checkToken([
@@ -228,6 +241,33 @@ class Parser {
         }
 
         self.lexer.state = EXPRESSION_KEY;
+    }
+
+    # Handles the grammar rules of integers and float numbers.
+    #
+    # + fractional - Flag is set when processing the fractional segment
+    # + return - Parsing error if occurred
+    private function number(boolean fractional = false) returns error? {
+        self.lexemeBuffer += self.currentToken.value;
+        self.nextToken = check self.lexer.getToken();
+
+        match self.nextToken.token {
+            EOL => { // Integer 
+                self.value = fractional ? check self.processTypeCastingError('float:fromString(self.lexemeBuffer))
+                                        : check self.processTypeCastingError('int:fromString(self.lexemeBuffer));
+            }
+            EXPONENTIAL => { // Handles exponential numbers
+
+            }
+            DOT => { // Handles fractional numbers
+                if (fractional) {
+                    return self.generateError("Cannot have a decimal point in the fraction part");
+                }
+                check self.checkToken(INTEGER, "Expected an integer after the decimal point");
+                self.lexemeBuffer += ".";
+                check self.number(true);
+            }
+        }
     }
 
     # Cast the token to the respective Ballerina type.
@@ -245,7 +285,7 @@ class Parser {
                 return self.processTypeCastingError('boolean:fromString(self.currentToken.value));
             }
             MULTI_BSTRING_DELIMITER|MULTI_LSTRING_DELIMITER => {
-                return self.multiLexeme;
+                return self.lexemeBuffer;
             }
         }
     }
