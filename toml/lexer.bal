@@ -163,6 +163,9 @@ class Lexer {
                 self.lexeme = "+";
                 return check self.tokensInSequence("inf", INFINITY);
             }
+            "e"|"E" => {
+                return self.generateToken(EXPONENTIAL);
+            }
         }
 
         // Check for values starting with an integer.

@@ -120,3 +120,24 @@ function testNanToken() returns error? {
     lexer = setLexerString("-nan", EXPRESSION_VALUE);
     check assertToken(lexer, NAN, lexeme = "-nan");
 }
+
+@test:Config {}
+function testExponentialToken() returns error? {
+    Lexer lexer = setLexerString("e", EXPRESSION_VALUE);
+    check assertToken(lexer, EXPONENTIAL);
+
+    lexer = setLexerString("E", EXPRESSION_VALUE);
+    check assertToken(lexer, EXPONENTIAL);
+}
+
+@test:Config {}
+function testProcessFractionalNumbers() returns error? {
+    AssertKey ak = check new AssertKey("flaot_fractional", true);
+    ak.hasKey("flt1", 1.0).hasKey("flt2", 3.14).hasKey("flt3", -0.1).close();
+}
+
+@test:Config {}
+function testPorcessExponentialNumbers() returns error? {
+    AssertKey ak = check new AssertKey("float_fractional");
+    ak.hasKey("fl1", 500.0).hasKey("flt2", 100.0).hasKey("flt3", -0.01).close();
+}
