@@ -154,7 +154,7 @@ class Parser {
     }
 
     private function multiBasicString() returns error? {
-        self.lexer.state = MULTILINE_STRING;
+        self.lexer.state = MULTILINE_BSTRING;
         self.multiLexeme = "";
 
         // Predict the next toknes

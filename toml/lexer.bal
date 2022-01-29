@@ -45,7 +45,7 @@ class Lexer {
             return check self.iterate(self.unquotedKey, UNQUOTED_KEY);
         }
 
-        if (self.state == MULTILINE_STRING || self.state == MULTILINE_ESCAPE) {
+        if (self.state == MULTILINE_BSTRING || self.state == MULTILINE_ESCAPE) {
             // Process the escape symbol
             if (self.line[self.index] == "\\") {
                 return self.generateToken(MULTI_BSTRING_ESCAPE);
@@ -56,6 +56,10 @@ class Lexer {
                 return check self.iterate(self.multilineBasicString, MULTI_BSTRING_CHARS);
             }
 
+        }
+
+        if (self.state == MULITLINE_LSTRING && regex:matches(self.line[self.index], LITERAL_STRING_PATTERN)) {
+            return self.iterate(self.multilineLiteralString, MULTI_LSTRING_CHARS);
         }
 
         match self.line[self.index] {
@@ -82,6 +86,13 @@ class Lexer {
                 return check self.iterate(self.basicString, BASIC_STRING, "Expected '\"' at the end of the basic string");
             }
             "'" => { // Literal strings
+
+                // Multi-line literal string
+                if (self.peek(1) == "'" && self.peek(2) == "'") {
+                    self.index += 2;
+                    return self.generateToken(MULTI_LSTRING_DELIMETER);
+                }
+
                 self.index += 1;
                 return check self.iterate(self.literalString, LITERAL_STRING, "Expected ''' at the end of the literal string");
             }
@@ -177,7 +188,7 @@ class Lexer {
                     return true;
                 }
             } else {
-                return self.generateError("Invalid character \"" + self.line[i] + "\" for a multi-line string", i);
+                return self.generateError("Invalid character \"" + self.line[i] + "\" for a multi-line basic string", i);
             }
         }
 
@@ -193,7 +204,7 @@ class Lexer {
         }
 
         self.lexeme += self.line[i];
-        self.state = MULTILINE_STRING;
+        self.state = MULTILINE_BSTRING;
         return false;
     }
 
@@ -209,6 +220,27 @@ class Lexer {
             }
             return self.generateError("Invalid character \"" + self.line[i] + "\" for a literal string", i);
         }
+        self.lexeme += self.line[i];
+        return false;
+    }
+
+    # Check for the lexemes to create a basic string for a line in multiline strings.
+    #
+    # + i - Current index
+    # + return - True if the end of the string, An error message for an invalid character.  
+    private function multilineLiteralString(int i) returns boolean|LexicalError {
+        if (!regex:matches(self.line[i], LITERAL_STRING_PATTERN)) {
+            if (self.line[i] == "'") {
+                self.index = i;
+                if (self.peek(1) == "'" && self.peek(2) == "'") {
+                    self.index = i - 1;
+                    return true;
+                }
+            } else {
+                return self.generateError("Invalid character \"" + self.line[i] + "\" for a multi-line literal string", i);
+            }
+        }
+
         self.lexeme += self.line[i];
         return false;
     }
