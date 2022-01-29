@@ -90,7 +90,7 @@ class Lexer {
                 // Multi-line literal string
                 if (self.peek(1) == "'" && self.peek(2) == "'") {
                     self.index += 2;
-                    return self.generateToken(MULTI_LSTRING_DELIMETER);
+                    return self.generateToken(MULTI_LSTRING_DELIMITER);
                 }
 
                 self.index += 1;
@@ -184,6 +184,12 @@ class Lexer {
             if (self.line[i] == "\"") {
                 self.index = i;
                 if (self.peek(1) == "\"" && self.peek(2) == "\"") {
+                    
+                    // Check if the double quotes are in the end of the line
+                    if (self.peek(3) == "\"" && self.peek(4) == "\"") {
+                        
+                    }
+
                     self.index = i - 1;
                     return true;
                 }
@@ -233,6 +239,14 @@ class Lexer {
             if (self.line[i] == "'") {
                 self.index = i;
                 if (self.peek(1) == "'" && self.peek(2) == "'") {
+
+                     // Check if the double quotes are at the end of the line
+                    if (self.peek(3) == "'" && self.peek(4) == "'") {
+                        self.lexeme += "''";
+                        self.index = i + 1;
+                        return true;
+                    }
+
                     self.index = i - 1;
                     return true;
                 }

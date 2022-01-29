@@ -46,14 +46,14 @@ function testMultilineEscapeNewlines() returns error? {
 }
 
 @test:Config {}
-function testDelimiterInsideMultilineString() {
+function testDelimiterInsideMultilineBasicString() {
     assertParsingError("str1 = \"\"\"\"\"\"\"\"\"");
 }
 
 @test:Config {}
 function testMultiLiteralStringDelimiter() returns error? {
     Lexer lexer = setLexerString("'''");
-    check assertToken(lexer, MULTI_LSTRING_DELIMETER);
+    check assertToken(lexer, MULTI_LSTRING_DELIMITER);
 }
 
 @test:Config {}
@@ -61,4 +61,27 @@ function testMultilineLiteralString() returns error? {
     Lexer lexer = setLexerString("'''somevalue'''");
     lexer.state = MULITLINE_LSTRING;
     check assertToken(lexer, MULTI_LSTRING_CHARS, 2, "somevalue");
+}
+
+@test:Config {}
+function testDelimiterInsideTheMultilinneLiteralString() {
+    assertParsingError("str1 = '''''''''");
+}
+
+@test:Config {}
+function testValidMultiLineLiteralString() returns error? {
+    AssertKey ak = check new AssertKey("str = '''somevalue'''");
+    ak.hasKey("str", "somevalue").close();
+}
+
+@test:Config {}
+function testValidApostropheInMultilineLiteralString() returns error? {
+    AssertKey ak = check new AssertKey("str = '''single'double'''''");
+    ak.hasKey("str", "single'double''").close();
+}
+
+@test:Config {}
+function testMultilineLiteralStrinsNewLines() returns error? {
+    AssertKey ak = check new AssertKey("multi_literal", true);
+    ak.hasKey("str1", "single' \\ndouble''\\n").close();
 }

@@ -130,6 +130,7 @@ class Parser {
                     BASIC_STRING,
                     LITERAL_STRING,
                     MULTI_BSTRING_DELIMITER,
+                    MULTI_LSTRING_DELIMITER,
                     INTEGER,
                     BOOLEAN
                 ], "Expected a value after '='");
@@ -137,6 +138,9 @@ class Parser {
                 match self.currentToken.token { // Check for values that span multiple lines
                     MULTI_BSTRING_DELIMITER => {
                         check self.multiBasicString();
+                    }
+                    MULTI_LSTRING_DELIMITER => {
+                        check self.multiLiteralString();
                     }
                 }
 
@@ -174,7 +178,7 @@ class Parser {
                 MULTI_BSTRING_ESCAPE => { // Escape token
                     self.lexer.state = MULTILINE_ESCAPE;
                 }
-                EOL => {
+                EOL => { // Processing new lines
                     self.lineIndex += 1;
                     self.initLexer();
                     if !(self.lexer.state == MULTILINE_ESCAPE) {
@@ -186,6 +190,39 @@ class Parser {
                 MULTI_BSTRING_CHARS,
                 MULTI_BSTRING_ESCAPE,
                 MULTI_BSTRING_DELIMITER,
+                EOL
+            ], "Invalid token inside a multi-line string");
+        }
+
+        self.lexer.state = EXPRESSION_KEY;
+    }
+
+    private function multiLiteralString() returns error? {
+        self.lexer.state = MULITLINE_LSTRING;
+        self.multiLexeme = "";
+
+        // Predict the next toknes
+        check self.checkToken([
+            MULTI_LSTRING_CHARS,
+            MULTI_LSTRING_DELIMITER,
+            EOL
+        ], "Invalid token inside a multi-line string");
+
+        // Predicting the next tokens until the end of the string.
+        while (self.currentToken.token != MULTI_LSTRING_DELIMITER) {
+            match self.currentToken.token {
+                MULTI_LSTRING_CHARS => { // Regular literal string
+                    self.multiLexeme += self.currentToken.value;
+                }
+                EOL => { // Processing new lines
+                    self.lineIndex += 1;
+                    self.initLexer();
+                    self.multiLexeme += "\\n";
+                }
+            }
+            check self.checkToken([
+                MULTI_LSTRING_CHARS,
+                MULTI_LSTRING_DELIMITER,
                 EOL
             ], "Invalid token inside a multi-line string");
         }
@@ -207,7 +244,7 @@ class Parser {
             BOOLEAN => {
                 return self.processTypeCastingError('boolean:fromString(self.currentToken.value));
             }
-            MULTI_BSTRING_DELIMITER => {
+            MULTI_BSTRING_DELIMITER|MULTI_LSTRING_DELIMITER => {
                 return self.multiLexeme;
             }
         }
