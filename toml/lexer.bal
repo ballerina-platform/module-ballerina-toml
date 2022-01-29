@@ -48,12 +48,12 @@ class Lexer {
         if (self.state == MULTILINE_STRING || self.state == MULTILINE_ESCAPE) {
             // Process the escape symbol
             if (self.line[self.index] == "\\") {
-                return self.generateToken(MULTI_STRING_ESCAPE);
+                return self.generateToken(MULTI_BSTRING_ESCAPE);
             }
 
             // Process multiline string regular characters
             if (regex:matches(self.line[self.index], BASIC_STRING_PATTERN)) {
-                return check self.iterate(self.multilineBasicString, MULTI_STRING_CHARS);
+                return check self.iterate(self.multilineBasicString, MULTI_BSTRING_CHARS);
             }
 
         }
@@ -75,7 +75,7 @@ class Lexer {
                 // Multi-line basic strings
                 if (self.peek(1) == "\"" && self.peek(2) == "\"") {
                     self.index += 2;
-                    return self.generateToken(MULTI_STRING_DELIMETER);
+                    return self.generateToken(MULTI_BSTRING_DELIMITER);
                 }
 
                 self.index += 1;

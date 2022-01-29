@@ -3,21 +3,21 @@ import ballerina/test;
 @test:Config {}
 function testMultiLineDelimiter() returns error? {
     Lexer lexer = setLexerString("\"\"\"");
-    check assertToken(lexer, MULTI_STRING_DELIMETER);
+    check assertToken(lexer, MULTI_BSTRING_DELIMITER);
 }
 
 @test:Config {}
 function testMultiLineStringChars() returns error? {
     Lexer lexer = setLexerString("\"\"\"somevalues\"\"\"");
     lexer.state = MULTILINE_STRING;
-    check assertToken(lexer, MULTI_STRING_CHARS, 2, "somevalues");
+    check assertToken(lexer, MULTI_BSTRING_CHARS, 2, "somevalues");
 }
 
 @test:Config {}
 function testValidQuotesInMultiline() returns error? {
     Lexer lexer = setLexerString("\"\"\"single-quote\"double-quotes\"\"single-apastrophe'double-appastrophe''\"\"\"");
     lexer.state = MULTILINE_STRING;
-    check assertToken(lexer, MULTI_STRING_CHARS, 2, "single-quote\"double-quotes\"\"single-apastrophe'double-appastrophe''");
+    check assertToken(lexer, MULTI_BSTRING_CHARS, 2, "single-quote\"double-quotes\"\"single-apastrophe'double-appastrophe''");
 }
 
 @test:Config {}
@@ -30,7 +30,7 @@ function testValidQuotesWithNewlines() returns error? {
 function testMultilineEscape() returns error? {
     Lexer lexer = setLexerString("\"\"\"escape\\  whitespace\"\"\"");
     lexer.state = MULTILINE_STRING;
-    check assertToken(lexer, MULTI_STRING_ESCAPE, 3);
+    check assertToken(lexer, MULTI_BSTRING_ESCAPE, 3);
 }
 
 @test:Config {}
