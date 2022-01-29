@@ -145,12 +145,17 @@ class Parser {
                 match self.currentToken.token { // Check for values that span multiple lines
                     MULTI_BSTRING_DELIMITER => {
                         check self.multiBasicString();
+                        self.value = self.lexemeBuffer;
                     }
                     MULTI_LSTRING_DELIMITER => {
                         check self.multiLiteralString();
+                        self.value = self.lexemeBuffer;
                     }
                     INTEGER => {
                         check self.number();
+                    }
+                    BOOLEAN => {
+                        self.value = check self.processTypeCastingError('boolean:fromString(self.currentToken.value));
                     }
                     _ => {
                         self.value = self.currentToken.value;

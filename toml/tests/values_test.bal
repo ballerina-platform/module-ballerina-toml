@@ -43,10 +43,10 @@ function testDecimalZero() returns error? {
     check assertToken(lexer, INTEGER, lexeme = "0");
 
     lexer = setLexerString("+0", EXPRESSION_VALUE);
-    check assertToken(lexer, INTEGER, lexeme = "0");
+    check assertToken(lexer, INTEGER, lexeme = "+0");
 
     lexer = setLexerString("-0", EXPRESSION_VALUE);
-    check assertToken(lexer, INTEGER, lexeme = "0");
+    check assertToken(lexer, INTEGER, lexeme = "-0");
 }
 
 @test:Config {}
