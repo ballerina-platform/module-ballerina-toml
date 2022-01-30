@@ -9,17 +9,20 @@ class Parser {
     private int numLines;
     private int lineIndex;
 
-    # Output TOML object
-    private map<anydata> tomlObject;
-
     # Current token
     private Token currentToken;
 
-    # Next token
-    private Token nextToken;
-
     # Hold the lexemes until the final value is generated
     private string lexemeBuffer;
+
+    # Output TOML object
+    private map<anydata> tomlObject;
+
+    # Current map structure the parser is working on
+    private map<anydata> currentStructure;
+
+    # Key stack to the current structure
+    private string[] keyStack;
 
     # Lexical analyzer tool for getting the tokens
     private Lexer lexer;
@@ -27,10 +30,11 @@ class Parser {
     function init(string[] lines) {
         self.lines = lines;
         self.numLines = lines.length();
-        self.tomlObject = {};
         self.lexer = new Lexer();
         self.currentToken = {token: DUMMY};
-        self.nextToken = {token: DUMMY};
+        self.tomlObject = {};
+        self.currentStructure = {};
+        self.keyStack = [];
         self.lineIndex = 0;
         self.lexemeBuffer = "";
     }
@@ -64,10 +68,10 @@ class Parser {
                     self.lexer.state = EXPRESSION_KEY;
                     self.lexemeBuffer = "";
                 }
-                OPEN_BRACKET => {
+                OPEN_BRACKET => { // Process a standard tale
 
                 }
-                DOUBLE_OPEN_BRACKET => {
+                DOUBLE_OPEN_BRACKET => { // Process an array table
 
                 }
             }
@@ -345,15 +349,37 @@ class Parser {
     }
 
     private function standardTable() {
-        // Add the current structure to the table
+        // Add the previous table to the TOML object
+        
+
 
         // Build the dotted key
+
+        // Initialize the current structure
 
         // Check whether it is possible to add values
     }
 
+    private function buildTOMLObject(map<anydata>? structure = ()){
+        // Root table
+        if (self.keyStack.length() == 0) {
+            self.tomlObject = self.currentStructure;
+            return;
+        }
+
+        // First level tables
+        if (self.keyStack.length() == 1) {
+            string key = self.keyStack.pop();
+            self.tomlObject[key] = self.currentStructure;
+        }
+
+        // Dotted tables
+        string key = self.keyStack.shift();
+        self.buildTOMLObject(structure[key] is map<anydata> ? <map<anydata>>structure[key] : ());
+    }
+
     # Check errors during type casting to Ballerina types.
-    #
+    #   
     # + value - Value to be type casted.
     # + return - Value as a Ballerina data type  
     private function processTypeCastingError(anydata|error value) returns anydata|ParsingError {
