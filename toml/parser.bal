@@ -21,9 +21,6 @@ class Parser {
     # Hold the lexemes until the final value is generated
     private string lexemeBuffer;
 
-    # Final value of the key currently processing
-    private anydata value;
-
     # Lexical analyzer tool for getting the tokens
     private Lexer lexer;
 
@@ -36,7 +33,6 @@ class Parser {
         self.nextToken = {token: DUMMY};
         self.lineIndex = 0;
         self.lexemeBuffer = "";
-        self.value = ();
     }
 
     # Generates a map object for the TOML document.
@@ -67,12 +63,13 @@ class Parser {
 
                     self.lexer.state = EXPRESSION_KEY;
                     self.lexemeBuffer = "";
-                    self.value = "";
                 }
                 OPEN_BRACKET => {
 
                 }
-                // TODO: Add support for table arrays
+                DOUBLE_OPEN_BRACKET => {
+
+                }
             }
 
             // Comments and new lines are ignored.
@@ -83,6 +80,8 @@ class Parser {
 
             self.lineIndex += 1;
         }
+
+        //TODO: Append the current structure to the TOML object
 
         // Return the TOML object
         return self.tomlObject;
@@ -130,7 +129,7 @@ class Parser {
                 map<anydata> value = check self.keyValue(
                     // If the structure exists and already assigned a value that is not a table,
                     // Then it is invalid to assign a value to it or nested to it.
-                    (structure is map<anydata> ? (<map<anydata>>structure).hasKey(tomlKey) : structure != () && alreadyExists),
+                    (structure is map<anydata> ? (<map<anydata>>structure).hasKey(tomlKey) : alreadyExists),
                     structure[tomlKey] is map<anydata> ? <map<anydata>?>structure[tomlKey] : ()
                     );
                 return self.buildInternalTable(tomlKey, value, structure);
@@ -149,13 +148,11 @@ class Parser {
                     BOOLEAN
                 ], "Expected a value after '='");
 
-                self.value = check self.dataValue();
-
                 if (structure is map<anydata> ? (<map<anydata>>structure).hasKey(tomlKey)
-                : structure != () ? alreadyExists : true && alreadyExists) {
+                : alreadyExists) {
                     return self.generateError("Duplicate key '" + tomlKey + "'");
                 } else {
-                    return self.buildInternalTable(tomlKey, self.value, structure);
+                    return self.buildInternalTable(tomlKey, check self.dataValue(), structure);
                 }
             }
             _ => {
@@ -189,7 +186,6 @@ class Parser {
             }
         }
         self.lexemeBuffer = "";
-        self.value = "";
         return returnData;
     }
 
@@ -346,6 +342,14 @@ class Parser {
                 }
             }
         }
+    }
+
+    private function standardTable() {
+        // Add the current structure to the table
+
+        // Build the dotted key
+
+        // Check whether it is possible to add values
     }
 
     # Check errors during type casting to Ballerina types.
