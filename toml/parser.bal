@@ -69,7 +69,9 @@ class Parser {
                     self.lexemeBuffer = "";
                     self.value = "";
                 }
-                // TODO: Add support for tables
+                OPEN_BRACKET => {
+
+                }
                 // TODO: Add support for table arrays
             }
 
@@ -143,7 +145,7 @@ class Parser {
                     MULTI_BSTRING_DELIMITER,
                     MULTI_LSTRING_DELIMITER,
                     INTEGER,
-                    ARRAY_START,
+                    OPEN_BRACKET,
                     BOOLEAN
                 ], "Expected a value after '='");
 
@@ -179,7 +181,7 @@ class Parser {
             BOOLEAN => {
                 returnData = check self.processTypeCastingError('boolean:fromString(self.currentToken.value));
             }
-            ARRAY_START => {
+            OPEN_BRACKET => {
                 returnData = check self.array();
             }
             _ => {
@@ -272,10 +274,10 @@ class Parser {
     # + return - Parsing error if occurred
     private function number(boolean fractional = false) returns anydata|error {
         self.lexemeBuffer += self.currentToken.value;
-        check self.checkToken([EOL, EXPONENTIAL, DOT, ARRAY_SEPARATOR, ARRAY_END], "Invalid token after an integer");
+        check self.checkToken([EOL, EXPONENTIAL, DOT, ARRAY_SEPARATOR, CLOST_BRACKET], "Invalid token after an integer");
 
         match self.currentToken.token {
-            EOL|ARRAY_SEPARATOR|ARRAY_END => { // Generate the final number
+            EOL|ARRAY_SEPARATOR|CLOST_BRACKET => { // Generate the final number
                 return fractional ? check self.processTypeCastingError('float:fromString(self.lexemeBuffer))
                                         : check self.processTypeCastingError('int:fromString(self.lexemeBuffer));
             }
@@ -307,8 +309,8 @@ class Parser {
             MULTI_LSTRING_DELIMITER,
             INTEGER,
             BOOLEAN,
-            ARRAY_START,
-            ARRAY_END,
+            OPEN_BRACKET,
+            CLOST_BRACKET,
             EOL,
             ARRAY_SEPARATOR
         ], "Expected a value after '='");
@@ -320,19 +322,19 @@ class Parser {
                 }
                 return self.generateError("Exptected ']' at the end of an array");
             }
-            ARRAY_END => { // If the array ends with a ','
+            CLOST_BRACKET => { // If the array ends with a ','
                 return tempArray;
             }
             INTEGER => { // Tokens that have consumed the next token
                 tempArray.push(check self.dataValue());
-                return self.currentToken.token == ARRAY_END ? tempArray : self.array(tempArray, false);
+                return self.currentToken.token == CLOST_BRACKET ? tempArray : self.array(tempArray, false);
             }
             _ => { // Array value
                 tempArray.push(check self.dataValue());
-                check self.checkToken([ARRAY_SEPARATOR, ARRAY_END], "Expected an ',' or ']' after an array value");
+                check self.checkToken([ARRAY_SEPARATOR, CLOST_BRACKET], "Expected an ',' or ']' after an array value");
 
                 match self.currentToken.token {
-                    ARRAY_END => { // End of the array value
+                    CLOST_BRACKET => { // End of the array value
                         return tempArray;
                     }
                     ARRAY_SEPARATOR => { // Expects another array value

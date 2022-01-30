@@ -73,10 +73,16 @@ class Lexer {
                 return self.generateToken(KEY_VALUE_SEPERATOR);
             }
             "[" => {
-                return self.generateToken(ARRAY_START);
+                if (self.peek(1) == "[") {
+                    return self.generateToken(DOUBLE_OPEN_BRACKET);    
+                }
+                return self.generateToken(OPEN_BRACKET);
             }
             "]" => {
-                return self.generateToken(ARRAY_END);
+                if (self.peek(1) == "]") {
+                    return self.generateToken(DOUBLE_CLOSE_BRACKET);
+                }
+                return self.generateToken(CLOST_BRACKET);
             }
             "," => {
                 return self.generateToken(ARRAY_SEPARATOR);

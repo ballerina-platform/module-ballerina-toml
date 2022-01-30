@@ -1,12 +1,12 @@
 import ballerina/test;
 
 @test:Config {}
-function testArrayTerimalTokens() returns error? {
+function testBracketTerminalTokens() returns error? {
     Lexer lexer = setLexerString("[", EXPRESSION_VALUE);
-    check assertToken(lexer, ARRAY_START);
+    check assertToken(lexer, OPEN_BRACKET);
 
     lexer = setLexerString("]", EXPRESSION_VALUE);
-    check assertToken(lexer, ARRAY_END);
+    check assertToken(lexer, CLOST_BRACKET);
 
 }
 
