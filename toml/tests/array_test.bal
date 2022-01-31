@@ -6,7 +6,7 @@ function testBracketTerminalTokens() returns error? {
     check assertToken(lexer, OPEN_BRACKET);
 
     lexer = setLexerString("]", EXPRESSION_VALUE);
-    check assertToken(lexer, CLOST_BRACKET);
+    check assertToken(lexer, CLOSE_BRACKET);
 
 }
 

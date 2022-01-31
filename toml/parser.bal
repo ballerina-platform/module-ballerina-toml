@@ -56,10 +56,7 @@ class Parser {
 
             match self.currentToken.token {
                 UNQUOTED_KEY|BASIC_STRING|LITERAL_STRING => { // Process a key value
-
-                    map<anydata> output = check self.keyValue(
-                        self.tomlObject.hasKey(self.currentToken.value),
-                        self.tomlObject);
+                    map<anydata> output = check self.keyValue(self.tomlObject);
 
                     // Add the key-value pair to the final TOML object.
                     string tomlKey = output.keys()[0];
@@ -69,7 +66,7 @@ class Parser {
                     self.lexemeBuffer = "";
                 }
                 OPEN_BRACKET => { // Process a standard tale
-
+                    check self.standardTable(self.tomlObject);
                 }
                 DOUBLE_OPEN_BRACKET => { // Process an array table
 
@@ -85,9 +82,8 @@ class Parser {
             self.lineIndex += 1;
         }
 
-        //TODO: Append the current structure to the TOML object
-
         // Return the TOML object
+        // self.tomlObject = check self.buildTOMLObject(self.tomlObject);
         return self.tomlObject;
     }
 
@@ -121,7 +117,7 @@ class Parser {
     # + alreadyExists - There is an existing value for the previous key.
     # + structure - The structure for the previous key. Null if there is no value.
     # + return - Returns the structure after assigning the value.
-    private function keyValue(boolean alreadyExists, map<anydata>? structure) returns map<anydata>|error {
+    private function keyValue(map<anydata>? structure) returns map<anydata>|error {
         string tomlKey = self.currentToken.value;
 
         check self.checkToken([DOT, KEY_VALUE_SEPERATOR], "Expected a '.' or a '=' after a key");
@@ -130,12 +126,16 @@ class Parser {
             DOT => {
                 check self.checkToken([UNQUOTED_KEY, BASIC_STRING, LITERAL_STRING], "Expected a key after '.'");
 
-                map<anydata> value = check self.keyValue(
-                    // If the structure exists and already assigned a value that is not a table,
-                    // Then it is invalid to assign a value to it or nested to it.
-                    (structure is map<anydata> ? (<map<anydata>>structure).hasKey(tomlKey) : alreadyExists),
-                    structure[tomlKey] is map<anydata> ? <map<anydata>?>structure[tomlKey] : ()
-                    );
+                // If the structure exists and already assigned a value that is not a table,
+                // then it is invalid to assign a value to it or nested to it.
+                if (structure is map<anydata>) {
+                    map<anydata> castedStructure = <map<anydata>>structure;
+                    if (castedStructure.hasKey(tomlKey) && !(castedStructure[tomlKey] is map<anydata>)) {
+                        return self.generateError("Duplicate values exists");
+                    }
+                }
+
+                map<anydata> value = check self.keyValue(structure[tomlKey] is map<anydata> ? <map<anydata>>structure[tomlKey] : ());
                 return self.buildInternalTable(tomlKey, value, structure);
             }
 
@@ -152,8 +152,7 @@ class Parser {
                     BOOLEAN
                 ], "Expected a value after '='");
 
-                if (structure is map<anydata> ? (<map<anydata>>structure).hasKey(tomlKey)
-                : alreadyExists) {
+                if (structure is map<anydata> && (<map<anydata>>structure).hasKey(tomlKey)) {
                     return self.generateError("Duplicate key '" + tomlKey + "'");
                 } else {
                     return self.buildInternalTable(tomlKey, check self.dataValue(), structure);
@@ -274,10 +273,10 @@ class Parser {
     # + return - Parsing error if occurred
     private function number(boolean fractional = false) returns anydata|error {
         self.lexemeBuffer += self.currentToken.value;
-        check self.checkToken([EOL, EXPONENTIAL, DOT, ARRAY_SEPARATOR, CLOST_BRACKET], "Invalid token after an integer");
+        check self.checkToken([EOL, EXPONENTIAL, DOT, ARRAY_SEPARATOR, CLOSE_BRACKET], "Invalid token after an integer");
 
         match self.currentToken.token {
-            EOL|ARRAY_SEPARATOR|CLOST_BRACKET => { // Generate the final number
+            EOL|ARRAY_SEPARATOR|CLOSE_BRACKET => { // Generate the final number
                 return fractional ? check self.processTypeCastingError('float:fromString(self.lexemeBuffer))
                                         : check self.processTypeCastingError('int:fromString(self.lexemeBuffer));
             }
@@ -310,7 +309,7 @@ class Parser {
             INTEGER,
             BOOLEAN,
             OPEN_BRACKET,
-            CLOST_BRACKET,
+            CLOSE_BRACKET,
             EOL,
             ARRAY_SEPARATOR
         ], "Expected a value after '='");
@@ -322,19 +321,19 @@ class Parser {
                 }
                 return self.generateError("Exptected ']' at the end of an array");
             }
-            CLOST_BRACKET => { // If the array ends with a ','
+            CLOSE_BRACKET => { // If the array ends with a ','
                 return tempArray;
             }
             INTEGER => { // Tokens that have consumed the next token
                 tempArray.push(check self.dataValue());
-                return self.currentToken.token == CLOST_BRACKET ? tempArray : self.array(tempArray, false);
+                return self.currentToken.token == CLOSE_BRACKET ? tempArray : self.array(tempArray, false);
             }
             _ => { // Array value
                 tempArray.push(check self.dataValue());
-                check self.checkToken([ARRAY_SEPARATOR, CLOST_BRACKET], "Expected an ',' or ']' after an array value");
+                check self.checkToken([ARRAY_SEPARATOR, CLOSE_BRACKET], "Expected an ',' or ']' after an array value");
 
                 match self.currentToken.token {
-                    CLOST_BRACKET => { // End of the array value
+                    CLOSE_BRACKET => { // End of the array value
                         return tempArray;
                     }
                     ARRAY_SEPARATOR => { // Expects another array value
@@ -348,38 +347,52 @@ class Parser {
         }
     }
 
-    private function standardTable() {
+    private function standardTable(map<anydata>? structure) returns error? {
         // Add the previous table to the TOML object
-        
+        self.tomlObject = check self.buildTOMLObject(self.tomlObject);
 
+        // Expected a table key
+        check self.checkToken([UNQUOTED_KEY, BASIC_STRING, LITERAL_STRING], "Expected a key after '[' in a table key");
+        string key = self.currentToken.value;
 
-        // Build the dotted key
+        check self.checkToken([DOT, CLOSE_BRACKET], "Expected '.' or ']' after a table key");
 
-        // Initialize the current structure
+        match self.currentToken.token {
+            DOT => { // Build the dotted key
 
-        // Check whether it is possible to add values
-    }
+                // return check self.standardTable();
+            }
 
-    private function buildTOMLObject(map<anydata>? structure = ()){
-        // Root table
-        if (self.keyStack.length() == 0) {
-            self.tomlObject = self.currentStructure;
-            return;
+            CLOSE_BRACKET => {
+                // Initialize the current structure
+                // Check whether it is possible to add values
+
+            }
         }
 
-        // First level tables
+    }
+
+    private function buildTOMLObject(map<anydata>? structure = ()) returns map<anydata>|error {
+        // Under the root table
+        if (self.keyStack.length() == 0) {
+            return self.currentStructure;
+        }
+
+        // First key table
         if (self.keyStack.length() == 1) {
             string key = self.keyStack.pop();
-            self.tomlObject[key] = self.currentStructure;
+            return self.buildInternalTable(key, self.currentStructure, structure);
         }
 
         // Dotted tables
         string key = self.keyStack.shift();
-        self.buildTOMLObject(structure[key] is map<anydata> ? <map<anydata>>structure[key] : ());
+        map<anydata> value = check self.buildTOMLObject(structure[key] is map<anydata> ? <map<anydata>>structure[key] : ());
+        return self.buildInternalTable(key, value, structure);
+
     }
 
     # Check errors during type casting to Ballerina types.
-    #   
+    #
     # + value - Value to be type casted.
     # + return - Value as a Ballerina data type  
     private function processTypeCastingError(anydata|error value) returns anydata|ParsingError {

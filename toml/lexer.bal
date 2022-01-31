@@ -82,7 +82,7 @@ class Lexer {
                 if (self.peek(1) == "]") {
                     return self.generateToken(DOUBLE_CLOSE_BRACKET);
                 }
-                return self.generateToken(CLOST_BRACKET);
+                return self.generateToken(CLOSE_BRACKET);
             }
             "," => {
                 return self.generateToken(ARRAY_SEPARATOR);
