@@ -56,17 +56,16 @@ class Parser {
 
             match self.currentToken.token {
                 UNQUOTED_KEY|BASIC_STRING|LITERAL_STRING => { // Process a key value
-                    map<anydata> output = check self.keyValue(self.tomlObject);
-
-                    // Add the key-value pair to the final TOML object.
-                    string tomlKey = output.keys()[0];
-                    self.tomlObject[tomlKey] = output[tomlKey];
-
+                    self.currentStructure = check self.keyValue(self.currentStructure.clone());
                     self.lexer.state = EXPRESSION_KEY;
                     self.lexemeBuffer = "";
                 }
                 OPEN_BRACKET => { // Process a standard tale
-                    check self.standardTable(self.tomlObject);
+                    // Add the previous table to the TOML object
+                    self.tomlObject = check self.buildTOMLObject(self.tomlObject.clone());
+
+                    check self.checkToken([UNQUOTED_KEY, BASIC_STRING, LITERAL_STRING], "Expected a key after '[' in a table key");
+                    check self.standardTable(self.tomlObject.clone());
                 }
                 DOUBLE_OPEN_BRACKET => { // Process an array table
 
@@ -83,7 +82,7 @@ class Parser {
         }
 
         // Return the TOML object
-        // self.tomlObject = check self.buildTOMLObject(self.tomlObject);
+        self.tomlObject = check self.buildTOMLObject(self.tomlObject.clone());
         return self.tomlObject;
     }
 
@@ -118,15 +117,13 @@ class Parser {
     # + return - Returns the structure after assigning the value.
     private function keyValue(map<anydata> structure) returns map<anydata>|error {
         string tomlKey = self.currentToken.value;
+        check self.verifyKey(structure, tomlKey);
 
         check self.checkToken([DOT, KEY_VALUE_SEPERATOR], "Expected a '.' or a '=' after a key");
 
         match self.currentToken.token {
             DOT => {
                 check self.checkToken([UNQUOTED_KEY, BASIC_STRING, LITERAL_STRING], "Expected a key after '.'");
-
-                check self.verifyKey(structure, tomlKey);
-
                 map<anydata> value = check self.keyValue(structure[tomlKey] is map<anydata> ? <map<anydata>>structure[tomlKey] : {});
                 structure[tomlKey] = value;
                 return structure;
@@ -145,12 +142,9 @@ class Parser {
                     BOOLEAN
                 ], "Expected a value after '='");
 
-                if structure.hasKey(tomlKey) {
-                    return self.generateError("Duplicate key '" + tomlKey + "'");
-                } else {
-                    structure[tomlKey] = check self.dataValue();
-                    return structure;
-                }
+                structure[tomlKey] = check self.dataValue();
+                return structure;
+
             }
             _ => {
                 return self.generateError("Expected a '.' or a '=' after a key");
@@ -168,6 +162,7 @@ class Parser {
         if (structure is map<anydata>) {
             map<anydata> castedStructure = <map<anydata>>structure;
             if (castedStructure.hasKey(key) && !(castedStructure[key] is map<anydata>)) {
+                // TODO: Improve the error message by stacking the parents
                 return self.generateError("Duplicate values exists");
             }
         }
@@ -356,26 +351,24 @@ class Parser {
         }
     }
 
-    private function standardTable(map<anydata>? structure) returns error? {
-        // Add the previous table to the TOML object
-        self.tomlObject = check self.buildTOMLObject(self.tomlObject);
+    private function standardTable(map<anydata> structure) returns error? {
 
-        // Expected a table key
-        check self.checkToken([UNQUOTED_KEY, BASIC_STRING, LITERAL_STRING], "Expected a key after '[' in a table key");
-        string key = self.currentToken.value;
+        // Establish the current structure
+        string tomlKey = self.currentToken.value;
+        self.keyStack.push(tomlKey);
+        check self.verifyKey(structure, tomlKey);
 
         check self.checkToken([DOT, CLOSE_BRACKET], "Expected '.' or ']' after a table key");
 
         match self.currentToken.token {
             DOT => { // Build the dotted key
-
-                // return check self.standardTable();
+                check self.checkToken([UNQUOTED_KEY, BASIC_STRING, LITERAL_STRING], "Expected a key after '.' in a table key");
+                return check self.standardTable(structure[tomlKey] is map<anydata> ? <map<anydata>>structure[tomlKey] : {});
             }
 
-            CLOSE_BRACKET => {
-                // Initialize the current structure
-                // Check whether it is possible to add values
-
+            CLOSE_BRACKET => { // Initialize the current structure
+                self.currentStructure = structure[tomlKey] is map<anydata> ? <map<anydata>>structure[tomlKey] : {};
+                return;
             }
         }
 
@@ -391,6 +384,7 @@ class Parser {
         if (self.keyStack.length() == 1) {
             string key = self.keyStack.pop();
             structure[key] = self.currentStructure;
+            return structure;
         }
 
         // Dotted tables

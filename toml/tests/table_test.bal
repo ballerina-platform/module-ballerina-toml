@@ -18,7 +18,7 @@ function testMultipleStandardTables() returns error? {
             .hasKey("key2", "a")
             .hop()
         .dive("table2")
-            .hasKey("key1", 1)
-            .hasKey("key2", "a")
+            .hasKey("key1", 2)
+            .hasKey("key2", "b")
             .close();
 }

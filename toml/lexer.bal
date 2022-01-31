@@ -300,7 +300,7 @@ class Lexer {
     # + return - True if the end of the key, An error message for an invalid character.  
     private function unquotedKey(int i) returns boolean|LexicalError {
         if (!regex:matches(self.line[i], UNQUOTED_STRING_PATTERN)) {
-            if (self.line[i] == " " || self.line[i] == ".") {
+            if (self.line[i] == " " || self.line[i] == "." || self.line[i] == "]") {
                 self.index = i - 1;
                 return true;
             }
