@@ -38,3 +38,18 @@ function testDottedStandardTables() returns error? {
 function testDuplicateTableKeys() {
     assertParsingError("table_duplicate", true);
 }
+
+@test:Config {}
+function testRedefiningDottedKey() {
+    assertParsingError("table_redefined_dotted", true);
+}
+
+@test:Config {}
+function testTableUndefinedDottedKey() returns error? {
+    AssertKey ak = check new AssertKey("table_undefined_dotted", true);
+    ak.dive("table")
+        .dive("outer")
+            .hasKey("key", 1)
+            .hasKey("inner", 1)
+            .close();
+}

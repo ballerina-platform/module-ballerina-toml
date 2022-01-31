@@ -371,6 +371,7 @@ class Parser {
             }
 
             CLOSE_BRACKET => { // Initialize the current structure
+
                 // Check if the table key is already defined
                 string tableKeyName = keyName + tomlKey;
                 if (self.definedTableKeys.indexOf(tableKeyName) != ()) {
