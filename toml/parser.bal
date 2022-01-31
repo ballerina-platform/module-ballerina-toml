@@ -116,7 +116,7 @@ class Parser {
     #
     # + structure - The structure for the previous key. Null if there is no value.
     # + return - Returns the structure after assigning the value.
-    private function keyValue(map<anydata>? structure) returns map<anydata>|error {
+    private function keyValue(map<anydata> structure) returns map<anydata>|error {
         string tomlKey = self.currentToken.value;
 
         check self.checkToken([DOT, KEY_VALUE_SEPERATOR], "Expected a '.' or a '=' after a key");
@@ -127,8 +127,9 @@ class Parser {
 
                 check self.verifyKey(structure, tomlKey);
 
-                map<anydata> value = check self.keyValue(structure[tomlKey] is map<anydata> ? <map<anydata>>structure[tomlKey] : ());
-                return self.buildInternalTable(tomlKey, value, structure);
+                map<anydata> value = check self.keyValue(structure[tomlKey] is map<anydata> ? <map<anydata>>structure[tomlKey] : {});
+                structure[tomlKey] = value;
+                return structure;
             }
 
             KEY_VALUE_SEPERATOR => {
@@ -144,10 +145,11 @@ class Parser {
                     BOOLEAN
                 ], "Expected a value after '='");
 
-                if (structure is map<anydata> && (<map<anydata>>structure).hasKey(tomlKey)) {
+                if structure.hasKey(tomlKey) {
                     return self.generateError("Duplicate key '" + tomlKey + "'");
                 } else {
-                    return self.buildInternalTable(tomlKey, check self.dataValue(), structure);
+                    structure[tomlKey] = check self.dataValue();
+                    return structure;
                 }
             }
             _ => {
@@ -379,7 +381,7 @@ class Parser {
 
     }
 
-    private function buildTOMLObject(map<anydata>? structure = ()) returns map<anydata>|error {
+    private function buildTOMLObject(map<anydata> structure) returns map<anydata>|error {
         // Under the root table
         if (self.keyStack.length() == 0) {
             return self.currentStructure;
@@ -388,14 +390,14 @@ class Parser {
         // First key table
         if (self.keyStack.length() == 1) {
             string key = self.keyStack.pop();
-            return self.buildInternalTable(key, self.currentStructure, structure);
+            structure[key] = self.currentStructure;
         }
 
         // Dotted tables
         string key = self.keyStack.shift();
-        map<anydata> value = check self.buildTOMLObject(structure[key] is map<anydata> ? <map<anydata>>structure[key] : ());
-        return self.buildInternalTable(key, value, structure);
-
+        map<anydata> value = check self.buildTOMLObject(structure[key] is map<anydata> ? <map<anydata>>structure[key] : {});
+        structure[key] = value;
+        return structure;
     }
 
     # Check errors during type casting to Ballerina types.
@@ -410,28 +412,6 @@ class Parser {
 
         // Returns the value on success
         return value;
-    }
-
-    # Constructs the internal table of the TOML object.
-    #
-    # + tomlKey - New key of the TOML object  
-    # + tomlValue - Value of the key  
-    # + structure - Already existing internal table
-    # + return - Constructed inner table. 
-    private function buildInternalTable(string tomlKey, anydata tomlValue, map<anydata>? structure) returns map<anydata> {
-
-        // Creates a new structure and add the key value
-        if (structure == ()) {
-            map<anydata> returnValue = {};
-            returnValue[tomlKey] = tomlValue;
-            return returnValue;
-        }
-        
-        // Add the key to the existing strcuture
-        else {
-            structure[tomlKey] = tomlValue;
-            return structure;
-        }
     }
 
     private function initLexer(boolean incrementLine = true) returns boolean {
