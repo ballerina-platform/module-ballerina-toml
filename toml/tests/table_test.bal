@@ -22,3 +22,19 @@ function testMultipleStandardTables() returns error? {
             .hasKey("key2", "b")
             .close();
 }
+
+@test:Config {}
+function testDottedStandardTables() returns error? {
+    AssertKey ak = check new AssertKey("table_dotted_keys",true);
+    ak.hasKey("outer")
+        .dive("outer")
+            .hasKey("key", 1)
+            .dive("inner")
+                .hasKey("key1", 1)
+                .close();
+}
+
+@test:Config {}
+function testDuplicateTableKeys() {
+    assertParsingError("table_duplicate", true);
+}

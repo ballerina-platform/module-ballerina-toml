@@ -24,6 +24,9 @@ class Parser {
     # Key stack to the current structure
     private string[] keyStack;
 
+    # Already defined table keys
+    private string[] definedTableKeys;
+
     # Lexical analyzer tool for getting the tokens
     private Lexer lexer;
 
@@ -35,6 +38,7 @@ class Parser {
         self.tomlObject = {};
         self.currentStructure = {};
         self.keyStack = [];
+        self.definedTableKeys = [];
         self.lineIndex = 0;
         self.lexemeBuffer = "";
     }
@@ -155,8 +159,8 @@ class Parser {
     # If the structure exists and already assigned a value that is not a table,
     # then it is invalid to assign a value to it or nested to it.
     #
-    # + structure - Structure which the key should exist in   
-    # + key - Key to be verified in the structure
+    # + structure - Structure which the key should exist in  
+    # + key - Key to be verified in the structure  
     # + return - Error, if there already exists a non-table value
     private function verifyKey(map<anydata>? structure, string key) returns error? {
         if (structure is map<anydata>) {
@@ -351,7 +355,7 @@ class Parser {
         }
     }
 
-    private function standardTable(map<anydata> structure) returns error? {
+    private function standardTable(map<anydata> structure, string keyName = "") returns error? {
 
         // Establish the current structure
         string tomlKey = self.currentToken.value;
@@ -363,10 +367,18 @@ class Parser {
         match self.currentToken.token {
             DOT => { // Build the dotted key
                 check self.checkToken([UNQUOTED_KEY, BASIC_STRING, LITERAL_STRING], "Expected a key after '.' in a table key");
-                return check self.standardTable(structure[tomlKey] is map<anydata> ? <map<anydata>>structure[tomlKey] : {});
+                return check self.standardTable(structure[tomlKey] is map<anydata> ? <map<anydata>>structure[tomlKey] : {}, tomlKey + ".");
             }
 
             CLOSE_BRACKET => { // Initialize the current structure
+                // Check if the table key is already defined
+                string tableKeyName = keyName + tomlKey;
+                if (self.definedTableKeys.indexOf(tableKeyName) != ()) {
+                    return self.generateError("Duplicate table key '" + tableKeyName + "'");
+                } else {
+                    self.definedTableKeys.push(tableKeyName);
+                }
+
                 self.currentStructure = structure[tomlKey] is map<anydata> ? <map<anydata>>structure[tomlKey] : {};
                 return;
             }
