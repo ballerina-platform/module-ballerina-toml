@@ -114,7 +114,6 @@ class Parser {
     # At the terminal, a value is assigned to the last key, 
     # and nested under the previous key's map if exists.
     #
-    # + alreadyExists - There is an existing value for the previous key.
     # + structure - The structure for the previous key. Null if there is no value.
     # + return - Returns the structure after assigning the value.
     private function keyValue(map<anydata>? structure) returns map<anydata>|error {
@@ -126,14 +125,7 @@ class Parser {
             DOT => {
                 check self.checkToken([UNQUOTED_KEY, BASIC_STRING, LITERAL_STRING], "Expected a key after '.'");
 
-                // If the structure exists and already assigned a value that is not a table,
-                // then it is invalid to assign a value to it or nested to it.
-                if (structure is map<anydata>) {
-                    map<anydata> castedStructure = <map<anydata>>structure;
-                    if (castedStructure.hasKey(tomlKey) && !(castedStructure[tomlKey] is map<anydata>)) {
-                        return self.generateError("Duplicate values exists");
-                    }
-                }
+                check self.verifyKey(structure, tomlKey);
 
                 map<anydata> value = check self.keyValue(structure[tomlKey] is map<anydata> ? <map<anydata>>structure[tomlKey] : ());
                 return self.buildInternalTable(tomlKey, value, structure);
@@ -160,6 +152,21 @@ class Parser {
             }
             _ => {
                 return self.generateError("Expected a '.' or a '=' after a key");
+            }
+        }
+    }
+
+    # If the structure exists and already assigned a value that is not a table,
+    # then it is invalid to assign a value to it or nested to it.
+    #
+    # + structure - Structure which the key should exist in   
+    # + key - Key to be verified in the structure
+    # + return - Error, if there already exists a non-table value
+    private function verifyKey(map<anydata>? structure, string key) returns error? {
+        if (structure is map<anydata>) {
+            map<anydata> castedStructure = <map<anydata>>structure;
+            if (castedStructure.hasKey(key) && !(castedStructure[key] is map<anydata>)) {
+                return self.generateError("Duplicate values exists");
             }
         }
     }
