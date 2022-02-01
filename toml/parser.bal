@@ -357,8 +357,7 @@ class Parser {
             OPEN_BRACKET,
             CLOSE_BRACKET,
             INLINE_TABLE_OPEN,
-            EOL,
-            ARRAY_SEPARATOR
+            EOL
         ], "Expected a value or ']' after '['");
 
         match self.currentToken.token {
@@ -373,14 +372,34 @@ class Parser {
             }
             _ => { // Array value
                 tempArray.push(check self.dataValue());
+                return self.arrayValue(tempArray);
+            }
+        }
+    }
 
-                if (self.tokenConsumed) {
-                    self.tokenConsumed = false;
-                } else {
-                    check self.checkToken([ARRAY_SEPARATOR, CLOSE_BRACKET], "Expected an ',' or ']' after an array value");
+    private function arrayValue(anydata[] tempArray = []) returns anydata[]|error {
+        if (self.tokenConsumed) {
+            self.tokenConsumed = false;
+        } else {
+            check self.checkToken([ // TODO: add the remaning values
+                EOL,
+                CLOSE_BRACKET,
+                ARRAY_SEPARATOR
+            ], "Expected a value or ']' after '['");
+        }
+
+        match self.currentToken.token {
+            EOL => {
+                if (self.initLexer()) {
+                    return self.arrayValue(tempArray);
                 }
-
-                return self.currentToken.token == CLOSE_BRACKET ? tempArray : self.array(tempArray);
+                return self.generateError("Expected ']' or ',' after an array value");
+            }
+            CLOSE_BRACKET => {
+                return tempArray;
+            }
+            _ => { // Array separator
+                return self.array(tempArray);
             }
         }
     }
@@ -438,7 +457,7 @@ class Parser {
                 self.definedTableKeys.push(tableKeyName);
 
                 if (structure.hasKey(tomlKey) && !(structure[tomlKey] is map<anydata>)) {
-                    return self.generateError("Already defined an array table for '" + tomlKey + "'" );
+                    return self.generateError("Already defined an array table for '" + tomlKey + "'");
                 }
 
                 self.currentStructure = structure[tomlKey] is map<anydata> ? <map<anydata>>structure[tomlKey] : {};
@@ -467,7 +486,7 @@ class Parser {
                 check self.verifyTableKey(keyName + tomlKey);
 
                 if (structure.hasKey(tomlKey) && !(structure[tomlKey] is anydata[])) {
-                    return self.generateError("Cannot define an array table for a standard table defined by '" + tomlKey + "'" );
+                    return self.generateError("Cannot define an array table for a standard table defined by '" + tomlKey + "'");
                 }
 
                 self.currentStructure = {};

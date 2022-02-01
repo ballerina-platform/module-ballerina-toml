@@ -61,7 +61,7 @@ class Lexer {
         }
 
         match self.line[self.index] {
-            " " => { // Whitespace
+            " "|"\t" => { // Whitespace
                 self.index += 1;
                 return check self.getToken();
             }
