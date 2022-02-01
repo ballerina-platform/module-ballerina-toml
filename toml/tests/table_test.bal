@@ -53,3 +53,31 @@ function testTableUndefinedDottedKey() returns error? {
             .hasKey("inner", 1)
             .close();
 }
+
+@test:Config {}
+function testInlineTableTerminalTokens() returns error? {
+    Lexer lexer = setLexerString("{", EXPRESSION_VALUE);
+    check assertToken(lexer, INLINE_TABLE_OPEN);
+
+    lexer = setLexerString("}", EXPRESSION_VALUE);
+    check assertToken(lexer, INLINE_TABLE_CLOSE);
+}
+
+@test:Config {}
+function testProcesInlineTable() returns error? {
+    AssertKey ak = check new AssertKey("inline_table", true);
+    ak.dive("name")
+        .hasKey("first", "Tom")
+        .hop()
+    .dive("point")
+        .hasKey("x", 1)
+        .hop()
+    .dive("animal")
+        .dive("type")
+            .hasKey("name", "pug")
+            .close();
+}
+@test:Config {}
+function testRedefineInlineTable() {
+    assertParsingError("inline_redefine_table", true);
+}

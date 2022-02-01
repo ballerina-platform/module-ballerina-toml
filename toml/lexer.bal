@@ -181,6 +181,12 @@ class Lexer {
             "e"|"E" => {
                 return self.generateToken(EXPONENTIAL);
             }
+            "{" => {
+                return self.generateToken(INLINE_TABLE_OPEN);
+            }
+            "}" => {
+                return self.generateToken(INLINE_TABLE_CLOSE);
+            }
         }
 
         // Check for values starting with an integer.
@@ -300,7 +306,7 @@ class Lexer {
     # + return - True if the end of the key, An error message for an invalid character.  
     private function unquotedKey(int i) returns boolean|LexicalError {
         if (!regex:matches(self.line[i], UNQUOTED_STRING_PATTERN)) {
-            if (self.line[i] == " " || self.line[i] == "." || self.line[i] == "]") {
+            if (self.line[i] == " " || self.line[i] == "." || self.line[i] == "]" || self.line[i] == "=") {
                 self.index = i - 1;
                 return true;
             }
@@ -318,7 +324,7 @@ class Lexer {
         return function(int i) returns boolean|LexicalError {
             if (!regex:matches(self.line[i], digitPattern)) {
                 if (self.line[i] == " " || self.line[i] == "#") {
-                    self.index = i;
+                    self.index = i - 1;
                     return true;
                 }
 

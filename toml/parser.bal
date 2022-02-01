@@ -27,6 +27,9 @@ class Parser {
     # Already defined table keys
     private string[] definedTableKeys;
 
+    # If the token for a next grammar rule has been bufferred to the current token
+    private boolean tokenConsumed;
+
     # Lexical analyzer tool for getting the tokens
     private Lexer lexer;
 
@@ -39,6 +42,7 @@ class Parser {
         self.currentStructure = {};
         self.keyStack = [];
         self.definedTableKeys = [];
+        self.tokenConsumed = false;
         self.lineIndex = 0;
         self.lexemeBuffer = "";
     }
@@ -62,7 +66,6 @@ class Parser {
                 UNQUOTED_KEY|BASIC_STRING|LITERAL_STRING => { // Process a key value
                     self.currentStructure = check self.keyValue(self.currentStructure.clone());
                     self.lexer.state = EXPRESSION_KEY;
-                    self.lexemeBuffer = "";
                 }
                 OPEN_BRACKET => { // Process a standard tale
                     // Add the previous table to the TOML object
@@ -143,7 +146,8 @@ class Parser {
                     MULTI_LSTRING_DELIMITER,
                     INTEGER,
                     OPEN_BRACKET,
-                    BOOLEAN
+                    BOOLEAN,
+                    INLINE_TABLE_OPEN
                 ], "Expected a value after '='");
 
                 structure[tomlKey] = check self.dataValue();
@@ -191,6 +195,9 @@ class Parser {
             }
             OPEN_BRACKET => {
                 returnData = check self.array();
+            }
+            INLINE_TABLE_OPEN => {
+                returnData = check self.inlineTable();
             }
             _ => {
                 returnData = self.currentToken.value;
@@ -284,7 +291,8 @@ class Parser {
         check self.checkToken([EOL, EXPONENTIAL, DOT, ARRAY_SEPARATOR, CLOSE_BRACKET], "Invalid token after an integer");
 
         match self.currentToken.token {
-            EOL|ARRAY_SEPARATOR|CLOSE_BRACKET => { // Generate the final number
+            EOL|ARRAY_SEPARATOR|CLOSE_BRACKET|INLINE_TABLE_CLOSE => { // Generate the final number
+                self.tokenConsumed = true;
                 return fractional ? check self.processTypeCastingError('float:fromString(self.lexemeBuffer))
                                         : check self.processTypeCastingError('int:fromString(self.lexemeBuffer));
             }
@@ -307,7 +315,7 @@ class Parser {
         }
     }
 
-    private function array(anydata[] tempArray = [], boolean isStart = true) returns anydata[]|error {
+    private function array(anydata[] tempArray = []) returns anydata[]|error {
 
         check self.checkToken([ // TODO: add the remaning values
             BASIC_STRING,
@@ -318,14 +326,15 @@ class Parser {
             BOOLEAN,
             OPEN_BRACKET,
             CLOSE_BRACKET,
+            INLINE_TABLE_OPEN,
             EOL,
             ARRAY_SEPARATOR
-        ], "Expected a value after '='");
+        ], "Expected a value or ']' after '['");
 
         match self.currentToken.token {
             EOL => {
                 if (self.initLexer()) {
-                    return self.array(tempArray, false);
+                    return self.array(tempArray);
                 }
                 return self.generateError("Exptected ']' at the end of an array");
             }
@@ -334,25 +343,50 @@ class Parser {
             }
             INTEGER => { // Tokens that have consumed the next token
                 tempArray.push(check self.dataValue());
-                return self.currentToken.token == CLOSE_BRACKET ? tempArray : self.array(tempArray, false);
+                return self.currentToken.token == CLOSE_BRACKET ? tempArray : self.array(tempArray);
             }
             _ => { // Array value
                 tempArray.push(check self.dataValue());
-                check self.checkToken([ARRAY_SEPARATOR, CLOSE_BRACKET], "Expected an ',' or ']' after an array value");
 
-                match self.currentToken.token {
-                    CLOSE_BRACKET => { // End of the array value
-                        return tempArray;
-                    }
-                    ARRAY_SEPARATOR => { // Expects another array value
-                        return self.array(tempArray, false);
-                    }
-                    _ => {
-                        return self.generateError("Expected an ',' or ']' after an array value");
-                    }
+                if (self.tokenConsumed) {
+                    self.tokenConsumed = false;
+                } else {
+                    check self.checkToken([ARRAY_SEPARATOR, CLOSE_BRACKET], "Expected an ',' or ']' after an array value");
                 }
+
+                return self.currentToken.token == CLOSE_BRACKET ? tempArray : self.array(tempArray);
             }
         }
+    }
+
+    private function inlineTable(map<anydata> tempTable = {}, boolean isStart = true) returns map<anydata>|error {
+        self.lexer.state = EXPRESSION_KEY;
+        check self.checkToken([ // TODO: add the remaning values
+            UNQUOTED_KEY,
+            BASIC_STRING,
+            LITERAL_STRING,
+            isStart ? INLINE_TABLE_CLOSE : DUMMY
+        ], "Expected a value or '}' after '{'");
+
+        // This is unreachable after a separator.
+        // This condition is only available to create an empty table.
+        if (self.currentToken.token == INLINE_TABLE_CLOSE) {
+            return tempTable;
+        }
+
+        map<anydata> newTable = check self.keyValue(tempTable.clone());
+
+        if (self.tokenConsumed) {
+            self.tokenConsumed = false;
+        } else {
+            check self.checkToken([ARRAY_SEPARATOR, INLINE_TABLE_CLOSE], "Expected ',' or '}' after a key value pair in an inline table");
+        }
+
+        if (self.currentToken.token == ARRAY_SEPARATOR) {
+            return check self.inlineTable(newTable, false);
+        }
+
+        return tempTable;
     }
 
     private function standardTable(map<anydata> structure, string keyName = "") returns error? {
