@@ -186,11 +186,10 @@ class Parser {
     # + structure - Structure which the key should exist in  
     # + key - Key to be verified in the structure  
     # + return - Error, if there already exists a non-table value
-    private function verifyKey(map<anydata>? structure, string key, boolean isArray = false) returns error? {
+    private function verifyKey(map<anydata>? structure, string key) returns error? {
         if (structure is map<anydata>) {
             map<anydata> castedStructure = <map<anydata>>structure;
             if (castedStructure.hasKey(key) && !(castedStructure[key] is anydata[] || castedStructure[key] is map<anydata>)) {
-                // if (castedStructure.hasKey(key) && !(isArray ? castedStructure[key] is anydata[] : castedStructure[key] is map<anydata>)) {
                 // TODO: Improve the error message by stacking the parents
                 return self.generateError("Duplicate values exists");
             }
@@ -452,7 +451,7 @@ class Parser {
     private function arrayTable(map<anydata> structure, string keyName = "") returns error? {
         string tomlKey = self.currentToken.value;
         self.keyStack.push(tomlKey);
-        check self.verifyKey(structure, tomlKey, true);
+        check self.verifyKey(structure, tomlKey);
 
         check self.checkToken([DOT, ARRAY_TABLE_CLOSE], "Expected '.' or ']]' after a array table key");
 
