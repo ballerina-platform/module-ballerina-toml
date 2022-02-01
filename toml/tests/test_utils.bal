@@ -142,10 +142,12 @@ class AssertKey {
     #
     # + return - Return Value Description  
     function hop() returns AssertKey {
+        string dummyKey; // dummy variable to hold the removed keys
 
         // If the parent node is the root
         if (self.stack.length() == 1) {
             self.innerData = ();
+            dummyKey = self.stack.pop();
             return self;
         }
 
@@ -153,6 +155,7 @@ class AssertKey {
         map<anydata>? targettedObject;
         foreach int i in 0 ... self.stack.length() - 2 {
             targettedObject = <map<anydata>?>self.toml[self.stack[i]];
+            dummyKey = self.stack.remove(i);
         }
         self.innerData = targettedObject;
 

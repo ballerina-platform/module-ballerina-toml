@@ -81,3 +81,15 @@ function testProcesInlineTable() returns error? {
 function testRedefineInlineTable() {
     assertParsingError("inline_redefine_table", true);
 }
+
+@test:Config {}
+function testEmptyInlineTable() returns error? {
+    AssertKey ak = check new AssertKey("key = {}");
+    ak.hasKey("key").close();
+}
+
+@test:Config {}
+function testSeparatorBeforeInlineTableTerminal() {
+    assertParsingError("key = {a=1,}");
+    assertParsingError("{,}");
+}

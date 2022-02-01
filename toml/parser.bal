@@ -30,6 +30,9 @@ class Parser {
     # If the token for a next grammar rule has been bufferred to the current token
     private boolean tokenConsumed;
 
+    # Buffers the key in the full format
+    private string bufferedKey;
+
     # Lexical analyzer tool for getting the tokens
     private Lexer lexer;
 
@@ -43,6 +46,7 @@ class Parser {
         self.keyStack = [];
         self.definedTableKeys = [];
         self.tokenConsumed = false;
+        self.bufferedKey = "";
         self.lineIndex = 0;
         self.lexemeBuffer = "";
     }
@@ -64,6 +68,7 @@ class Parser {
 
             match self.currentToken.token {
                 UNQUOTED_KEY|BASIC_STRING|LITERAL_STRING => { // Process a key value
+                    self.bufferedKey = self.currentToken.value;
                     self.currentStructure = check self.keyValue(self.currentStructure.clone());
                     self.lexer.state = EXPRESSION_KEY;
                 }
@@ -125,12 +130,14 @@ class Parser {
     private function keyValue(map<anydata> structure) returns map<anydata>|error {
         string tomlKey = self.currentToken.value;
         check self.verifyKey(structure, tomlKey);
+        check self.verifyTableKey(self.bufferedKey);
 
         check self.checkToken([DOT, KEY_VALUE_SEPERATOR], "Expected a '.' or a '=' after a key");
 
         match self.currentToken.token {
             DOT => {
                 check self.checkToken([UNQUOTED_KEY, BASIC_STRING, LITERAL_STRING], "Expected a key after '.'");
+                self.bufferedKey += "." + self.currentToken.value;
                 map<anydata> value = check self.keyValue(structure[tomlKey] is map<anydata> ? <map<anydata>>structure[tomlKey] : {});
                 structure[tomlKey] = value;
                 return structure;
@@ -176,6 +183,12 @@ class Parser {
         }
     }
 
+    private function verifyTableKey(string tableKeyName) returns error?{
+        if (self.definedTableKeys.indexOf(tableKeyName) != ()) {
+            return self.generateError("Duplicate table key '" + tableKeyName + "'");
+        }
+    }
+
     private function dataValue() returns anydata|error {
         anydata returnData;
         match self.currentToken.token {
@@ -198,6 +211,8 @@ class Parser {
             }
             INLINE_TABLE_OPEN => {
                 returnData = check self.inlineTable();
+                self.definedTableKeys.push(self.bufferedKey);
+                self.bufferedKey = "";
             }
             _ => {
                 returnData = self.currentToken.value;
@@ -288,7 +303,7 @@ class Parser {
     # + return - Parsing error if occurred
     private function number(boolean fractional = false) returns anydata|error {
         self.lexemeBuffer += self.currentToken.value;
-        check self.checkToken([EOL, EXPONENTIAL, DOT, ARRAY_SEPARATOR, CLOSE_BRACKET], "Invalid token after an integer");
+        check self.checkToken([EOL, EXPONENTIAL, DOT, ARRAY_SEPARATOR, CLOSE_BRACKET, INLINE_TABLE_CLOSE], "Invalid token after an integer");
 
         match self.currentToken.token {
             EOL|ARRAY_SEPARATOR|CLOSE_BRACKET|INLINE_TABLE_CLOSE => { // Generate the final number
@@ -341,10 +356,6 @@ class Parser {
             CLOSE_BRACKET => { // If the array ends with a ','
                 return tempArray;
             }
-            INTEGER => { // Tokens that have consumed the next token
-                tempArray.push(check self.dataValue());
-                return self.currentToken.token == CLOSE_BRACKET ? tempArray : self.array(tempArray);
-            }
             _ => { // Array value
                 tempArray.push(check self.dataValue());
 
@@ -361,7 +372,7 @@ class Parser {
 
     private function inlineTable(map<anydata> tempTable = {}, boolean isStart = true) returns map<anydata>|error {
         self.lexer.state = EXPRESSION_KEY;
-        check self.checkToken([ // TODO: add the remaning values
+        check self.checkToken([
             UNQUOTED_KEY,
             BASIC_STRING,
             LITERAL_STRING,
@@ -386,7 +397,7 @@ class Parser {
             return check self.inlineTable(newTable, false);
         }
 
-        return tempTable;
+        return newTable;
     }
 
     private function standardTable(map<anydata> structure, string keyName = "") returns error? {
@@ -408,11 +419,8 @@ class Parser {
 
                 // Check if the table key is already defined
                 string tableKeyName = keyName + tomlKey;
-                if (self.definedTableKeys.indexOf(tableKeyName) != ()) {
-                    return self.generateError("Duplicate table key '" + tableKeyName + "'");
-                } else {
-                    self.definedTableKeys.push(tableKeyName);
-                }
+                check self.verifyTableKey(tableKeyName);
+                self.definedTableKeys.push(tableKeyName);
 
                 self.currentStructure = structure[tomlKey] is map<anydata> ? <map<anydata>>structure[tomlKey] : {};
                 return;
