@@ -189,7 +189,8 @@ class Parser {
     private function verifyKey(map<anydata>? structure, string key, boolean isArray = false) returns error? {
         if (structure is map<anydata>) {
             map<anydata> castedStructure = <map<anydata>>structure;
-            if (castedStructure.hasKey(key) && !(isArray ? castedStructure[key] is anydata[] : castedStructure[key] is map<anydata>)) {
+            if (castedStructure.hasKey(key) && !(castedStructure[key] is anydata[] || castedStructure[key] is map<anydata>)) {
+                // if (castedStructure.hasKey(key) && !(isArray ? castedStructure[key] is anydata[] : castedStructure[key] is map<anydata>)) {
                 // TODO: Improve the error message by stacking the parents
                 return self.generateError("Duplicate values exists");
             }
@@ -427,7 +428,7 @@ class Parser {
         match self.currentToken.token {
             DOT => { // Build the dotted key
                 check self.checkToken([UNQUOTED_KEY, BASIC_STRING, LITERAL_STRING], "Expected a key after '.' in a table key");
-                return check self.standardTable(structure[tomlKey] is map<anydata> ? <map<anydata>>structure[tomlKey] : {}, tomlKey + ".");
+                return check self.standardTable(structure[tomlKey] is map<anydata> ? <map<anydata>>structure[tomlKey] : {}, keyName + tomlKey + ".");
             }
 
             CLOSE_BRACKET => { // Initialize the current structure
@@ -436,6 +437,10 @@ class Parser {
                 string tableKeyName = keyName + tomlKey;
                 check self.verifyTableKey(tableKeyName);
                 self.definedTableKeys.push(tableKeyName);
+
+                if (structure.hasKey(tomlKey) && !(structure[tomlKey] is map<anydata>)) {
+                    return self.generateError("Already defined an array table for '" + tomlKey + "'" );
+                }
 
                 self.currentStructure = structure[tomlKey] is map<anydata> ? <map<anydata>>structure[tomlKey] : {};
                 return;
@@ -461,6 +466,10 @@ class Parser {
 
                 // Check if there is an static array or a standard table key aready defined
                 check self.verifyTableKey(keyName + tomlKey);
+
+                if (structure.hasKey(tomlKey) && !(structure[tomlKey] is anydata[])) {
+                    return self.generateError("Cannot define an array table for a standard table defined by '" + tomlKey + "'" );
+                }
 
                 self.currentStructure = {};
                 return;
@@ -491,8 +500,21 @@ class Parser {
 
         // Dotted tables
         string key = self.keyStack.shift();
-        map<anydata> value = check self.buildTOMLObject(structure[key] is map<anydata> ? <map<anydata>>structure[key] : {});
-        structure[key] = value;
+        map<anydata> value;
+
+        if (structure[key] is map<anydata>) {
+            value = check self.buildTOMLObject(<map<anydata>>structure[key]);
+            structure[key] = value;
+        }
+        else if (structure[key] is anydata[]) {
+            value = check self.buildTOMLObject(<map<anydata>>(<anydata[]>structure[key]).pop());
+            (<anydata[]>structure[key]).push(value);
+        }
+        else {
+            value = check self.buildTOMLObject({});
+            structure[key] = value;
+        }
+
         return structure;
     }
 
