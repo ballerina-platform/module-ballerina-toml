@@ -62,3 +62,45 @@ function testArrayOfInlineTables() returns error? {
     AssertKey ak = check new AssertKey("array_inline_tables", true);
     ak.hasKey("points", [{x: 1, y: 2}, {x: 3, y: 4}]).close();
 }
+
+@test:Config {}
+function testArrayTableRepeated() returns error? {
+    AssertKey ak = check new AssertKey("array_table_repeated", true);
+    ak.hasKey("table", [
+        {key1: 1, str1: "a"},
+        {},
+        {key2: "b", bool: false}
+    ]).close();
+}
+
+@test:Config {}
+function testArrayTableSubtables() returns error? {
+    AssertKey ak = check new AssertKey("array_table_sub", true);
+    ak.hasKey("a", [{
+        "key1" : 1,
+        "b" : {"key2": 2},
+        "c" : [
+            {"key3": 3}
+        ]
+    },{
+        "key4" : 4,
+        "c": [
+            {"key5": 5}
+        ]
+    }]).close();
+}
+
+@test:Config {}
+function testSubtableDefinedBeforeArrayTables() {
+    assertParsingError("array_table_sub.toml", true);
+}
+
+@test:Config {}
+function testRedefiningStaticArraysByArrayTables() {
+    assertParsingError("array_table_static", true);
+}
+
+@test:Config {}
+function testArrayTableRedefineTable() {
+    assertParsingError("array_table_redefine_table", true);
+}

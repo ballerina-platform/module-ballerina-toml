@@ -98,3 +98,8 @@ function testSeparatorBeforeInlineTableTerminal() {
 function testRedefineSuperTable() {
     assertParsingError("inline_redefine_super_table", true);
 }
+
+@test:Config {}
+function testTableRedefineArrayTable() {
+    assertParsingError("table_redefine_array_table", true);
+}

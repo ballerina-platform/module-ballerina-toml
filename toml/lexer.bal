@@ -348,7 +348,7 @@ class Lexer {
 
                 // Float number allows only a decimal number a prefix.
                 // Check for decimal points and exponentials in decimal numbers.
-                // Check for array separators and array end symbol.
+                // Check for separators and end symbols.
                 if (digitPattern == DECIMAL_DIGIT_PATTERN && (
                                 self.line[i] == "." ||
                                 self.line[i] == "e" ||
