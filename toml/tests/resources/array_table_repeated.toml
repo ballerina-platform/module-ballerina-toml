@@ -1,0 +1,10 @@
+[[table]]
+key1 = 1
+str1 = "a"
+
+[[table]]
+
+[[table]]
+str2 = "b"
+
+bool = false
