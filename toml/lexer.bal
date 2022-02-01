@@ -354,7 +354,8 @@ class Lexer {
                                 self.line[i] == "e" ||
                                 self.line[i] == "E" ||
                                 self.line[i] == "," ||
-                                self.line[i] == "]")) {
+                                self.line[i] == "]" ||
+                                self.line[i] == "}")) {
                     self.index = i - 1;
                     return true;
                 }

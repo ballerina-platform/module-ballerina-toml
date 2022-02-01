@@ -54,5 +54,11 @@ function testUnclosedArray() {
 @test:Config {}
 function testEmptyArray() returns error? {
     AssertKey ak = check new AssertKey("arr = []");
-    ak.hasKey("arr",[]).close();
+    ak.hasKey("arr", []).close();
+}
+
+@test:Config {}
+function testArrayOfInlineTables() returns error? {
+    AssertKey ak = check new AssertKey("array_inline_tables", true);
+    ak.hasKey("points", [{x: 1, y: 2}, {x: 3, y: 4}]).close();
 }
