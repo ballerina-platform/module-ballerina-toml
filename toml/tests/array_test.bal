@@ -92,7 +92,7 @@ function testArrayTableSubtables() returns error? {
 
 @test:Config {}
 function testSubtableDefinedBeforeArrayTables() {
-    assertParsingError("array_table_sub.toml", true);
+    assertParsingError("array_table_sub_before", true);
 }
 
 @test:Config {}
