@@ -104,3 +104,12 @@ function testRedefiningStaticArraysByArrayTables() {
 function testArrayTableRedefineTable() {
     assertParsingError("array_table_redefine_table", true);
 }
+
+@test:Config {}
+function testArrayTableForSameObject() returns error? {
+    AssertKey ak = check new AssertKey("array_table_same_object", true);
+    ak.hasKey("table", [
+        {key: 1, str: "a"},
+        {key: 2, str: "b"}
+    ]).close();
+}

@@ -221,13 +221,17 @@ class Parser {
             }
             OPEN_BRACKET => {
                 returnData = check self.array();
-                self.definedTableKeys.push(self.bufferedKey);
-                self.bufferedKey = "";
+                if (!self.isArrayTable) {
+                    self.definedTableKeys.push(self.bufferedKey);
+                    self.bufferedKey = "";
+                }
             }
             INLINE_TABLE_OPEN => {
                 returnData = check self.inlineTable();
-                self.definedTableKeys.push(self.bufferedKey);
-                self.bufferedKey = "";
+                if (!self.isArrayTable) {
+                    self.definedTableKeys.push(self.bufferedKey);
+                    self.bufferedKey = "";
+                }
             }
             _ => {
                 returnData = self.currentToken.value;
