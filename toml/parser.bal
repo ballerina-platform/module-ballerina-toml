@@ -33,6 +33,8 @@ class Parser {
     # Buffers the key in the full format
     private string bufferedKey;
 
+    private boolean isArrayTable;
+
     # Lexical analyzer tool for getting the tokens
     private Lexer lexer;
 
@@ -47,6 +49,7 @@ class Parser {
         self.definedTableKeys = [];
         self.tokenConsumed = false;
         self.bufferedKey = "";
+        self.isArrayTable = false;
         self.lineIndex = 0;
         self.lexemeBuffer = "";
     }
@@ -75,12 +78,17 @@ class Parser {
                 OPEN_BRACKET => { // Process a standard tale
                     // Add the previous table to the TOML object
                     self.tomlObject = check self.buildTOMLObject(self.tomlObject.clone());
+                    self.isArrayTable = false;
 
                     check self.checkToken([UNQUOTED_KEY, BASIC_STRING, LITERAL_STRING], "Expected a key after '[' in a table key");
                     check self.standardTable(self.tomlObject.clone());
                 }
-                DOUBLE_OPEN_BRACKET => { // Process an array table
+                ARRAY_TABLE_OPEN => { // Process an array table
+                    self.tomlObject = check self.buildTOMLObject(self.tomlObject.clone());
+                    self.isArrayTable = true;
 
+                    check self.checkToken([UNQUOTED_KEY, BASIC_STRING, LITERAL_STRING], "Expected a key after '[[' in a table key");
+                    check self.arrayTable(self.tomlObject.clone());
                 }
             }
 
@@ -178,17 +186,17 @@ class Parser {
     # + structure - Structure which the key should exist in  
     # + key - Key to be verified in the structure  
     # + return - Error, if there already exists a non-table value
-    private function verifyKey(map<anydata>? structure, string key) returns error? {
+    private function verifyKey(map<anydata>? structure, string key, boolean isArray = false) returns error? {
         if (structure is map<anydata>) {
             map<anydata> castedStructure = <map<anydata>>structure;
-            if (castedStructure.hasKey(key) && !(castedStructure[key] is map<anydata>)) {
+            if (castedStructure.hasKey(key) && !(isArray ? castedStructure[key] is anydata[] : castedStructure[key] is map<anydata>)) {
                 // TODO: Improve the error message by stacking the parents
                 return self.generateError("Duplicate values exists");
             }
         }
     }
 
-    private function verifyTableKey(string tableKeyName) returns error?{
+    private function verifyTableKey(string tableKeyName) returns error? {
         if (self.definedTableKeys.indexOf(tableKeyName) != ()) {
             return self.generateError("Duplicate table key '" + tableKeyName + "'");
         }
@@ -213,6 +221,8 @@ class Parser {
             }
             OPEN_BRACKET => {
                 returnData = check self.array();
+                self.definedTableKeys.push(self.bufferedKey);
+                self.bufferedKey = "";
             }
             INLINE_TABLE_OPEN => {
                 returnData = check self.inlineTable();
@@ -434,6 +444,30 @@ class Parser {
 
     }
 
+    private function arrayTable(map<anydata> structure, string keyName = "") returns error? {
+        string tomlKey = self.currentToken.value;
+        self.keyStack.push(tomlKey);
+        check self.verifyKey(structure, tomlKey, true);
+
+        check self.checkToken([DOT, ARRAY_TABLE_CLOSE], "Expected '.' or ']]' after a array table key");
+
+        match self.currentToken.token {
+            DOT => { // Build the dotted key
+                check self.checkToken([UNQUOTED_KEY, BASIC_STRING, LITERAL_STRING], "Expected a key after '.' in a table key");
+                return check self.arrayTable(structure[tomlKey] is map<anydata> ? <map<anydata>>structure[tomlKey] : {}, tomlKey + ".");
+            }
+
+            ARRAY_TABLE_CLOSE => { // Initialize the current structure
+
+                // Check if there is an static array or a standard table key aready defined
+                check self.verifyTableKey(keyName + tomlKey);
+
+                self.currentStructure = {};
+                return;
+            }
+        }
+    }
+
     private function buildTOMLObject(map<anydata> structure) returns map<anydata>|error {
         // Under the root table
         if (self.keyStack.length() == 0) {
@@ -443,7 +477,15 @@ class Parser {
         // First key table
         if (self.keyStack.length() == 1) {
             string key = self.keyStack.pop();
-            structure[key] = self.currentStructure;
+            if (self.isArrayTable) {
+                if (structure[key] is anydata[]) {
+                    (<anydata[]>structure[key]).push(self.currentStructure.clone());
+                } else {
+                    structure[key] = [self.currentStructure.clone()];
+                }
+            } else {
+                structure[key] = self.currentStructure;
+            }
             return structure;
         }
 

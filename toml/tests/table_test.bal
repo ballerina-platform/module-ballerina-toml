@@ -3,10 +3,10 @@ import ballerina/test;
 @test:Config {}
 function testDoubleBracketTerminalTokens() returns error? {
     Lexer lexer = setLexerString("[[");
-    check assertToken(lexer, DOUBLE_OPEN_BRACKET);
+    check assertToken(lexer, ARRAY_TABLE_OPEN);
 
     lexer = setLexerString("]]");
-    check assertToken(lexer, DOUBLE_CLOSE_BRACKET);
+    check assertToken(lexer, ARRAY_TABLE_CLOSE);
 }
 
 @test:Config {}

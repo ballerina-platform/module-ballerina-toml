@@ -69,7 +69,7 @@ function testArrayTableRepeated() returns error? {
     ak.hasKey("table", [
         {key1: 1, str1: "a"},
         {},
-        {key2: "b", bool: false}
+        {str2: "b", bool: false}
     ]).close();
 }
 
