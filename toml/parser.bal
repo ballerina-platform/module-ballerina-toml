@@ -157,6 +157,11 @@ class Parser {
                     INLINE_TABLE_OPEN
                 ], "Expected a value after '='");
 
+                // Existing tables cannot be overwritten by inline tables
+                if (self.currentToken.token == INLINE_TABLE_OPEN && structure[tomlKey] is map<anydata>) {
+                    return self.generateError("Duplicate key " + self.bufferedKey);
+                }
+
                 structure[tomlKey] = check self.dataValue();
                 return structure;
 

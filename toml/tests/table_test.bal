@@ -93,3 +93,8 @@ function testSeparatorBeforeInlineTableTerminal() {
     assertParsingError("key = {a=1,}");
     assertParsingError("{,}");
 }
+
+@test:Config {}
+function testRedefineSuperTable() {
+    assertParsingError("inline_redefine_super_table", true);
+}
