@@ -18,50 +18,50 @@ function testUnclosedString() {
     assertLexicalError("'hello");
 }
 
-// Integer tokens
+// DECIMAL tokens
 @test:Config {}
 function testPositiveDecimal() returns error? {
     Lexer lexer = setLexerString("+1", EXPRESSION_VALUE);
-    check assertToken(lexer, INTEGER, lexeme = "+1");
+    check assertToken(lexer, DECIMAL, lexeme = "+1");
 }
 
 @test:Config {}
 function testNegativeDecimal() returns error? {
     Lexer lexer = setLexerString("-1", EXPRESSION_VALUE);
-    check assertToken(lexer, INTEGER, lexeme = "-1");
+    check assertToken(lexer, DECIMAL, lexeme = "-1");
 }
 
 @test:Config {}
 function testDecimal() returns error? {
     Lexer lexer = setLexerString("1", EXPRESSION_VALUE);
-    check assertToken(lexer, INTEGER, lexeme = "1");
+    check assertToken(lexer, DECIMAL, lexeme = "1");
 }
 
 @test:Config {}
 function testDecimalZero() returns error? {
     Lexer lexer = setLexerString("0", EXPRESSION_VALUE);
-    check assertToken(lexer, INTEGER, lexeme = "0");
+    check assertToken(lexer, DECIMAL, lexeme = "0");
 
     lexer = setLexerString("+0", EXPRESSION_VALUE);
-    check assertToken(lexer, INTEGER, lexeme = "+0");
+    check assertToken(lexer, DECIMAL, lexeme = "+0");
 
     lexer = setLexerString("-0", EXPRESSION_VALUE);
-    check assertToken(lexer, INTEGER, lexeme = "-0");
+    check assertToken(lexer, DECIMAL, lexeme = "-0");
 }
 
 @test:Config {}
 function testUnderscoreDecimal() returns error? {
     Lexer lexer = setLexerString("111_222_333", EXPRESSION_VALUE);
-    check assertToken(lexer, INTEGER, lexeme = "111222333");
+    check assertToken(lexer, DECIMAL, lexeme = "111222333");
 
     lexer = setLexerString("0xdead_beef", EXPRESSION_VALUE);
-    check assertToken(lexer, INTEGER, lexeme = "0xdeadbeef");
+    check assertToken(lexer, HEXADECIMAL, lexeme = "deadbeef");
 
     lexer = setLexerString("0b001_010", EXPRESSION_VALUE);
-    check assertToken(lexer, INTEGER, lexeme = "0b001010");
+    check assertToken(lexer, BINARY, lexeme = "001010");
 
     lexer = setLexerString("0o007_610", EXPRESSION_VALUE);
-    check assertToken(lexer, INTEGER, lexeme = "0o007610");
+    check assertToken(lexer, OCTAL, lexeme = "007610");
 }
 
 @test:Config {}
@@ -76,7 +76,7 @@ function testLeadingZeroDecimal() {
 }
 
 @test:Config {}
-function testProcessIntegerValue() returns error? {
+function testProcessDECIMALValue() returns error? {
     AssertKey ak = check new AssertKey("somekey = 123");
     ak.hasKey("somekey", 123).close();
 }
@@ -131,7 +131,7 @@ function testExponentialToken() returns error? {
 }
 
 @test:Config {}
-function testExponentialTokenWithInteger() returns error? {
+function testExponentialTokenWithDECIMAL() returns error? {
     Lexer lexer = setLexerString("123e2", EXPRESSION_VALUE);
     check assertToken(lexer, EXPONENTIAL, 2);
 }
@@ -165,4 +165,22 @@ function testInvalidDecimalPoint() {
 function testFloatWithUnderscore() returns error? {
     AssertKey ak = check new AssertKey("flt = 123_456.123_456");
     ak.hasKey("flt", 123456.123456).close();
+}
+
+@test:Config {}
+function testProcessBinaryNumbers() returns error? {
+    AssertKey ak = check new AssertKey("bin = 0b0101");
+    ak.hasKey("bin", 5).close();
+}
+
+@test:Config {}
+function testProcessOctalNumbers() returns error? {
+    AssertKey ak = check new AssertKey("bin = 0o0172");
+    ak.hasKey("bin", 122).close();
+}
+
+@test:Config {}
+function testProcessHexaDecimalNumbers() returns error? {
+    AssertKey ak = check new AssertKey("bin = 0xab12");
+    ak.hasKey("bin", 43794).close();
 }

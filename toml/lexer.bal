@@ -75,7 +75,7 @@ class Lexer {
             "[" => {
                 if (self.peek(1) == "[" && self.state == EXPRESSION_KEY) {
                     self.index += 1;
-                    return self.generateToken(ARRAY_TABLE_OPEN);    
+                    return self.generateToken(ARRAY_TABLE_OPEN);
                 }
                 return self.generateToken(OPEN_BRACKET);
             }
@@ -118,22 +118,19 @@ class Lexer {
                 match self.peek(1) {
                     "x" => { // Hexadecimal numbers
                         self.index += 2;
-                        self.lexeme = "0x";
-                        return check self.iterate(self.digit(HEXADECIMAL_DIGIT_PATTERN), INTEGER);
+                        return check self.iterate(self.digit(HEXADECIMAL_DIGIT_PATTERN), HEXADECIMAL);
                     }
                     "o" => { // Octal numbers
                         self.index += 2;
-                        self.lexeme = "0o";
-                        return check self.iterate(self.digit(OCTAL_DIGIT_PATTERN), INTEGER);
+                        return check self.iterate(self.digit(OCTAL_DIGIT_PATTERN), OCTAL);
                     }
                     "b" => { // Binary numbers
                         self.index += 2;
-                        self.lexeme = "0b";
-                        return check self.iterate(self.digit(BINARY_DIGIT_PATTERN), INTEGER);
+                        return check self.iterate(self.digit(BINARY_DIGIT_PATTERN), BINARY);
                     }
                     ()|" "|"#"|"."|","|"]" => { // Decimal numbers
                         self.lexeme = "0";
-                        return self.generateToken(INTEGER);
+                        return self.generateToken(DECIMAL);
                     }
                     _ => {
                         return self.generateError("Invalid character '" + self.line[self.index + 1] + "' after '0'", self.index + 1);
@@ -145,7 +142,7 @@ class Lexer {
                     "0" => { // There cannot be leading zero.
                         self.lexeme = self.line[self.index] + "0";
                         self.index += 1;
-                        return self.generateToken(INTEGER);
+                        return self.generateToken(DECIMAL);
                     }
                     () => { // Only '+' and '-' are invalid.
                         return self.generateError("There must me digits after '+'", self.index + 1);
@@ -163,7 +160,7 @@ class Lexer {
                     _ => { // Remaining digits of the decimal numbers
                         self.lexeme = self.line[self.index];
                         self.index += 1;
-                        return check self.iterate(self.digit(DECIMAL_DIGIT_PATTERN), INTEGER);
+                        return check self.iterate(self.digit(DECIMAL_DIGIT_PATTERN), DECIMAL);
                     }
                 }
             }
@@ -191,9 +188,9 @@ class Lexer {
             }
         }
 
-        // Check for values starting with an integer.
+        // Check for values starting with an DECIMAL.
         if (self.state == EXPRESSION_VALUE && regex:matches(self.line[self.index], DECIMAL_DIGIT_PATTERN)) {
-            return check self.iterate(self.digit(DECIMAL_DIGIT_PATTERN), INTEGER);
+            return check self.iterate(self.digit(DECIMAL_DIGIT_PATTERN), DECIMAL);
         }
 
         return self.generateError("Invalid character '" + self.line[self.index] + "'", self.index);
@@ -318,7 +315,7 @@ class Lexer {
         return false;
     }
 
-    # Check for the lexems to crete an integer token.
+    # Check for the lexems to crete an DECIMAL token.
     #
     # + digitPattern - Regex pattern of the number system
     # + return - Generates a function which checks the lexems for the given number system.  
@@ -362,7 +359,7 @@ class Lexer {
                     return true;
                 }
 
-                return self.generateError("Invalid character \"" + self.line[i] + "\" for an integer", i);
+                return self.generateError("Invalid character \"" + self.line[i] + "\" for an DECIMAL", i);
             }
             self.lexeme += self.line[i];
             return false;
@@ -393,7 +390,7 @@ class Lexer {
     }
 
     # Peeks the character succeeding after k indexes. 
-    # Returns the character after k integers
+    # Returns the character after k DECIMALs
     #
     # + k - Number of characters to peek
     # + return - Character at the peek if not null  

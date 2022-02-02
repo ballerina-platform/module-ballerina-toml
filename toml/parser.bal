@@ -159,7 +159,10 @@ class Parser {
                     LITERAL_STRING,
                     MULTI_BSTRING_DELIMITER,
                     MULTI_LSTRING_DELIMITER,
-                    INTEGER,
+                    DECIMAL,
+                    BINARY,
+                    OCTAL,
+                    HEXADECIMAL,
                     OPEN_BRACKET,
                     BOOLEAN,
                     INLINE_TABLE_OPEN
@@ -213,8 +216,17 @@ class Parser {
                 check self.multiLiteralString();
                 returnData = self.lexemeBuffer;
             }
-            INTEGER => {
+            DECIMAL => {
                 returnData = check self.number();
+            }
+            HEXADECIMAL => {
+                returnData = check self.processTypeCastingError('int:fromHexString(self.currentToken.value));
+            }
+            BINARY => {
+                returnData = check self.processInteger(2);
+            }
+            OCTAL => {
+                returnData = check self.processInteger(8);
             }
             BOOLEAN => {
                 returnData = check self.processTypeCastingError('boolean:fromString(self.currentToken.value));
@@ -316,13 +328,13 @@ class Parser {
         self.lexer.state = EXPRESSION_KEY;
     }
 
-    # Handles the grammar rules of integers and float numbers.
+    # Handles the grammar rules of DECIMALs and float numbers.
     #
     # + fractional - Flag is set when processing the fractional segment
     # + return - Parsing error if occurred
     private function number(boolean fractional = false) returns anydata|error {
         self.lexemeBuffer += self.currentToken.value;
-        check self.checkToken([EOL, EXPONENTIAL, DOT, ARRAY_SEPARATOR, CLOSE_BRACKET, INLINE_TABLE_CLOSE], "Invalid token after an integer");
+        check self.checkToken([EOL, EXPONENTIAL, DOT, ARRAY_SEPARATOR, CLOSE_BRACKET, INLINE_TABLE_CLOSE], "Invalid token after an DECIMAL");
 
         match self.currentToken.token {
             EOL|ARRAY_SEPARATOR|CLOSE_BRACKET|INLINE_TABLE_CLOSE => { // Generate the final number
@@ -331,7 +343,7 @@ class Parser {
                                         : check self.processTypeCastingError('int:fromString(self.lexemeBuffer));
             }
             EXPONENTIAL => { // Handles exponential numbers
-                check self.checkToken(INTEGER, "Expected an integer after the exponential");
+                check self.checkToken(DECIMAL, "Expected an DECIMAL after the exponential");
 
                 // Evaluating the exponential value
                 float exponent = <float>(check self.processTypeCastingError('float:fromString(self.currentToken.value)));
@@ -342,7 +354,7 @@ class Parser {
                 if (fractional) {
                     return self.generateError("Cannot have a decimal point in the fraction part");
                 }
-                check self.checkToken(INTEGER, "Expected an integer after the decimal point");
+                check self.checkToken(DECIMAL, "Expected an DECIMAL after the decimal point");
                 self.lexemeBuffer += ".";
                 return check self.number(true);
             }
@@ -356,7 +368,7 @@ class Parser {
             LITERAL_STRING,
             MULTI_BSTRING_DELIMITER,
             MULTI_LSTRING_DELIMITER,
-            INTEGER,
+            DECIMAL,
             BOOLEAN,
             OPEN_BRACKET,
             CLOSE_BRACKET,
@@ -538,6 +550,17 @@ class Parser {
         }
 
         return structure;
+    }
+
+    private function processInteger(int numberSystem) returns int|error {
+        int value = 0;
+        int power = 1;
+        int length = self.currentToken.value.length() - 1;
+        foreach int i in 0 ... length {
+            value += check 'int:fromString(self.currentToken.value[length - i]) * power;
+            power *= numberSystem;
+        }
+        return value;
     }
 
     # Check errors during type casting to Ballerina types.
