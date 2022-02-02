@@ -60,6 +60,26 @@ class Lexer {
             return self.iterate(self.multilineLiteralString, MULTI_LSTRING_CHARS);
         }
 
+        if (self.state == NUMBER) {
+            match self.line[self.index] {
+                ":" => {
+                    return self.generateToken(COLON);
+                }
+                "-" => {
+                    return self.generateToken(MINUS);
+                }
+                "t"|"T"|" " => {
+                    return self.generateToken(TIME_DELIMITER);
+                }
+                "+" => {
+                    return self.generateToken(PLUS);
+                }
+                "Z" => {
+                    return self.generateToken(ZULU);
+                }
+            }
+        }
+
         match self.line[self.index] {
             " "|"\t" => { // Whitespace
                 self.index += 1;
@@ -189,7 +209,7 @@ class Lexer {
         }
 
         // Check for values starting with an DECIMAL.
-        if (self.state == EXPRESSION_VALUE && regex:matches(self.line[self.index], DECIMAL_DIGIT_PATTERN)) {
+        if ((self.state == EXPRESSION_VALUE || self.state == NUMBER) && regex:matches(self.line[self.index], DECIMAL_DIGIT_PATTERN)) {
             return check self.iterate(self.digit(DECIMAL_DIGIT_PATTERN), DECIMAL);
         }
 
@@ -305,7 +325,7 @@ class Lexer {
     # + return - True if the end of the key, An error message for an invalid character.  
     private function unquotedKey(int i) returns boolean|LexicalError {
         if (!regex:matches(self.line[i], UNQUOTED_STRING_PATTERN)) {
-            if (self.line[i] == " " || self.line[i] == "." || self.line[i] == "]" || self.line[i] == "=") {
+            if (self.checkCharacter([" ", ".", "]", "="])) {
                 self.index = i - 1;
                 return true;
             }
@@ -348,15 +368,15 @@ class Lexer {
                 // Float number allows only a decimal number a prefix.
                 // Check for decimal points and exponentials in decimal numbers.
                 // Check for separators and end symbols.
-                if (digitPattern == DECIMAL_DIGIT_PATTERN && (
-                                self.line[i] == "." ||
-                                self.line[i] == "e" ||
-                                self.line[i] == "E" ||
-                                self.line[i] == "," ||
-                                self.line[i] == "]" ||
-                                self.line[i] == "}")) {
-                    self.index = i - 1;
-                    return true;
+                if (digitPattern == DECIMAL_DIGIT_PATTERN) {
+                    if (self.checkCharacter([".", "e", "E", ",", "]", "}"], i)) {
+                        self.index = i - 1;
+                        return true;
+                    }
+                    if (self.state == NUMBER && self.checkCharacter(["-", ":", "t", "T", "+", "-", "Z"], i)) {
+                        self.index = i - 1;
+                        return true;
+                    }
                 }
 
                 return self.generateError("Invalid character \"" + self.line[i] + "\" for an DECIMAL", i);
@@ -415,6 +435,18 @@ class Lexer {
         return self.generateToken(successToken);
     }
 
+    # Assert the character of the current index
+    #
+    # + expectedCharacters - Expected characters at the current index
+    # + return - True if the assertion is true
+    private function checkCharacter(string|string[] expectedCharacters, int? index = ()) returns boolean {
+        if (expectedCharacters is string) {
+            return expectedCharacters == self.line[index == () ? self.index : index];
+        } else if (expectedCharacters.indexOf(self.line[index == () ? self.index : index]) == ()) {
+            return false;
+        }
+        return true;
+    }
     # Generates a Lexical Error.
     #
     # + message - Error message  

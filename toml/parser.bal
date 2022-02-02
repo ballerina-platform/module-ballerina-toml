@@ -361,6 +361,14 @@ class Parser {
         }
     }
 
+    private function time() {
+
+    }
+
+    private function date() {
+        
+    }
+
     private function array(anydata[] tempArray = []) returns anydata[]|error {
 
         check self.checkToken([ // TODO: add the remaning values
