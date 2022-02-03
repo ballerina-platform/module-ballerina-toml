@@ -1,12 +1,12 @@
-import ballerina/lang.'int;
-import ballerina/lang.'float;
 import ballerina/lang.'boolean;
+import ballerina/lang.'float;
+import ballerina/lang.'int;
 import ballerina/time;
 
 type ParsingError distinct error;
 
 class Parser {
-    # Input TOML lines
+    # Properties for the TOML lines
     private string[] lines;
     private int numLines;
     private int lineIndex;
@@ -35,6 +35,7 @@ class Parser {
     # Buffers the key in the full format
     private string bufferedKey;
 
+    # If set, the parser is currently working on an array table
     private boolean isArrayTable;
 
     # Lexical analyzer tool for getting the tokens
@@ -52,22 +53,20 @@ class Parser {
         self.tokenConsumed = false;
         self.bufferedKey = "";
         self.isArrayTable = false;
-        self.lineIndex = 0;
+        self.lineIndex = -1;
         self.lexemeBuffer = "";
     }
 
     # Generates a map object for the TOML document.
-    # Initally, considers the predictions for the 'expression', 'table', and 'array table'
+    # Considers the predictions for the 'expression', 'table', and 'array table'.
     #
-    # + return - If success, map object for the TOMl document. 
-    # Else, a lexical or a parser error. 
+    # + return - If success, map object for the TOML document. 
+    # Else, a lexical or a parsing error. 
     public function parse() returns map<anydata>|error {
 
-        // Iterating each document line
-        while self.lineIndex < self.numLines {
-            if (!self.initLexer(false)) {
-                return self.generateError("Cannot open TOML document");
-            }
+        // Iterating each line of the document.
+        while self.lineIndex < self.numLines - 1 {
+            check self.initLexer("Cannot open the TOML document");
             self.currentToken = check self.lexer.getToken();
             self.lexer.state = EXPRESSION_KEY;
 
@@ -99,8 +98,6 @@ class Parser {
             if (self.currentToken.token != EOL) {
                 check self.checkToken(EOL, "Cannot have anymore tokens in the same line");
             }
-
-            self.lineIndex += 1;
         }
 
         // Return the TOML object
@@ -160,7 +157,7 @@ class Parser {
             KEY_VALUE_SEPERATOR => {
                 self.lexer.state = EXPRESSION_VALUE;
 
-                check self.checkToken([ // TODO: add the remaning values
+                check self.checkToken([
                     BASIC_STRING,
                     LITERAL_STRING,
                     MULTI_BSTRING_DELIMITER,
@@ -281,9 +278,7 @@ class Parser {
                     self.lexer.state = MULTILINE_ESCAPE;
                 }
                 EOL => { // Processing new lines
-                    if (!self.initLexer()) {
-                        return self.generateError("Expected to end the multi-line basic string");
-                    }
+                    check self.initLexer("Expected to end the multi-line basic string");
                     if !(self.lexer.state == MULTILINE_ESCAPE) {
                         self.lexemeBuffer += "\\n";
                     }
@@ -318,9 +313,7 @@ class Parser {
                     self.lexemeBuffer += self.currentToken.value;
                 }
                 EOL => { // Processing new lines
-                    if (!self.initLexer()) {
-                        return self.generateError("Expected to end the multi-line literal string");
-                    }
+                    check self.initLexer("Expected to end the multi-line literal string");
                     self.lexemeBuffer += "\\n";
                 }
             }
@@ -476,7 +469,7 @@ class Parser {
         self.lexemeBuffer += "-" + self.currentToken.value;
 
         error? validateDate = 'time:dateValidate({year, month, day});
-        if(validateDate is error) {
+        if (validateDate is error) {
             return self.generateError(validateDate.toString().substring(18));
         }
 
@@ -501,7 +494,7 @@ class Parser {
 
     private function array(anydata[] tempArray = []) returns anydata[]|error {
 
-        check self.checkToken([ // TODO: add the remaning values
+        check self.checkToken([
             BASIC_STRING,
             LITERAL_STRING,
             MULTI_BSTRING_DELIMITER,
@@ -516,10 +509,8 @@ class Parser {
 
         match self.currentToken.token {
             EOL => {
-                if (self.initLexer()) {
-                    return self.array(tempArray);
-                }
-                return self.generateError("Exptected ']' at the end of an array");
+                check self.initLexer("Exptected ']' at the end of an array");
+                return self.array(tempArray);
             }
             CLOSE_BRACKET => { // If the array ends with a ','
                 return tempArray;
@@ -535,7 +526,7 @@ class Parser {
         if (self.tokenConsumed) {
             self.tokenConsumed = false;
         } else {
-            check self.checkToken([ // TODO: add the remaning values
+            check self.checkToken([
                 EOL,
                 CLOSE_BRACKET,
                 ARRAY_SEPARATOR
@@ -544,10 +535,8 @@ class Parser {
 
         match self.currentToken.token {
             EOL => {
-                if (self.initLexer()) {
-                    return self.arrayValue(tempArray);
-                }
-                return self.generateError("Expected ']' or ',' after an array value");
+                check self.initLexer("Expected ']' or ',' after an array value");
+                return self.arrayValue(tempArray);
             }
             CLOSE_BRACKET => {
                 return tempArray;
@@ -715,17 +704,21 @@ class Parser {
         return value;
     }
 
-    private function initLexer(boolean incrementLine = true) returns boolean {
+    # Initialize the lexer with the attributes of a new line.
+    #
+    # + message - Error messgae to display when if the initalization fails 
+    # + incrementLine - Sets the next line to the lexer
+    # + return - An error if it fails to initialize  
+    private function initLexer(string message, boolean incrementLine = true) returns error? {
         if (incrementLine) {
             self.lineIndex += 1;
         }
         if (self.lineIndex >= self.numLines) {
-            return false;
+            return self.generateError(message);
         }
         self.lexer.line = self.lines[self.lineIndex];
         self.lexer.index = 0;
         self.lexer.lineNumber = self.lineIndex;
-        return true;
     }
 
     # Generates a Parsing Error Error.
