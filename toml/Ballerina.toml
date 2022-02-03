@@ -1,11 +1,12 @@
 [package]
-distribution = "slbeta6"
+license=["Apache-2.0"]
+keywords=["Toml", "Parser"]
 org="nipunayf"
 name="toml"
-authors=["Nipuna Fernando"]
+icon = "icon.png"
+distribution = "2201.0.0"
 repository="https://github.com/nipunayf/module-ballerina-toml"
-license=["Apache-2.0"]
-keywords=["ballerina", "toml", "parser"]
+authors=["Nipuna Fernando"]
 
 [build-options]
 observabilityIncluded = true
