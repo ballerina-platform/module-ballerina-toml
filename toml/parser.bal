@@ -117,7 +117,7 @@ class Parser {
     # Hence, the error checking must be done explicitly.
     #
     # + expectedTokens - Predicted token or tokens
-    # + errorMessage - Error message to be displayed if the eexpected token not found  
+    # + customMessage - Error message to be displayed if the expected token not found  
     # + return - Parsing error if not found
     private function checkToken(TOMLToken|TOMLToken[] expectedTokens = DUMMY, string customMessage = "") returns error? {
         TOMLToken prevToken = self.currentToken.token;
@@ -869,7 +869,6 @@ class Parser {
     #
     # + messageType - Number of the template message
     # + expectedTokens - Predicted tokens  
-    # + actualToken - Actual tokens   
     # + beforeToken - Toekn before the predicetd token  
     # + value - Any value name. Commonly used to indicate keys.
     # + return - If success, the generated error message. Else, an error message.
