@@ -67,7 +67,7 @@ class Parser {
         // Iterating each line of the document.
         while self.lineIndex < self.numLines - 1 {
             check self.initLexer("Cannot open the TOML document");
-            self.currentToken = check self.lexer.getToken();
+            check self.checkToken();
             self.lexer.state = EXPRESSION_KEY;
 
             match self.currentToken.token {
@@ -76,7 +76,7 @@ class Parser {
                     self.currentStructure = check self.keyValue(self.currentStructure.clone());
                     self.lexer.state = EXPRESSION_KEY;
                 }
-                OPEN_BRACKET => { // Process a standard tale
+                OPEN_BRACKET => { // Process a standard tale.
                     // Add the previous table to the TOML object
                     self.tomlObject = check self.buildTOMLObject(self.tomlObject.clone());
                     self.isArrayTable = false;
@@ -85,6 +85,7 @@ class Parser {
                     check self.standardTable(self.tomlObject.clone());
                 }
                 ARRAY_TABLE_OPEN => { // Process an array table
+                    // Add the previous structure to the array in the TOML object.
                     self.tomlObject = check self.buildTOMLObject(self.tomlObject.clone());
                     self.isArrayTable = true;
 
@@ -106,6 +107,8 @@ class Parser {
     }
 
     # Assert the next lexer token with the predicted token.
+    # If no token is provided, then the next token is retrieved without an error checking.
+    # Hence, the error checking must be done explicitly.
     #
     # + expectedTokens - Predicted token or tokens
     # + errorMessage - Parsing error if expected token not found  
@@ -113,6 +116,7 @@ class Parser {
     private function checkToken(TOMLToken|TOMLToken[] expectedTokens = DUMMY, string errorMessage = "") returns error? {
         self.currentToken = check self.lexer.getToken();
 
+        // Bypass error handling.
         if (expectedTokens == DUMMY) {
             return;
         }
