@@ -393,7 +393,7 @@ class Parser {
         self.lexemeBuffer += ":" + self.currentToken.value;
 
         check self.checkToken(COLON, "Expected a ':' after minutes");
-        check self.checkToken(DECIMAL, "Expected a 2 digit day after ':'");
+        check self.checkToken(DECIMAL, "Expected a 2 digit seconds after ':'");
         check self.checkTime(self.currentToken.value, 0, 60, "minutes");
         self.lexemeBuffer += ":" + self.currentToken.value;
 
@@ -405,14 +405,19 @@ class Parser {
             DOT => {
                 check self.checkToken(DECIMAL, "Expected a integer after '.' for the time fraction");
                 self.lexemeBuffer += "." + self.currentToken.value;
-                return self.lexemeBuffer;
-            }
-            ZULU => {
-                return datePrefixed ? time:utcFromString(self.lexemeBuffer + "Z")
-                    : self.generateError("Cannot crate a UTC time for a local time");
-            }
-            PLUS|MINUS => {
 
+                check self.checkToken();
+                match self.currentToken.token {
+                    EOL => {
+                        return self.lexemeBuffer;
+                    }
+                    PLUS|MINUS|ZULU => {
+                        return self.timeOffset(datePrefixed);
+                    }
+                }
+            }
+            PLUS|MINUS|ZULU => {
+                return self.timeOffset(datePrefixed);
             }
             _ => {
                 return self.generateError("Invalid token '" + self.currentToken.token + "' after seconds");
@@ -420,22 +425,47 @@ class Parser {
         }
     }
 
+    private function timeOffset(boolean datePrefixed) returns anydata|error {
+        match self.currentToken.token {
+            ZULU => {
+                return datePrefixed ? time:utcFromString(self.lexemeBuffer + "Z")
+                    : self.generateError("Cannot crate a UTC time for a local time");
+            }
+            PLUS|MINUS => {
+                if (datePrefixed) {
+                    self.lexemeBuffer += self.currentToken.token == PLUS ? "+" : "-";
+
+                    check self.checkToken(DECIMAL, "Expected a 2 digit hours after time offset");
+                    check self.checkTime(self.currentToken.value, 0, 24, "hours");
+                    self.lexemeBuffer += self.currentToken.value;
+
+                    check self.checkToken(COLON, "Expected a ':' after hours");
+                    check self.checkToken(DECIMAL, "Expected 2 digit minutes after ':'");
+                    check self.checkTime(self.currentToken.value, 0, 60, "minutes");
+                    self.lexemeBuffer += ":" + self.currentToken.value;
+                    return time:utcFromString(self.lexemeBuffer);
+                }
+                return self.generateError("Cannot crate a UTC time for a local time");
+            }
+        }
+    }
+
     private function date() returns anydata|error {
-        int year = <int> check self.processTypeCastingError('int:fromString(self.lexemeBuffer)); 
+        int year = <int>check self.processTypeCastingError('int:fromString(self.lexemeBuffer));
 
         check self.checkToken(DECIMAL, "Expected a 2 digit month after '-'");
-        int month = <int> check self.processTypeCastingError('int:fromString(self.currentToken.value));
+        int month = <int>check self.processTypeCastingError('int:fromString(self.currentToken.value));
         self.lexemeBuffer += "-" + self.currentToken.value;
 
         check self.checkToken(MINUS, "Expected a '-' after month");
         check self.checkToken(DECIMAL, "Expected a 2 digit day after '-'");
-        int day = <int> check self.processTypeCastingError('int:fromString(self.currentToken.value));
+        int day = <int>check self.processTypeCastingError('int:fromString(self.currentToken.value));
         self.lexemeBuffer += "-" + self.currentToken.value;
 
         check 'time:dateValidate({year, month, day});
 
         check self.checkToken();
-        
+
         match self.currentToken.token {
             EOL => {
                 return self.lexemeBuffer;

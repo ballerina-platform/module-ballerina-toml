@@ -67,7 +67,7 @@ function testODTSecondFraction() returns error? {
 
 @test:Config {}
 function testODTSecondFractionWithDifferenceOffset() returns error? {
-    AssertKey ak = check new AssertKey("odt = 1979-05-27T07:32:00.99-07:00");
+    AssertKey ak = check new AssertKey("odt = 1979-05-27T07:32:00.99+07:00");
     ak.hasKey("odt", check time:utcFromString("1979-05-27T00:32:00.99Z")).close();
 }
 
