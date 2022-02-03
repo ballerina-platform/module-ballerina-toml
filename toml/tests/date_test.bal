@@ -74,9 +74,9 @@ function testODTSecondFractionWithDifferenceOffset() returns error? {
 @test:Config {}
 function testODTSupportDifferentTimeDelimiters() returns error? {
     AssertKey ak = check new AssertKey("date_time_delim", true);
-    ak.hasKey("odt1", "1979-05-27 07:32:00Z")
-        .hasKey("odt2", "1979-05-27 07:32:00Z")
-        .hasKey("odt3", "1979-05-27 07:32:00Z")
+    ak.hasKey("odt1", "1979-05-27T07:32:00Z")
+        .hasKey("odt2", "1979-05-27T07:32:00Z")
+        .hasKey("odt3", "1979-05-27T07:32:00Z")
         .close();
 }
 

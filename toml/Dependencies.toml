@@ -99,7 +99,6 @@ modules = [
 org = "ballerina"
 name = "time"
 version = "2.2.0"
-scope = "testOnly"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"}
 ]

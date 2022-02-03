@@ -1,8 +1,7 @@
 import ballerina/lang.'int;
 import ballerina/lang.'float;
 import ballerina/lang.'boolean;
-
-// import ballerina/time;
+import ballerina/time;
 
 type ParsingError distinct error;
 
@@ -114,8 +113,12 @@ class Parser {
     # + expectedTokens - Predicted token or tokens
     # + errorMessage - Parsing error if expected token not found  
     # + return - Parsing error if not found
-    private function checkToken(TOMLToken|TOMLToken[] expectedTokens, string errorMessage) returns error? {
+    private function checkToken(TOMLToken|TOMLToken[] expectedTokens = DUMMY, string errorMessage = "") returns error? {
         self.currentToken = check self.lexer.getToken();
+
+        if (expectedTokens == DUMMY) {
+            return;
+        }
 
         // Generate an error if the expected token differ from the actual token.
         if (expectedTokens is TOMLToken) {
@@ -367,33 +370,31 @@ class Parser {
             }
             COLON => {
                 self.lexer.state = NUMBER;
-                return check self.time();
+                return check self.time(self.lexemeBuffer);
             }
         }
     }
 
-    private function time(boolean datePrefixed = false) returns anydata|error {
-        int hours = <int>check self.processTypeCastingError('int:fromString(self.lexemeBuffer));
-        if (hours < 0 || hours > 24) {
-            return self.generateError("Expected hours to be between 0-24");
+    private function checkTime(string value, int lowerBound, int upperBound, string valueName) returns error? {
+        int intValue = <int>check self.processTypeCastingError('int:fromString(value));
+        if (intValue < lowerBound || intValue > upperBound) {
+            return self.generateError("Expected " + valueName + " to be between " + lowerBound.toString() + "-" + upperBound.toString());
         }
+    }
+
+    private function time(string hours, boolean datePrefixed = false) returns anydata|error {
+        check self.checkTime(hours, 0, 24, "hours");
 
         check self.checkToken(DECIMAL, "Expected 2 digit minutes after ':'");
-        int minutes = <int>check self.processTypeCastingError('int:fromString(self.currentToken.value));
-        if (minutes < 0 || minutes > 60) {
-            return self.generateError("Expected minutes to be between 0-60");
-        }
+        check self.checkTime(self.currentToken.value, 0, 60, "minutes");
         self.lexemeBuffer += ":" + self.currentToken.value;
 
         check self.checkToken(COLON, "Expected a ':' after minutes");
         check self.checkToken(DECIMAL, "Expected a 2 digit day after ':'");
-        int seconds = <int>check self.processTypeCastingError('int:fromString(self.currentToken.value));
-        if (seconds < 0 || seconds > 60) {
-            return self.generateError("Expected seconds to be between 0-60");
-        }
+        check self.checkTime(self.currentToken.value, 0, 60, "minutes");
         self.lexemeBuffer += ":" + self.currentToken.value;
 
-        check self.checkToken([EOL, DOT], "Invalid token '" + self.currentToken.token + "' after seconds");
+        check self.checkToken();
         match self.currentToken.token {
             EOL => {
                 return self.lexemeBuffer;
@@ -402,6 +403,16 @@ class Parser {
                 check self.checkToken(DECIMAL, "Expected a integer after '.' for the time fraction");
                 self.lexemeBuffer += "." + self.currentToken.value;
                 return self.lexemeBuffer;
+            }
+            ZULU => {
+                return datePrefixed ? time:utcFromString(self.lexemeBuffer + "Z")
+                    : self.generateError("Cannot crate a UTC time for a local time");
+            }
+            PLUS|MINUS => {
+
+            }
+            _ => {
+                return self.generateError("Invalid token '" + self.currentToken.token + "' after seconds");
             }
         }
     }
