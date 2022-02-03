@@ -224,9 +224,8 @@ class Parser {
         }
     }
 
-    
     # Generate any TOML data value.
-    # 
+    #
     # + return - If sucess, returns the formatted data value. Else, an error.
     private function dataValue() returns anydata|error {
         anydata returnData;
@@ -257,7 +256,7 @@ class Parser {
             OPEN_BRACKET => {
                 returnData = check self.array();
 
-                // There can be 
+                // Static arrays cannot be redefined by the array tables.
                 if (!self.isArrayTable) {
                     self.definedTableKeys.push(self.currentTableKey.length() == 0 ? self.bufferedKey : self.currentTableKey + "." + self.bufferedKey);
                     self.bufferedKey = "";
@@ -265,12 +264,14 @@ class Parser {
             }
             INLINE_TABLE_OPEN => {
                 returnData = check self.inlineTable();
+
+                // Inline tables cannot be redefined by the standard tables.
                 if (!self.isArrayTable) {
                     self.definedTableKeys.push(self.currentTableKey.length() == 0 ? self.bufferedKey : self.currentTableKey + "." + self.bufferedKey);
                     self.bufferedKey = "";
                 }
             }
-            _ => {
+            _ => { // Latter primitve data types
                 returnData = self.currentToken.value;
             }
         }
@@ -278,6 +279,9 @@ class Parser {
         return returnData;
     }
 
+    # Process multi-line basic string.
+    #
+    # + return - An error if the grammar rule is not made  
     private function multiBasicString() returns error? {
         self.lexer.state = MULTILINE_BSTRING;
         self.lexemeBuffer = "";
@@ -288,7 +292,7 @@ class Parser {
             MULTI_BSTRING_ESCAPE,
             MULTI_BSTRING_DELIMITER,
             EOL
-        ], "Invalid token inside a multi-line string");
+        ]);
 
         // Predicting the next tokens until the end of the string.
         while (self.currentToken.token != MULTI_BSTRING_DELIMITER) {
@@ -301,6 +305,8 @@ class Parser {
                 }
                 EOL => { // Processing new lines
                     check self.initLexer("Expected to end the multi-line basic string");
+
+                    // Ignore new lines after the escape symbol
                     if !(self.lexer.state == MULTILINE_ESCAPE) {
                         self.lexemeBuffer += "\\n";
                     }
@@ -311,12 +317,15 @@ class Parser {
                 MULTI_BSTRING_ESCAPE,
                 MULTI_BSTRING_DELIMITER,
                 EOL
-            ], "Invalid token inside a multi-line string");
+            ]);
         }
 
         self.lexer.state = EXPRESSION_KEY;
     }
 
+    # Process mulit-line literal string.
+    #
+    # + return - An error if the grammar production is not made.  
     private function multiLiteralString() returns error? {
         self.lexer.state = MULITLINE_LSTRING;
         self.lexemeBuffer = "";
@@ -326,7 +335,7 @@ class Parser {
             MULTI_LSTRING_CHARS,
             MULTI_LSTRING_DELIMITER,
             EOL
-        ], "Invalid token inside a multi-line string");
+        ]);
 
         // Predicting the next tokens until the end of the string.
         while (self.currentToken.token != MULTI_LSTRING_DELIMITER) {
@@ -335,7 +344,7 @@ class Parser {
                     self.lexemeBuffer += self.currentToken.value;
                 }
                 EOL => { // Processing new lines
-                    check self.initLexer("Expected to end the multi-line literal string");
+                    check self.initLexer(check self.formatErrorMessage(1, MULTI_LSTRING_DELIMITER, MULTI_BSTRING_DELIMITER));
                     self.lexemeBuffer += "\\n";
                 }
             }
@@ -343,13 +352,14 @@ class Parser {
                 MULTI_LSTRING_CHARS,
                 MULTI_LSTRING_DELIMITER,
                 EOL
-            ], "Invalid token inside a multi-line string");
+            ]);
         }
 
         self.lexer.state = EXPRESSION_KEY;
     }
 
-    # Handles the grammar rules of DECIMALs and float numbers.
+    # Handles the grammar rules of integers and float numbers.
+    # Delegates to date and time when the dates can be predicted.
     #
     # + fractional - Flag is set when processing the fractional segment
     # + return - Parsing error if occurred
@@ -367,7 +377,7 @@ class Parser {
                                         : check self.processTypeCastingError('int:fromString(self.lexemeBuffer));
             }
             EXPONENTIAL => { // Handles exponential numbers
-                check self.checkToken(DECIMAL, "Expected an DECIMAL after the exponential");
+                check self.checkToken(DECIMAL);
 
                 // Evaluating the exponential value
                 float exponent = <float>(check self.processTypeCastingError('float:fromString(self.currentToken.value)));
@@ -378,7 +388,7 @@ class Parser {
                 if (fractional) {
                     return self.generateError("Cannot have a decimal point in the fraction part");
                 }
-                check self.checkToken(DECIMAL, "Expected an DECIMAL after the decimal point");
+                check self.checkToken(DECIMAL);
                 self.lexemeBuffer += ".";
                 return check self.number(true);
             }
@@ -396,7 +406,15 @@ class Parser {
         }
     }
 
+    # Validates a given time component
+    #
+    # + value - Actual value in the TOML document 
+    # + lowerBound - Minimum acceptable value
+    # + upperBound - Maximum acceptable value
+    # + valueName - Name of the time compoenent
+    # + return - Returns an error if the requirements are not met.
     private function checkTime(string value, int lowerBound, int upperBound, string valueName) returns error? {
+        // Expected the time digits to be 2.
         if (value.length() != 2) {
             return self.generateError("Expected number of digits in " + valueName + " to be 2");
         }
@@ -406,13 +424,21 @@ class Parser {
         }
     }
 
+    # Process the time component.
+    #
+    # + hours - Hours in the TOML document
+    # + datePrefixed - True if there is a date before the time
+    # + return - Returns the formatted time on success. Else, an parsing error.
     private function time(string hours, boolean datePrefixed = false) returns anydata|error {
+        // Validate hours
         check self.checkTime(hours, 0, 24, "hours");
 
+        // Validate minutes
         check self.checkToken(DECIMAL, "Expected 2 digit minutes after ':'");
         check self.checkTime(self.currentToken.value, 0, 60, "minutes");
         self.lexemeBuffer += ":" + self.currentToken.value;
 
+        // Validate seconds
         check self.checkToken(COLON, "Expected a ':' after minutes");
         check self.checkToken(DECIMAL, "Expected a 2 digit seconds after ':'");
         check self.checkTime(self.currentToken.value, 0, 60, "minutes");
@@ -420,32 +446,36 @@ class Parser {
 
         check self.checkToken();
         match self.currentToken.token {
-            EOL => {
+            EOL => { // Partial time
                 return self.lexemeBuffer;
             }
-            DOT => {
+            DOT => { // Fractional time
                 check self.checkToken(DECIMAL, "Expected a integer after '.' for the time fraction");
                 self.lexemeBuffer += "." + self.currentToken.value;
 
                 check self.checkToken();
                 match self.currentToken.token {
-                    EOL => {
+                    EOL => { // Fractional partial time
                         return self.lexemeBuffer;
                     }
-                    PLUS|MINUS|ZULU => {
+                    PLUS|MINUS|ZULU => { // Fractional time with time offset
                         return self.timeOffset(datePrefixed);
                     }
                 }
             }
-            PLUS|MINUS|ZULU => {
+            PLUS|MINUS|ZULU => { // Partial time with time offset
                 return self.timeOffset(datePrefixed);
             }
             _ => {
-                return self.generateError("Invalid token '" + self.currentToken.token + "' after seconds");
+                return self.generateError(check self.formatErrorMessage(1, [EOL, DOT, PLUS, MINUS, ZULU], DECIMAL));
             }
         }
     }
 
+    # Returns the formattd time in UTC
+    #
+    # + datePrefixed - True if there is a date before the time
+    # + return - UTC object representing the time on success. Else, an parsing error.
     private function timeOffset(boolean datePrefixed) returns anydata|error {
         match self.currentToken.token {
             ZULU => {
@@ -456,14 +486,17 @@ class Parser {
                 if (datePrefixed) {
                     self.lexemeBuffer += self.currentToken.token == PLUS ? "+" : "-";
 
+                    // Valdiate hours
                     check self.checkToken(DECIMAL, "Expected a 2 digit hours after time offset");
                     check self.checkTime(self.currentToken.value, 0, 24, "hours");
                     self.lexemeBuffer += self.currentToken.value;
 
+                    // Validate minutess
                     check self.checkToken(COLON, "Expected a ':' after hours");
                     check self.checkToken(DECIMAL, "Expected 2 digit minutes after ':'");
                     check self.checkTime(self.currentToken.value, 0, 60, "minutes");
                     self.lexemeBuffer += ":" + self.currentToken.value;
+
                     return time:utcFromString(self.lexemeBuffer);
                 }
                 return self.generateError("Cannot crate a UTC time for a local time");
@@ -471,6 +504,12 @@ class Parser {
         }
     }
 
+    # Validates the date component.
+    #
+    # + value - Actual value in the TOML document  
+    # + numDigits - Required number of digits to the component. 
+    # + valueName - Name of the date component.
+    # + return - Returns the value in integer. Else, an parsing error.
     private function checkDate(string value, int numDigits, string valueName) returns int|error {
         if (value.length() != numDigits) {
             return self.generateError("Expected number of digits in " + valueName + " to be " + numDigits.toString());
@@ -478,42 +517,54 @@ class Parser {
         return <int>check self.processTypeCastingError('int:fromString(value));
     }
 
+    # Process the date component.
+    #
+    # + return - An error if the grammar rules are not met.  
     private function date() returns anydata|error {
+        // Validate the year
         int year = check self.checkDate(self.lexemeBuffer, 4, "year");
 
-        check self.checkToken(DECIMAL, "Expected a 2 digit month after '-'");
+        // Validate the month
+        check self.checkToken(DECIMAL);
         int month = check self.checkDate(self.currentToken.value, 2, "month");
         self.lexemeBuffer += "-" + self.currentToken.value;
 
-        check self.checkToken(MINUS, "Expected a '-' after month");
-        check self.checkToken(DECIMAL, "Expected a 2 digit day after '-'");
+        // Validate the day
+        check self.checkToken(MINUS);
+        check self.checkToken(DECIMAL);
         int day = check self.checkDate(self.currentToken.value, 2, "day");
         self.lexemeBuffer += "-" + self.currentToken.value;
 
+        // Validate the complete date
         error? validateDate = 'time:dateValidate({year, month, day});
         if (validateDate is error) {
             return self.generateError(validateDate.toString().substring(18));
         }
 
         check self.checkToken();
-
         match self.currentToken.token {
-            EOL => {
+            EOL => { // Local date
                 return self.lexemeBuffer;
             }
-            TIME_DELIMITER => {
-                check self.checkToken(DECIMAL, "Expected a 2 digit decimal after the time delimiter");
+            TIME_DELIMITER => { // Adding a time component to the date
+
+                // Obtain the hours
+                check self.checkToken(DECIMAL);
                 string hours = self.currentToken.value;
                 self.lexemeBuffer += "T" + hours;
-                check self.checkToken(COLON, "Expected a ':' after hours");
+                check self.checkToken(COLON);
                 return self.time(hours, true);
             }
             _ => {
-                return self.generateError("Invalid token token after");
+                return self.generateError(check self.formatErrorMessage(1, [EOL, TIME_DELIMITER], DECIMAL));
             }
         }
     }
 
+    # Process the rules after '[' or ','.
+    #
+    # + tempArray - Recursively constructing array
+    # + return - Completed array on success. An error if the grammar rules are not met.
     private function array(anydata[] tempArray = []) returns anydata[]|error {
 
         check self.checkToken([
@@ -527,11 +578,11 @@ class Parser {
             CLOSE_BRACKET,
             INLINE_TABLE_OPEN,
             EOL
-        ], "Expected a value or ']' after '['");
+        ]);
 
         match self.currentToken.token {
             EOL => {
-                check self.initLexer("Exptected ']' at the end of an array");
+                check self.initLexer(check self.formatErrorMessage(1, CLOSE_BRACKET, OPEN_BRACKET));
                 return self.array(tempArray);
             }
             CLOSE_BRACKET => { // If the array ends with a ','
@@ -544,15 +595,19 @@ class Parser {
         }
     }
 
+    # Process the rules after an array value.
+    #
+    # + tempArray - Recursively constructing array
+    # + return - Completed array on success. An error if the grammar rules are not met.
     private function arrayValue(anydata[] tempArray = []) returns anydata[]|error {
+        TOMLToken prevToken;
+
         if (self.tokenConsumed) {
+            prevToken = DECIMAL;
             self.tokenConsumed = false;
         } else {
-            check self.checkToken([
-                EOL,
-                CLOSE_BRACKET,
-                ARRAY_SEPARATOR
-            ], "Expected a value or ']' after '['");
+            prevToken = self.currentToken.token;
+            check self.checkToken();
         }
 
         match self.currentToken.token {
@@ -563,12 +618,20 @@ class Parser {
             CLOSE_BRACKET => {
                 return tempArray;
             }
-            _ => { // Array separator
+            ARRAY_SEPARATOR => {
                 return self.array(tempArray);
+            }
+            _ => {
+                return self.generateError(check self.formatErrorMessage(1, [EOL, CLOSE_BRACKET, ARRAY_SEPARATOR], prevToken));
             }
         }
     }
 
+    # Process the grammar rules of inline tables.
+    #
+    # + tempTable - Recursively constructing inline table
+    # + isStart - True if the function is being called for the first time.
+    # + return - Map structure representing the table on success. Else, an error if the grammar rules are not met.
     private function inlineTable(map<anydata> tempTable = {}, boolean isStart = true) returns map<anydata>|error {
         self.lexer.state = EXPRESSION_KEY;
         check self.checkToken([
@@ -576,7 +639,7 @@ class Parser {
             BASIC_STRING,
             LITERAL_STRING,
             isStart ? INLINE_TABLE_CLOSE : DUMMY
-        ], "Expected a value or '}' after '{'");
+        ]);
 
         // This is unreachable after a separator.
         // This condition is only available to create an empty table.
@@ -584,14 +647,16 @@ class Parser {
             return tempTable;
         }
 
+        // Add the key value to the inline table.
         map<anydata> newTable = check self.keyValue(tempTable.clone());
 
         if (self.tokenConsumed) {
             self.tokenConsumed = false;
         } else {
-            check self.checkToken([ARRAY_SEPARATOR, INLINE_TABLE_CLOSE], "Expected ',' or '}' after a key value pair in an inline table");
+            check self.checkToken([ARRAY_SEPARATOR, INLINE_TABLE_CLOSE]);
         }
 
+        // Calls the method recursively to add new key values.
         if (self.currentToken.token == ARRAY_SEPARATOR) {
             return check self.inlineTable(newTable, false);
         }
@@ -599,31 +664,38 @@ class Parser {
         return newTable;
     }
 
+    # Process the grammar rules for initializing the standard table.
+    # Sets a new current structure, so the succeeding key values are added to it.
+    #
+    # + structure - Mapping of the parent key
+    # + keyName - Recursively constructing the table key name
+    # + return - An error if the grammar rules are not met or any duplicate values.
     private function standardTable(map<anydata> structure, string keyName = "") returns error? {
 
-        // Establish the current structure
+        // Verifies the current key
         string tomlKey = self.currentToken.value;
         self.keyStack.push(tomlKey);
         check self.verifyKey(structure, tomlKey);
 
-        check self.checkToken([DOT, CLOSE_BRACKET], "Expected '.' or ']' after a table key");
+        check self.checkToken();
 
         match self.currentToken.token {
             DOT => { // Build the dotted key
-                check self.checkToken([UNQUOTED_KEY, BASIC_STRING, LITERAL_STRING], "Expected a key after '.' in a table key");
+                check self.checkToken([UNQUOTED_KEY, BASIC_STRING, LITERAL_STRING]);
                 return check self.standardTable(structure[tomlKey] is map<anydata> ? <map<anydata>>structure[tomlKey] : {}, keyName + tomlKey + ".");
             }
 
             CLOSE_BRACKET => { // Initialize the current structure
 
-                // Check if the table key is already defined
+                // Check if the table key is already defined.
                 string tableKeyName = keyName + tomlKey;
                 check self.verifyTableKey(tableKeyName);
                 self.definedTableKeys.push(tableKeyName);
                 self.currentTableKey = tableKeyName;
 
+                // Cannot define an standard table for an already defined array table.
                 if (structure.hasKey(tomlKey) && !(structure[tomlKey] is map<anydata>)) {
-                    return self.generateError("Already defined an array table for '" + tomlKey + "'");
+                    return self.generateError(check self.formatErrorMessage(2, value = tableKeyName));
                 }
 
                 self.currentStructure = structure[tomlKey] is map<anydata> ? <map<anydata>>structure[tomlKey] : {};
@@ -633,49 +705,68 @@ class Parser {
 
     }
 
+    # Process the grammar rules of initializing an array table.
+    #
+    # + structure - Mapping of the parent key
+    # + keyName - Recursively constructing the table key name
+    # + return - An error if the grammar rules are not met or any duplicate values. 
     private function arrayTable(map<anydata> structure, string keyName = "") returns error? {
+
+        // Verifies the current key
         string tomlKey = self.currentToken.value;
         self.keyStack.push(tomlKey);
         check self.verifyKey(structure, tomlKey);
 
-        check self.checkToken([DOT, ARRAY_TABLE_CLOSE], "Expected '.' or ']]' after a array table key");
+        check self.checkToken();
 
         match self.currentToken.token {
             DOT => { // Build the dotted key
-                check self.checkToken([UNQUOTED_KEY, BASIC_STRING, LITERAL_STRING], "Expected a key after '.' in a table key");
+                check self.checkToken([UNQUOTED_KEY, BASIC_STRING, LITERAL_STRING]);
                 return check self.arrayTable(structure[tomlKey] is map<anydata> ? <map<anydata>>structure[tomlKey] : {}, tomlKey + ".");
             }
 
             ARRAY_TABLE_CLOSE => { // Initialize the current structure
 
-                // Check if there is an static array or a standard table key aready defined
+                // Check if there is an static array or a standard table key aready defined.
                 check self.verifyTableKey(keyName + tomlKey);
 
+                // Cannot define an array table for already defined standard table.
                 if (structure.hasKey(tomlKey) && !(structure[tomlKey] is anydata[])) {
-                    return self.generateError("Cannot define an array table for a standard table defined by '" + tomlKey + "'");
+                    return self.generateError(check self.formatErrorMessage(2, value = keyName + tomlKey));
                 }
 
+                // An array table always create a new object.
                 self.currentStructure = {};
                 return;
             }
         }
     }
 
+    # Adds the current structure to the final TOML object.
+    #
+    # + structure - Parameter Description
+    # + return - Constructed final toml object on success. Else, a parsing error.
     private function buildTOMLObject(map<anydata> structure) returns map<anydata>|error {
         // Under the root table
         if (self.keyStack.length() == 0) {
             return self.currentStructure;
         }
 
-        // First key table
+        // Under the key tables at the depth of 1
         if (self.keyStack.length() == 1) {
             string key = self.keyStack.pop();
             if (self.isArrayTable) {
+
+                // Adds the current structure to the end of the array.
                 if (structure[key] is anydata[]) {
                     (<anydata[]>structure[key]).push(self.currentStructure.clone());
+
+                    // If the array does not exist, initialize and add it.
                 } else {
                     structure[key] = [self.currentStructure.clone()];
                 }
+
+                // If a standard table, assign the structure directly under the key
             } else {
                 structure[key] = self.currentStructure;
             }
@@ -686,14 +777,19 @@ class Parser {
         string key = self.keyStack.shift();
         map<anydata> value;
 
+        // If the key is a table
         if (structure[key] is map<anydata>) {
             value = check self.buildTOMLObject(<map<anydata>>structure[key]);
             structure[key] = value;
         }
+
+        // If there is a standard table under an array table, obtain the latest object.
         else if (structure[key] is anydata[]) {
             value = check self.buildTOMLObject(<map<anydata>>(<anydata[]>structure[key]).pop());
             (<anydata[]>structure[key]).push(value);
         }
+
+        // Creates a new structure if not exists.
         else {
             value = check self.buildTOMLObject({});
             structure[key] = value;
@@ -702,6 +798,10 @@ class Parser {
         return structure;
     }
 
+    # Evaluates an integer of a different base
+    #
+    # + numberSystem - Number system of the value
+    # + return - Processed integer. Error if there is a string.
     private function processInteger(int numberSystem) returns int|error {
         int value = 0;
         int power = 1;
@@ -798,7 +898,6 @@ class Parser {
                 if (value.length() == 0) {
                     return error("Value cannot be empty for this template message");
                 }
-
                 return "Duplicate key exists for '" + value + "'";
             }
 
