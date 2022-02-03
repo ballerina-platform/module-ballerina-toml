@@ -1,4 +1,0 @@
-{
-    "image": "ballerina/ballerina-devcontainer:slbeta6",
-    "extensions": ["WSO2.ballerina"],
-}
