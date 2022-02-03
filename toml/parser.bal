@@ -340,7 +340,7 @@ class Parser {
     # + return - Parsing error if occurred
     private function number(boolean fractional = false) returns anydata|error {
         self.lexemeBuffer += self.currentToken.value;
-        check self.checkToken([EOL, EXPONENTIAL, DOT, ARRAY_SEPARATOR, CLOSE_BRACKET, INLINE_TABLE_CLOSE, MINUS, COLON], "Invalid token after an DECIMAL");
+        check self.checkToken();
 
         match self.currentToken.token {
             EOL|ARRAY_SEPARATOR|CLOSE_BRACKET|INLINE_TABLE_CLOSE => { // Generate the final number
@@ -371,6 +371,9 @@ class Parser {
             COLON => {
                 self.lexer.state = NUMBER;
                 return check self.time(self.lexemeBuffer);
+            }
+            _ => {
+                return self.generateError("Invalid token after an decimal integer");
             }
         }
     }
@@ -418,15 +421,36 @@ class Parser {
     }
 
     private function date() returns anydata|error {
-        string year = self.lexemeBuffer;
+        int year = <int> check self.processTypeCastingError('int:fromString(self.lexemeBuffer)); 
 
         check self.checkToken(DECIMAL, "Expected a 2 digit month after '-'");
-        string month = self.currentToken.value;
+        int month = <int> check self.processTypeCastingError('int:fromString(self.currentToken.value));
+        self.lexemeBuffer += "-" + self.currentToken.value;
 
         check self.checkToken(MINUS, "Expected a '-' after month");
         check self.checkToken(DECIMAL, "Expected a 2 digit day after '-'");
-        string day = self.currentToken.value;
+        int day = <int> check self.processTypeCastingError('int:fromString(self.currentToken.value));
+        self.lexemeBuffer += "-" + self.currentToken.value;
 
+        check 'time:dateValidate({year, month, day});
+
+        check self.checkToken();
+        
+        match self.currentToken.token {
+            EOL => {
+                return self.lexemeBuffer;
+            }
+            TIME_DELIMITER => {
+                check self.checkToken(DECIMAL, "Expected a 2 digit decimal after the time delimiter");
+                string hours = self.currentToken.value;
+                self.lexemeBuffer += "T" + hours;
+                check self.checkToken(COLON, "Expected a ':' after hours");
+                return self.time(hours, true);
+            }
+            _ => {
+                return self.generateError("Invalid token token after");
+            }
+        }
     }
 
     private function array(anydata[] tempArray = []) returns anydata[]|error {

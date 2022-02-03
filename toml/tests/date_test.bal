@@ -74,9 +74,9 @@ function testODTSecondFractionWithDifferenceOffset() returns error? {
 @test:Config {}
 function testODTSupportDifferentTimeDelimiters() returns error? {
     AssertKey ak = check new AssertKey("date_time_delim", true);
-    ak.hasKey("odt1", "1979-05-27T07:32:00Z")
-        .hasKey("odt2", "1979-05-27T07:32:00Z")
-        .hasKey("odt3", "1979-05-27T07:32:00Z")
+    ak.hasKey("odt1", "1979-05-27T07:32:00")
+        .hasKey("odt2", "1979-05-27T07:32:00")
+        .hasKey("odt3", "1979-05-27T07:32:00")
         .close();
 }
 
@@ -117,4 +117,10 @@ function testInvalidLocalTime() {
     assertParsingError("07::01");
     assertParsingError("07:02:");
     assertParsingError("07:32:0099");
+}
+
+@test:Config {}
+function testLocalDateTime() returns error? {
+    AssertKey ak = check new AssertKey("ldt = 1979-05-27T07:32:00");
+    ak.hasKey("ldt", "1979-05-27T07:32:00").close();
 }

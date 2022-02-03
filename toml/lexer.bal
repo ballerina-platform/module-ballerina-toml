@@ -380,12 +380,15 @@ class Lexer {
                 if (digitPattern == DECIMAL_DIGIT_PATTERN) {
                     if (self.checkCharacter([".", "e", "E", ",", "]", "}"], i)) {
                         self.index = i - 1;
-                        return true;
+                    }
+                    if (self.checkCharacter(["-", ":"], i)) {
+                        self.index = i - 1;
+                        self.state = NUMBER;
                     }
                     if (self.state == NUMBER && self.checkCharacter(["-", ":", "t", "T", "+", "-", "Z"], i)) {
                         self.index = i - 1;
-                        return true;
                     }
+                    return true;
                 }
 
                 return self.generateError("Invalid character \"" + self.line[i] + "\" for an DECIMAL", i);
