@@ -345,6 +345,9 @@ class Parser {
         match self.currentToken.token {
             EOL|ARRAY_SEPARATOR|CLOSE_BRACKET|INLINE_TABLE_CLOSE => { // Generate the final number
                 self.tokenConsumed = true;
+                if (self.lexemeBuffer.length() > 1 && self.lexemeBuffer[0] == "0") {
+                    return self.generateError("Cannot have leading 0's in integers or floats");
+                }
                 return fractional ? check self.processTypeCastingError('float:fromString(self.lexemeBuffer))
                                         : check self.processTypeCastingError('int:fromString(self.lexemeBuffer));
             }
@@ -379,6 +382,9 @@ class Parser {
     }
 
     private function checkTime(string value, int lowerBound, int upperBound, string valueName) returns error? {
+        if (value.length() != 2) {
+            return self.generateError("Expected number of digits in " + valueName + " to be 2");
+        }
         int intValue = <int>check self.processTypeCastingError('int:fromString(value));
         if (intValue < lowerBound || intValue > upperBound) {
             return self.generateError("Expected " + valueName + " to be between " + lowerBound.toString() + "-" + upperBound.toString());
@@ -450,19 +456,29 @@ class Parser {
         }
     }
 
+    private function checkDate(string value, int numDigits, string valueName) returns int|error {
+        if (value.length() != numDigits) {
+            return self.generateError("Expected number of digits in " + valueName + " to be " + numDigits.toString());
+        }
+        return <int>check self.processTypeCastingError('int:fromString(value));
+    }
+
     private function date() returns anydata|error {
-        int year = <int>check self.processTypeCastingError('int:fromString(self.lexemeBuffer));
+        int year = check self.checkDate(self.lexemeBuffer, 4, "year");
 
         check self.checkToken(DECIMAL, "Expected a 2 digit month after '-'");
-        int month = <int>check self.processTypeCastingError('int:fromString(self.currentToken.value));
+        int month = check self.checkDate(self.currentToken.value, 2, "month");
         self.lexemeBuffer += "-" + self.currentToken.value;
 
         check self.checkToken(MINUS, "Expected a '-' after month");
         check self.checkToken(DECIMAL, "Expected a 2 digit day after '-'");
-        int day = <int>check self.processTypeCastingError('int:fromString(self.currentToken.value));
+        int day = check self.checkDate(self.currentToken.value, 2, "day");
         self.lexemeBuffer += "-" + self.currentToken.value;
 
-        check 'time:dateValidate({year, month, day});
+        error? validateDate = 'time:dateValidate({year, month, day});
+        if(validateDate is error) {
+            return self.generateError(validateDate.toString().substring(18));
+        }
 
         check self.checkToken();
 
@@ -716,7 +732,7 @@ class Parser {
     #
     # + message - Error message
     # + return - Constructed Parsing Error message  
-    private function generateError(string message) returns ParsingError {
+    private function generateError(readonly & string message) returns ParsingError {
         string text = "Parsing Error at line "
                         + self.lexer.lineNumber.toString()
                         + " index "

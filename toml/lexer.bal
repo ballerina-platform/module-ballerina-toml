@@ -139,12 +139,18 @@ class Lexer {
                 return self.generateToken(DOT);
             }
             "0" => {
-                if (regex:matches(self.line[self.index], DECIMAL_DIGIT_PATTERN)) {
+                string? peekValue = self.peek(1);
+                if (peekValue == ()) {
+                    self.lexeme = "0";
+                    return self.generateToken(DECIMAL);
+                }
+
+                if (regex:matches(peekValue, DECIMAL_DIGIT_PATTERN)) {
                     self.state = NUMBER;
                     return check self.iterate(self.digit(DECIMAL_DIGIT_PATTERN), DECIMAL);
                 }
 
-                match self.peek(1) {
+                match peekValue {
                     "x" => { // Hexadecimal numbers
                         self.index += 2;
                         return check self.iterate(self.digit(HEXADECIMAL_DIGIT_PATTERN), HEXADECIMAL);
@@ -157,7 +163,7 @@ class Lexer {
                         self.index += 2;
                         return check self.iterate(self.digit(BINARY_DIGIT_PATTERN), BINARY);
                     }
-                    ()|" "|"#"|"."|","|"]" => { // Decimal numbers
+                    " "|"#"|"."|","|"]" => { // Decimal numbers
                         self.lexeme = "0";
                         return self.generateToken(DECIMAL);
                     }

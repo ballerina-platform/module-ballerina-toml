@@ -50,7 +50,7 @@ function testODTZulu() returns error? {
 @test:Config {}
 function testInvalidODT() {
     assertParsingError("odt = 1979-05-2707:32:00Z");
-    assertParsingError("odt = 1979-05-2707:32:00-");
+    assertParsingError("odt = 1979-05-27T07:32:00-");
 }
 
 @test:Config {}
@@ -61,7 +61,7 @@ function testODTTimeDifferenceOffset() returns error? {
 
 @test:Config {}
 function testODTSecondFraction() returns error? {
-    AssertKey ak = check new AssertKey("odt = 1979-05-27T07:32:00.99");
+    AssertKey ak = check new AssertKey("odt = 1979-05-27T07:32:00.99Z");
     ak.hasKey("odt", check time:utcFromString("1979-05-27T07:32:00.99Z")).close();
 }
 
@@ -88,12 +88,12 @@ function testLocalDate() returns error? {
 
 @test:Config {}
 function testInvalidLocalDate() {
-    assertParsingError("192-12-12");
-    assertParsingError("1922-2-12");
-    assertParsingError("1922-02-2");
-    assertParsingError("1922-2-");
-    assertParsingError("1922--1");
-    assertParsingError("-02-01");
+    assertParsingError("ld = 192-12-12");
+    assertParsingError("ld = 1922-2-12");
+    assertParsingError("ld = 1922-02-2");
+    assertParsingError("ld = 1922-2-");
+    assertParsingError("ld = 1922--1");
+    assertParsingError("ld = -02-01");
 }
 
 @test:Config {}
@@ -110,13 +110,13 @@ function testLocalTimeWithFraction() returns error? {
 
 @test:Config {}
 function testInvalidLocalTime() {
-    assertParsingError("7:32:00");
-    assertParsingError("07:2:00");
-    assertParsingError("07:02:1");
-    assertParsingError(":02:01");
-    assertParsingError("07::01");
-    assertParsingError("07:02:");
-    assertParsingError("07:32:0099");
+    assertParsingError("ldt = 7:32:00");
+    assertParsingError("ldt = 07:2:00");
+    assertParsingError("ldt = 07:02:1");
+    assertParsingError("ldt = :02:01", isLexical = true);
+    assertParsingError("ldt = 07::01");
+    assertParsingError("ldt = 07:02:");
+    assertParsingError("ldt = 07:32:0099");
 }
 
 @test:Config {}

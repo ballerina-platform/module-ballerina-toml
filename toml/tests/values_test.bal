@@ -72,7 +72,7 @@ function testIllegalUnderscoe() {
 
 @test:Config {}
 function testLeadingZeroDecimal() {
-    assertParsingError("somekey = 012", isLexical = true);
+    assertParsingError("somekey = 012");
 }
 
 @test:Config {}
