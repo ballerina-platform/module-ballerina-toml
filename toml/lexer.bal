@@ -78,6 +78,10 @@ class Lexer {
                     return self.generateToken(ZULU);
                 }
             }
+
+            if (regex:matches(self.line[self.index], DECIMAL_DIGIT_PATTERN)) {
+                return check self.iterate(self.digit(DECIMAL_DIGIT_PATTERN), DECIMAL);
+            }
         }
 
         match self.line[self.index] {
@@ -135,6 +139,11 @@ class Lexer {
                 return self.generateToken(DOT);
             }
             "0" => {
+                if (regex:matches(self.line[self.index], DECIMAL_DIGIT_PATTERN)) {
+                    self.state = NUMBER;
+                    return check self.iterate(self.digit(DECIMAL_DIGIT_PATTERN), DECIMAL);
+                }
+
                 match self.peek(1) {
                     "x" => { // Hexadecimal numbers
                         self.index += 2;
@@ -325,7 +334,7 @@ class Lexer {
     # + return - True if the end of the key, An error message for an invalid character.  
     private function unquotedKey(int i) returns boolean|LexicalError {
         if (!regex:matches(self.line[i], UNQUOTED_STRING_PATTERN)) {
-            if (self.checkCharacter([" ", ".", "]", "="])) {
+            if (self.checkCharacter([" ", ".", "]", "="], i)) {
                 self.index = i - 1;
                 return true;
             }
@@ -439,7 +448,7 @@ class Lexer {
     #
     # + expectedCharacters - Expected characters at the current index
     # + return - True if the assertion is true
-    private function checkCharacter(string|string[] expectedCharacters, int? index = ()) returns boolean {
+    private function checkCharacter(string|string[] expectedCharacters, int? index) returns boolean {
         if (expectedCharacters is string) {
             return expectedCharacters == self.line[index == () ? self.index : index];
         } else if (expectedCharacters.indexOf(self.line[index == () ? self.index : index]) == ()) {

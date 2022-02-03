@@ -99,13 +99,13 @@ function testInvalidLocalDate() {
 @test:Config {}
 function testLocalTime() returns error? {
     AssertKey ak = check new AssertKey("lt = 07:32:00");
-    ak.hasKey("ld", "07:32:00").close();
+    ak.hasKey("lt", "07:32:00").close();
 }
 
 @test:Config {}
 function testLocalTimeWithFraction() returns error? {
     AssertKey ak = check new AssertKey("lt = 07:32:00.99");
-    ak.hasKey("ld", "07:32:00.99").close();
+    ak.hasKey("lt", "07:32:00.99").close();
 }
 
 @test:Config {}

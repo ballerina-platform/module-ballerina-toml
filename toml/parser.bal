@@ -1,5 +1,8 @@
 import ballerina/lang.'int;
+import ballerina/lang.'float;
 import ballerina/lang.'boolean;
+
+// import ballerina/time;
 
 type ParsingError distinct error;
 
@@ -334,7 +337,7 @@ class Parser {
     # + return - Parsing error if occurred
     private function number(boolean fractional = false) returns anydata|error {
         self.lexemeBuffer += self.currentToken.value;
-        check self.checkToken([EOL, EXPONENTIAL, DOT, ARRAY_SEPARATOR, CLOSE_BRACKET, INLINE_TABLE_CLOSE], "Invalid token after an DECIMAL");
+        check self.checkToken([EOL, EXPONENTIAL, DOT, ARRAY_SEPARATOR, CLOSE_BRACKET, INLINE_TABLE_CLOSE, MINUS, COLON], "Invalid token after an DECIMAL");
 
         match self.currentToken.token {
             EOL|ARRAY_SEPARATOR|CLOSE_BRACKET|INLINE_TABLE_CLOSE => { // Generate the final number
@@ -358,15 +361,61 @@ class Parser {
                 self.lexemeBuffer += ".";
                 return check self.number(true);
             }
+            MINUS => {
+                self.lexer.state = NUMBER;
+                return check self.date();
+            }
+            COLON => {
+                self.lexer.state = NUMBER;
+                return check self.time();
+            }
         }
     }
 
-    private function time() {
+    private function time(boolean datePrefixed = false) returns anydata|error {
+        int hours = <int>check self.processTypeCastingError('int:fromString(self.lexemeBuffer));
+        if (hours < 0 || hours > 24) {
+            return self.generateError("Expected hours to be between 0-24");
+        }
 
+        check self.checkToken(DECIMAL, "Expected 2 digit minutes after ':'");
+        int minutes = <int>check self.processTypeCastingError('int:fromString(self.currentToken.value));
+        if (minutes < 0 || minutes > 60) {
+            return self.generateError("Expected minutes to be between 0-60");
+        }
+        self.lexemeBuffer += ":" + self.currentToken.value;
+
+        check self.checkToken(COLON, "Expected a ':' after minutes");
+        check self.checkToken(DECIMAL, "Expected a 2 digit day after ':'");
+        int seconds = <int>check self.processTypeCastingError('int:fromString(self.currentToken.value));
+        if (seconds < 0 || seconds > 60) {
+            return self.generateError("Expected seconds to be between 0-60");
+        }
+        self.lexemeBuffer += ":" + self.currentToken.value;
+
+        check self.checkToken([EOL, DOT], "Invalid token '" + self.currentToken.token + "' after seconds");
+        match self.currentToken.token {
+            EOL => {
+                return self.lexemeBuffer;
+            }
+            DOT => {
+                check self.checkToken(DECIMAL, "Expected a integer after '.' for the time fraction");
+                self.lexemeBuffer += "." + self.currentToken.value;
+                return self.lexemeBuffer;
+            }
+        }
     }
 
-    private function date() {
-        
+    private function date() returns anydata|error {
+        string year = self.lexemeBuffer;
+
+        check self.checkToken(DECIMAL, "Expected a 2 digit month after '-'");
+        string month = self.currentToken.value;
+
+        check self.checkToken(MINUS, "Expected a '-' after month");
+        check self.checkToken(DECIMAL, "Expected a 2 digit day after '-'");
+        string day = self.currentToken.value;
+
     }
 
     private function array(anydata[] tempArray = []) returns anydata[]|error {
