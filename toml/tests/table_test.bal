@@ -25,7 +25,7 @@ function testMultipleStandardTables() returns error? {
 
 @test:Config {}
 function testDottedStandardTables() returns error? {
-    AssertKey ak = check new AssertKey("table_dotted_keys",true);
+    AssertKey ak = check new AssertKey("table_dotted_keys", true);
     ak.hasKey("outer")
         .dive("outer")
             .hasKey("key", 1)
@@ -77,6 +77,7 @@ function testProcesInlineTable() returns error? {
             .hasKey("name", "pug")
             .close();
 }
+
 @test:Config {}
 function testRedefineInlineTable() {
     assertParsingError("inline_redefine_table", true);
@@ -102,4 +103,15 @@ function testRedefineSuperTable() {
 @test:Config {}
 function testTableRedefineArrayTable() {
     assertParsingError("table_redefine_array_table", true);
+}
+
+@test:Config {}
+function testSameKeyOfDifferentTables() returns error? {
+    AssertKey ak = check new AssertKey("table_same_key_diff_tables", true);
+    ak.dive("a")
+        .hasKey("c", {d: 1})
+        .hop()
+    .dive("b")
+        .hasKey("c", {d: 2})
+        .close();
 }

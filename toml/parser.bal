@@ -38,6 +38,9 @@ class Parser {
     # If set, the parser is currently working on an array table
     private boolean isArrayTable;
 
+    # The current table key name. If empty, then current table is the root.
+    private string currentTableKey;
+
     # Lexical analyzer tool for getting the tokens
     private Lexer lexer;
 
@@ -53,6 +56,7 @@ class Parser {
         self.tokenConsumed = false;
         self.bufferedKey = "";
         self.isArrayTable = false;
+        self.currentTableKey = "";
         self.lineIndex = -1;
         self.lexemeBuffer = "";
     }
@@ -97,7 +101,7 @@ class Parser {
             // Comments and new lines are ignored.
             // However, other expressions cannot have addtional tokens in their line.
             if (self.currentToken.token != EOL) {
-                check self.checkToken(EOL, "Cannot have anymore tokens in the same line");
+                check self.checkToken(EOL);
             }
         }
 
@@ -111,15 +115,21 @@ class Parser {
     # Hence, the error checking must be done explicitly.
     #
     # + expectedTokens - Predicted token or tokens
-    # + errorMessage - Parsing error if expected token not found  
+    # + errorMessage - Error message to be displayed if the eexpected token not found  
     # + return - Parsing error if not found
-    private function checkToken(TOMLToken|TOMLToken[] expectedTokens = DUMMY, string errorMessage = "") returns error? {
+    private function checkToken(TOMLToken|TOMLToken[] expectedTokens = DUMMY, string customMessage = "") returns error? {
+        TOMLToken prevToken = self.currentToken.token;
         self.currentToken = check self.lexer.getToken();
 
         // Bypass error handling.
         if (expectedTokens == DUMMY) {
             return;
         }
+
+        // Automatically generates a template error message if there is no custom message.
+        string errorMessage = customMessage.length() == 0
+                                ? check self.formatErrorMessage(1, expectedTokens, prevToken)
+                                : customMessage;
 
         // Generate an error if the expected token differ from the actual token.
         if (expectedTokens is TOMLToken) {
@@ -146,19 +156,18 @@ class Parser {
         string tomlKey = self.currentToken.value;
         check self.verifyKey(structure, tomlKey);
         check self.verifyTableKey(self.bufferedKey);
-
-        check self.checkToken([DOT, KEY_VALUE_SEPERATOR], "Expected a '.' or a '=' after a key");
+        check self.checkToken();
 
         match self.currentToken.token {
-            DOT => {
-                check self.checkToken([UNQUOTED_KEY, BASIC_STRING, LITERAL_STRING], "Expected a key after '.'");
+            DOT => { // Process dotted keys
+                check self.checkToken([UNQUOTED_KEY, BASIC_STRING, LITERAL_STRING]);
                 self.bufferedKey += "." + self.currentToken.value;
                 map<anydata> value = check self.keyValue(structure[tomlKey] is map<anydata> ? <map<anydata>>structure[tomlKey] : {});
                 structure[tomlKey] = value;
                 return structure;
             }
 
-            KEY_VALUE_SEPERATOR => {
+            KEY_VALUE_SEPERATOR => { // Process value assignment
                 self.lexer.state = EXPRESSION_VALUE;
 
                 check self.checkToken([
@@ -173,45 +182,52 @@ class Parser {
                     OPEN_BRACKET,
                     BOOLEAN,
                     INLINE_TABLE_OPEN
-                ], "Expected a value after '='");
+                ]);
 
                 // Existing tables cannot be overwritten by inline tables
                 if (self.currentToken.token == INLINE_TABLE_OPEN && structure[tomlKey] is map<anydata>) {
-                    return self.generateError("Duplicate key " + self.bufferedKey);
+                    return self.generateError(check self.formatErrorMessage(2, value = self.bufferedKey));
                 }
 
                 structure[tomlKey] = check self.dataValue();
                 return structure;
-
             }
             _ => {
-                return self.generateError("Expected a '.' or a '=' after a key");
+                return self.generateError(check self.formatErrorMessage(1, [DOT, KEY_VALUE_SEPERATOR], UNQUOTED_KEY));
             }
         }
     }
 
-    # If the structure exists and already assigned a value that is not a table,
+    # If the structure exists and already assigned a primitive value,
     # then it is invalid to assign a value to it or nested to it.
     #
-    # + structure - Structure which the key should exist in  
+    # + structure - Parent key of the provided one 
     # + key - Key to be verified in the structure  
-    # + return - Error, if there already exists a non-table value
+    # + return - Error, if there already exists a primitive value.
     private function verifyKey(map<anydata>? structure, string key) returns error? {
         if (structure is map<anydata>) {
             map<anydata> castedStructure = <map<anydata>>structure;
             if (castedStructure.hasKey(key) && !(castedStructure[key] is anydata[] || castedStructure[key] is map<anydata>)) {
-                // TODO: Improve the error message by stacking the parents
-                return self.generateError("Duplicate values exists");
+                return self.generateError("Duplicate values exists for '" + self.bufferedKey + "'");
             }
         }
     }
 
+    # TOML allows only once to define a standard key table.
+    # This function checks if the table key name already exists.
+    #
+    # + tableKeyName - Table key name to be checked
+    # + return - An error if the key already exists.  
     private function verifyTableKey(string tableKeyName) returns error? {
         if (self.definedTableKeys.indexOf(tableKeyName) != ()) {
-            return self.generateError("Duplicate table key '" + tableKeyName + "'");
+            return self.generateError("Duplicate table key exists for '" + tableKeyName + "'");
         }
     }
 
+    
+    # Generate any TOML data value.
+    # 
+    # + return - If sucess, returns the formatted data value. Else, an error.
     private function dataValue() returns anydata|error {
         anydata returnData;
         match self.currentToken.token {
@@ -240,15 +256,17 @@ class Parser {
             }
             OPEN_BRACKET => {
                 returnData = check self.array();
+
+                // There can be 
                 if (!self.isArrayTable) {
-                    self.definedTableKeys.push(self.bufferedKey);
+                    self.definedTableKeys.push(self.currentTableKey.length() == 0 ? self.bufferedKey : self.currentTableKey + "." + self.bufferedKey);
                     self.bufferedKey = "";
                 }
             }
             INLINE_TABLE_OPEN => {
                 returnData = check self.inlineTable();
                 if (!self.isArrayTable) {
-                    self.definedTableKeys.push(self.bufferedKey);
+                    self.definedTableKeys.push(self.currentTableKey.length() == 0 ? self.bufferedKey : self.currentTableKey + "." + self.bufferedKey);
                     self.bufferedKey = "";
                 }
             }
@@ -602,6 +620,7 @@ class Parser {
                 string tableKeyName = keyName + tomlKey;
                 check self.verifyTableKey(tableKeyName);
                 self.definedTableKeys.push(tableKeyName);
+                self.currentTableKey = tableKeyName;
 
                 if (structure.hasKey(tomlKey) && !(structure[tomlKey] is map<anydata>)) {
                     return self.generateError("Already defined an array table for '" + tomlKey + "'");
@@ -729,7 +748,7 @@ class Parser {
     #
     # + message - Error message
     # + return - Constructed Parsing Error message  
-    private function generateError(readonly & string message) returns ParsingError {
+    private function generateError(string message) returns ParsingError {
         string text = "Parsing Error at line "
                         + self.lexer.lineNumber.toString()
                         + " index "
@@ -738,5 +757,55 @@ class Parser {
                         + message
                         + ".";
         return error ParsingError(text);
+    }
+
+    # Generate a standard error message based on the type.
+    #
+    # 1 - Expected ${expectedTokens} after ${beforeToken}, but found ${actualToken}
+    #
+    # 2 - Duplicate key exists for ${value}
+    #
+    # + messageType - Number of the template message
+    # + expectedTokens - Predicted tokens  
+    # + actualToken - Actual tokens   
+    # + beforeToken - Toekn before the predicetd token  
+    # + value - Any value name. Commonly used to indicate keys.
+    # + return - If success, the generated error message. Else, an error message.
+    private function formatErrorMessage(
+            int messageType,
+            TOMLToken|TOMLToken[] expectedTokens = DUMMY,
+            TOMLToken beforeToken = DUMMY,
+            string value = "") returns string|error {
+
+        match messageType {
+            1 => { // Expected ${expectedTokens} after ${beforeToken}, but found ${actualToken}
+                if (expectedTokens == DUMMY || beforeToken == DUMMY) {
+                    return error("Token parameters cannot be null for this template error message.");
+                }
+                string expectedTokensMessage;
+                if (expectedTokens is TOMLToken[]) { // If multiplke tokens
+                    string tempMessage = expectedTokens.reduce(function(string message, TOMLToken token) returns string {
+                        return message + " '" + token + "' or";
+                    }, "");
+                    expectedTokensMessage = tempMessage.substring(0, tempMessage.length() - 3);
+                } else { // If a singel token
+                    expectedTokensMessage = " '" + expectedTokens + "'";
+                }
+                return "Expected" + expectedTokensMessage + " after '" + beforeToken + "', but found '" + self.currentToken.token + "'";
+            }
+
+            2 => { // Duplicate key exists for ${value}
+                if (value.length() == 0) {
+                    return error("Value cannot be empty for this template message");
+                }
+
+                return "Duplicate key exists for '" + value + "'";
+            }
+
+            _ => {
+                return error("Invalid message type number. Enter a value between 1-2");
+            }
+        }
+
     }
 }
