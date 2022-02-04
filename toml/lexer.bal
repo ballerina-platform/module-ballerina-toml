@@ -52,6 +52,7 @@ class Lexer {
             return check self.iterate(self.unquotedKey, UNQUOTED_KEY);
         }
 
+        // Generate tokens related to multi line basic strings
         if (self.state == MULTILINE_BSTRING || self.state == MULTILINE_ESCAPE) {
             // Process the escape symbol
             if (self.line[self.index] == "\\") {
@@ -65,7 +66,7 @@ class Lexer {
 
         }
 
-        // Process tokens related to multi-line literal string
+        // Generate tokens related to multi-line literal string
         if (self.state == MULITLINE_LSTRING && regex:matches(self.line[self.index], LITERAL_STRING_PATTERN)) {
             return self.iterate(self.multilineLiteralString, MULTI_LSTRING_CHARS);
         }
@@ -372,7 +373,7 @@ class Lexer {
                 }
 
                 // Both preceding and succeeding chars of the '_' should be digits
-                if (self.line[i] == "_") {
+                if (self.checkCharacter("_", i)) {
                     // '_' should be after a digit
                     if (self.lexeme.length() > 0) {
                         string? nextChr = self.peek(1);
@@ -464,7 +465,8 @@ class Lexer {
 
     # Assert the character of the current index
     #
-    # + expectedCharacters - Expected characters at the current index
+    # + expectedCharacters - Expected characters at the current index  
+    # + index - Index of the character. If null, takes the lexer's index.
     # + return - True if the assertion is true
     private function checkCharacter(string|string[] expectedCharacters, int? index) returns boolean {
         if (expectedCharacters is string) {
