@@ -19,3 +19,13 @@ public function readFile(string filePath) returns map<anydata>|error {
     Parser parser = new Parser(lines);
     return parser.parse();
 }
+
+# Writes the toml structure to a TOML document.
+#
+# + fileName - Path to the file  
+# + tomlStructure - Structure to be written to the file.
+# + return - An error on failure
+public function write(string fileName, map<anydata> tomlStructure) returns error? {
+    Writer writer = new Writer();
+    check writer.write();
+}

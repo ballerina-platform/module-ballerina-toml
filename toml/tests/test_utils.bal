@@ -1,6 +1,7 @@
 import ballerina/test;
+import ballerina/io;
 
-const ORIGIN_FILE_PATH = "toml/tests/resources/";
+const ORIGIN_FILE_PATH = "tests/resources/";
 
 # Returns a new lexer with the configured line for testing
 #
@@ -164,5 +165,22 @@ class AssertKey {
     # Invoke this after finish writing the assertions.  
     function close() {
         return;
+    }
+}
+
+# Assert if given word(s) are in the file
+#
+# + fileName - Path to the file  
+# + content - Words to be which should be in the file
+# + return - An error on fail
+function assertFile(string fileName, string|string[] content) returns error? {
+    string fileContent = check io:fileReadString(fileName);
+
+    if (content is string) {
+        test:assertTrue(fileContent.includes(content));
+    } else {
+        test:assertTrue(content.reduce(function(boolean assertion, string word) returns boolean {
+            return assertion && fileContent.includes(word);
+        }, true));
     }
 }
