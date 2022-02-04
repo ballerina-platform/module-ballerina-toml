@@ -157,7 +157,7 @@ class Parser {
     private function keyValue(map<anydata> structure) returns map<anydata>|error {
         string tomlKey = self.currentToken.value;
         check self.verifyKey(structure, tomlKey);
-        check self.verifyTableKey(self.bufferedKey);
+        check self.verifyTableKey(self.currentTableKey == "" ? self.bufferedKey : self.currentTableKey + "." + self.bufferedKey);
         check self.checkToken();
 
         match self.currentToken.token {
