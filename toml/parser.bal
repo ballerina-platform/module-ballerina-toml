@@ -181,6 +181,8 @@ class Parser {
                     BINARY,
                     OCTAL,
                     HEXADECIMAL,
+                    INFINITY,
+                    NAN,
                     OPEN_BRACKET,
                     BOOLEAN,
                     INLINE_TABLE_OPEN
@@ -251,6 +253,12 @@ class Parser {
             }
             OCTAL => {
                 returnData = check self.processInteger(8);
+            }
+            INFINITY => {
+                returnData = self.currentToken.value[0] == "+" ? 'float:Infinity : -'float:Infinity;
+            }
+            NAN => {
+                returnData = 'float:NaN;
             }
             BOOLEAN => {
                 returnData = check self.processTypeCastingError('boolean:fromString(self.currentToken.value));
@@ -575,6 +583,11 @@ class Parser {
             MULTI_BSTRING_DELIMITER,
             MULTI_LSTRING_DELIMITER,
             DECIMAL,
+            HEXADECIMAL,
+            OCTAL,
+            BINARY,
+            INFINITY,
+            NAN,
             BOOLEAN,
             OPEN_BRACKET,
             CLOSE_BRACKET,

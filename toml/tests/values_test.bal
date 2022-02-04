@@ -184,3 +184,21 @@ function testProcessHexaDecimalNumbers() returns error? {
     AssertKey ak = check new AssertKey("bin = 0xab12");
     ak.hasKey("bin", 43794).close();
 }
+
+@test:Config {}
+function testProcessInfinityValues() returns error? {
+    AssertKey ak = check new AssertKey("infinity", true);
+    ak.hasKey("sf1", 'float:Infinity)
+        .hasKey("sf2", 'float:Infinity)
+        .hasKey("sf3", -'float:Infinity)
+        .close();
+}
+
+@test:Config {}
+function testProcessNaNValues() returns error? {
+    AssertKey ak = check new AssertKey("nan", true);
+    ak.hasKey("sf1", 'float:NaN)
+        .hasKey("sf2", 'float:NaN)
+        .hasKey("sf3", 'float:NaN)
+        .close();
+}
