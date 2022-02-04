@@ -27,5 +27,7 @@ public function readFile(string filePath) returns map<anydata>|error {
 # + return - An error on failure
 public function write(string fileName, map<anydata> tomlStructure) returns error? {
     Writer writer = new Writer();
-    check writer.write();
+    check writer.openFile(fileName);
+    string[] output = check writer.write(tomlStructure);
+    check io:fileWriteLines(fileName, output);
 }

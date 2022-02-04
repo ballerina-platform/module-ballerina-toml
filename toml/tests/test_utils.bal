@@ -1,5 +1,4 @@
 import ballerina/test;
-import ballerina/io;
 
 const ORIGIN_FILE_PATH = "tests/resources/";
 
@@ -168,19 +167,20 @@ class AssertKey {
     }
 }
 
-# Assert if given word(s) are in the file
+# Assert if given word(s) are in the output array
 #
-# + fileName - Path to the file  
+# + structure - TOML structure to be tested
 # + content - Words to be which should be in the file
 # + return - An error on fail
-function assertFile(string fileName, string|string[] content) returns error? {
-    string fileContent = check io:fileReadString(fileName);
+function assertStringArray(map<anydata> structure, string|string[] content) returns error? {
+    Writer writer = new Writer();
+    string[] output = check writer.write(structure);
 
     if (content is string) {
-        test:assertTrue(fileContent.includes(content));
+        test:assertTrue(output.indexOf(content) != ());
     } else {
         test:assertTrue(content.reduce(function(boolean assertion, string word) returns boolean {
-            return assertion && fileContent.includes(word);
+            return assertion && output.indexOf(word) != ();
         }, true));
     }
 }
