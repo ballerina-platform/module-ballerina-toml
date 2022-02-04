@@ -11,6 +11,15 @@ enum RegexPatterns {
     BINARY_DIGIT_PATTERN = "[0-1]{1}"
 }
 
+enum State {
+    EXPRESSION_KEY,
+    EXPRESSION_VALUE,
+    DATE_TIME,
+    MULTILINE_BSTRING,
+    MULITLINE_LSTRING,
+    MULTILINE_ESCAPE
+}
+
 # Represenst an error caused by the lexical analyzer
 type LexicalError distinct error;
 
@@ -123,7 +132,7 @@ class Lexer {
                 return self.generateToken(CLOSE_BRACKET);
             }
             "," => {
-                return self.generateToken(ARRAY_SEPARATOR);
+                return self.generateToken(SEPARATOR);
             }
             "\"" => { // Basic strings
 

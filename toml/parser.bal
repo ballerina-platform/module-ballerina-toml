@@ -378,7 +378,7 @@ class Parser {
         check self.checkToken();
 
         match self.currentToken.token {
-            EOL|ARRAY_SEPARATOR|CLOSE_BRACKET|INLINE_TABLE_CLOSE => { // Generate the final number
+            EOL|SEPARATOR|CLOSE_BRACKET|INLINE_TABLE_CLOSE => { // Generate the final number
                 self.tokenConsumed = true;
                 if (self.lexemeBuffer.length() > 1 && self.lexemeBuffer[0] == "0") {
                     return self.generateError("Cannot have leading 0's in integers or floats");
@@ -633,11 +633,11 @@ class Parser {
             CLOSE_BRACKET => {
                 return tempArray;
             }
-            ARRAY_SEPARATOR => {
+            SEPARATOR => {
                 return self.array(tempArray);
             }
             _ => {
-                return self.generateError(check self.formatErrorMessage(1, [EOL, CLOSE_BRACKET, ARRAY_SEPARATOR], prevToken));
+                return self.generateError(check self.formatErrorMessage(1, [EOL, CLOSE_BRACKET, SEPARATOR], prevToken));
             }
         }
     }
@@ -668,11 +668,11 @@ class Parser {
         if (self.tokenConsumed) {
             self.tokenConsumed = false;
         } else {
-            check self.checkToken([ARRAY_SEPARATOR, INLINE_TABLE_CLOSE]);
+            check self.checkToken([SEPARATOR, INLINE_TABLE_CLOSE]);
         }
 
         // Calls the method recursively to add new key values.
-        if (self.currentToken.token == ARRAY_SEPARATOR) {
+        if (self.currentToken.token == SEPARATOR) {
             return check self.inlineTable(newTable, false);
         }
 
