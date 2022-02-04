@@ -3,8 +3,10 @@ import ballerina/lang.'float;
 import ballerina/lang.'int;
 import ballerina/time;
 
+# Represents an error caused by parser
 type ParsingError distinct error;
 
+# Parses the TOML document using the lexer
 class Parser {
     # Properties for the TOML lines
     private string[] lines;
@@ -393,11 +395,11 @@ class Parser {
                 return check self.number(true);
             }
             MINUS => {
-                self.lexer.state = NUMBER;
+                self.lexer.state = DATE_TIME;
                 return check self.date();
             }
             COLON => {
-                self.lexer.state = NUMBER;
+                self.lexer.state = DATE_TIME;
                 return check self.time(self.lexemeBuffer);
             }
             _ => {
@@ -744,7 +746,7 @@ class Parser {
 
     # Adds the current structure to the final TOML object.
     #
-    # + structure - Parameter Description
+    # + structure - Structure to which the changes are made.
     # + return - Constructed final toml object on success. Else, a parsing error.
     private function buildTOMLObject(map<anydata> structure) returns map<anydata>|error {
         // Under the root table

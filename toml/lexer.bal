@@ -11,13 +11,22 @@ enum RegexPatterns {
     BINARY_DIGIT_PATTERN = "[0-1]{1}"
 }
 
+# Represenst an error caused by the lexical analyzer
 type LexicalError distinct error;
 
+# Geneerates tokens based on the TOML lexemes  
 class Lexer {
+    # Properties to represent current position 
     int index;
     int lineNumber;
+
+    # Line to be lexically analyzed
     string line;
+
+    # Value of the generateed token
     string lexeme;
+
+    # Current state of the Lexer
     State state;
 
     function init() {
@@ -56,11 +65,13 @@ class Lexer {
 
         }
 
+        // Process tokens related to multi-line literal string
         if (self.state == MULITLINE_LSTRING && regex:matches(self.line[self.index], LITERAL_STRING_PATTERN)) {
             return self.iterate(self.multilineLiteralString, MULTI_LSTRING_CHARS);
         }
 
-        if (self.state == NUMBER) {
+        // Process tokens related to date time
+        if (self.state == DATE_TIME) {
             match self.line[self.index] {
                 ":" => {
                     return self.generateToken(COLON);
@@ -93,7 +104,6 @@ class Lexer {
                 return self.generateToken(EOL);
             }
             "=" => { // Key value seperator
-                self.state = EXPRESSION_VALUE;
                 return self.generateToken(KEY_VALUE_SEPERATOR);
             }
             "[" => {
@@ -146,7 +156,6 @@ class Lexer {
                 }
 
                 if (regex:matches(peekValue, DECIMAL_DIGIT_PATTERN)) {
-                    self.state = NUMBER;
                     return check self.iterate(self.digit(DECIMAL_DIGIT_PATTERN), DECIMAL);
                 }
 
@@ -223,8 +232,8 @@ class Lexer {
             }
         }
 
-        // Check for values starting with an DECIMAL.
-        if ((self.state == EXPRESSION_VALUE || self.state == NUMBER) && regex:matches(self.line[self.index], DECIMAL_DIGIT_PATTERN)) {
+        // Check for values starting with an integer.
+        if ((self.state == EXPRESSION_VALUE) && regex:matches(self.line[self.index], DECIMAL_DIGIT_PATTERN)) {
             return check self.iterate(self.digit(DECIMAL_DIGIT_PATTERN), DECIMAL);
         }
 
@@ -389,9 +398,9 @@ class Lexer {
                     }
                     if (self.checkCharacter(["-", ":"], i)) {
                         self.index = i - 1;
-                        self.state = NUMBER;
+                        self.state = DATE_TIME;
                     }
-                    if (self.state == NUMBER && self.checkCharacter(["-", ":", "t", "T", "+", "-", "Z"], i)) {
+                    if (self.state == DATE_TIME && self.checkCharacter(["-", ":", "t", "T", "+", "-", "Z"], i)) {
                         self.index = i - 1;
                     }
                     return true;
