@@ -9,13 +9,16 @@ class Writer {
 
     # The table key which the Writer currently processing. 
     # Root if the string is empty.
-    private string tableKey;
+    private string tableKey = "";
 
-    private string[] output;
+    # TOML lines to be written
+    private string[] output = [];
 
-    function init() {
-        self.tableKey = "";
-        self.output = [];
+    # Whitespace for an indent
+    private string whitespace = "";
+
+    function init(int indentationPolicy = 2) {
+        self.whitespace = self.getWhitespace(indentationPolicy);
     }
 
     # Write the TOML structure to the given file.
@@ -28,23 +31,42 @@ class Writer {
 
         // Traverse all the keys .
         foreach string key in keys {
+            anydata value = structure[key];
 
             // This structure should be processed at the end of this depth level.
             // TODO: Process interal strucutres
-            if (structure[key] is map<anydata>) {
+            if (value is map<anydata>) {
                 continue;
             }
 
-            if (structure[key] is time:Utc) {
-                self.output.push(key + " = " + time:utcToString(<time:Utc>structure[key]));
+            // Procss UTC time
+            if (value is time:Utc) {
+                self.output.push(key + " = " + time:utcToString(<time:Utc>value));
+                continue;
             }
 
             // TODO: Process array values
-            if (structure[key] is anydata[]) {
+            if (value is anydata[]) {
+                boolean isAllObject = (<anydata[]>value).reduce(function(boolean assertion, anydata arrayValue) returns boolean {
+                    return assertion && arrayValue is map<anydata>;
+                }, true);
+
+                // Construct an array table
+                if (isAllObject) {
+
+                }
+
+                // Construct an inline array
+                else {
+                    self.output.push(key + " = [");
+                    value.forEach(arrayValue => self.output.push(self.whitespace + check self.processPrimitiveValue(arrayValue) + ","));
+                    self.output.push("]");
+                }
+
                 continue;
             }
 
-            self.output.push(key + " = " + check self.processPrimitiveValue(structure[key]));
+            self.output.push(key + " = " + check self.processPrimitiveValue(value));
         }
 
         return self.output;
@@ -87,11 +109,19 @@ class Writer {
             return "nan";
         }
 
-        if (value is int || value is float || value is boolean) {
+        if (value is int || value is float || value is boolean || value is map<anydata>) {
             return value.toString();
         }
 
         return self.generateError("Unknown data type to process");
+    }
+
+    private function getWhitespace(int policy) returns string {
+        string whitespace = "";
+        foreach int i in 1 ... policy {
+            whitespace += " ";
+        }
+        return whitespace;
     }
 
     # Generates a Parsing Error Error.

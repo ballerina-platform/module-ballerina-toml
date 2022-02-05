@@ -24,3 +24,57 @@ function primitiveDataGen() returns map<[string, anydata, string]>|error {
     };
     return dataSet;
 }
+
+@test:Config {
+    groups: ["writer"]
+}
+function testWriteDottedKeys() returns error?{
+    map<anydata> toml = {
+        "a": {
+            "b": 1
+        }
+    };
+    check assertStringArray(toml, "a.b = 1");
+}
+
+@test:Config {
+    groups: ["writer"]
+}
+function testWriteInlineArrays() returns error? {
+    map<anydata> toml = {
+        "a": [
+            {"b": 1, "c": 2},
+            3
+        ]
+    };
+    check assertStringArray(toml, ["a = [", "]", "  {\"b\":1,\"c\":2},", "  3,"]);
+}
+
+@test:Config {
+    groups: ["writer"]
+}
+function testWriteArrayTable() returns error? {
+    map<anydata> toml = {
+        "a": [
+            {"b": 1, "c": 2},
+            {"b": 2, "d": 3}
+        ]
+    };
+    check assertStringArray(toml, ["[[a]]", "b = 1", "b = 2", "c = 2", "d = 3"]);
+}
+
+@test:Config {
+    groups: ["writer"]
+}
+function testWriteStandardTableUnderArrayTable() returns error? {
+    map<anydata> toml = {
+        "a": [
+            {"b": 1, "c": 2},
+            {"d": {
+                "e": 3,
+                "f": 4
+            }, "g": 5}
+        ]
+    };
+    check assertStringArray(toml, ["[[a]]", "b = 1", "c = 2", "  [a.d]", "  e = 3", "  f = 4", "g = 5"]);
+}
