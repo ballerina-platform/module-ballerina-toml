@@ -8,7 +8,7 @@ type WritingError distinct error;
 class Writer {
 
     # The table key which the Writer currently processing. 
-    # Root if the string is empty.
+    # Root if the string is empty.  
     private string tableKey = "";
 
     # TOML lines to be written
@@ -27,7 +27,34 @@ class Writer {
     # + structure - TOML structure to be written
     # + return - An error on failure
     public function write(map<anydata> structure) returns string[]|error {
+        check self.processStructure(structure);
+        return self.output;
+    }
+
+    # Checks izf the file exists. If not, creates a new file.
+    #
+    # + fileName - Path to the file
+    # + return - An error on failure
+    public function openFile(string fileName) returns error? {
+        // Check if the given fileName is not directory
+        if (check file:test(fileName, file:IS_DIR)) {
+            return self.generateError("Cannot write to a directory");
+        }
+
+        // Create the file if the file does not exists
+        if (!check file:test(fileName, file:EXISTS)) {
+            check file:create(fileName);
+        }
+    }
+
+    private function processStructure(map<anydata> structure) returns error? {
         string[] keys = structure.keys();
+
+        // List of array tables to be created
+        [string, anydata[]][] arrayTables = [];
+
+        // List of standard tables to be created
+        [string, map<anydata>][] standardTables = [];
 
         // Traverse all the keys .
         foreach string key in keys {
@@ -45,46 +72,29 @@ class Writer {
                 continue;
             }
 
-            // TODO: Process array values
+            // TODO: Process array values   
             if (value is anydata[]) {
-                boolean isAllObject = (<anydata[]>value).reduce(function(boolean assertion, anydata arrayValue) returns boolean {
-                    return assertion && arrayValue is map<anydata>;
-                }, true);
-
-                // Construct an array table
-                if (isAllObject) {
-
-                }
-
-                // Construct an inline array
-                else {
-                    self.output.push(key + " = [");
-                    value.forEach(arrayValue => self.output.push(self.whitespace + check self.processPrimitiveValue(arrayValue) + ","));
-                    self.output.push("]");
-                }
-
+                check self.processArray(key, value, arrayTables);
                 continue;
             }
 
             self.output.push(key + " = " + check self.processPrimitiveValue(value));
         }
 
-        return self.output;
-    }
-
-    # Checks if the file exists. If not, creates a new file.
-    #
-    # + fileName - Path to the file
-    # + return - An error on failure
-    public function openFile(string fileName) returns error? {
-        // Check if the given fileName is not directory
-        if (check file:test(fileName, file:IS_DIR)) {
-            return self.generateError("Cannot write to a directory");
+        // Construct the array tables
+        if (arrayTables.length() > 0) {
+            foreach [string, anydata[]] arrayTable in arrayTables {
+                foreach anydata arrayObject in arrayTable[1] {
+                    self.output.push("[[" + arrayTable[0] + "]]");
+                    check self.processStructure(<map<anydata>>arrayObject);
+                    self.output.push("");
+                }
+            }
         }
 
-        // Create the file if the file does not exists
-        if (!check file:test(fileName, file:EXISTS)) {
-            check file:create(fileName);
+        // Construct teh standard tables
+        if (standardTables.length() > 0) {
+
         }
     }
 
@@ -114,6 +124,28 @@ class Writer {
         }
 
         return self.generateError("Unknown data type to process");
+    }
+
+    private function processArray(string key, anydata[] value, [string, anydata[]][] arrayTables) returns error? {
+        boolean isAllObject = value.reduce(function(boolean assertion, anydata arrayValue) returns boolean {
+            return assertion && arrayValue is map<anydata>;
+        }, true);
+
+        // Construct an array table
+        if (isAllObject) {
+            arrayTables.push([key, value]);
+            return;
+            // value.forEach(arrayObject => check self.processStructure(<map<anydata>>arrayObject));
+        }
+
+        // Construct an inline array
+        self.output.push(key + " = [");
+        value.forEach(arrayValue => self.output.push(self.whitespace + check self.processPrimitiveValue(arrayValue) + ","));
+        self.output.push("]");
+    }
+
+    private function processTable() returns error? {
+
     }
 
     private function getWhitespace(int policy) returns string {
