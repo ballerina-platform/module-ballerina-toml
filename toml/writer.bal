@@ -27,7 +27,7 @@ class Writer {
     # + structure - TOML structure to be written
     # + return - An error on failure
     public function write(map<anydata> structure) returns string[]|error {
-        check self.processStructure(structure);
+        check self.processStructure(structure, 0, "");
         return self.output;
     }
 
@@ -47,7 +47,7 @@ class Writer {
         }
     }
 
-    private function processStructure(map<anydata> structure) returns error? {
+    private function processStructure(map<anydata> structure, int depth, string tableKey) returns error? {
         string[] keys = structure.keys();
 
         // List of array tables to be created
@@ -63,6 +63,7 @@ class Writer {
             // This structure should be processed at the end of this depth level.
             // TODO: Process interal strucutres
             if (value is map<anydata>) {
+                check self.processTable(value, self.constructTableKey(tableKey, key), standardTables);
                 continue;
             }
 
@@ -85,14 +86,14 @@ class Writer {
         if (arrayTables.length() > 0) {
             foreach [string, anydata[]] arrayTable in arrayTables {
                 foreach anydata arrayObject in arrayTable[1] {
-                    self.output.push("[[" + arrayTable[0] + "]]");
-                    check self.processStructure(<map<anydata>>arrayObject);
+                    self.output.push("[[" + self.constructTableKey(tableKey, arrayTable[0]) + "]]");
+                    check self.processStructure(<map<anydata>>arrayObject, depth + 1, self.constructTableKey(tableKey, arrayTable[0]));
                     self.output.push("");
                 }
             }
         }
 
-        // Construct teh standard tables
+        // Construct the standard tables
         if (standardTables.length() > 0) {
 
         }
@@ -135,7 +136,6 @@ class Writer {
         if (isAllObject) {
             arrayTables.push([key, value]);
             return;
-            // value.forEach(arrayObject => check self.processStructure(<map<anydata>>arrayObject));
         }
 
         // Construct an inline array
@@ -144,8 +144,24 @@ class Writer {
         self.output.push("]");
     }
 
-    private function processTable() returns error? {
+    private function processTable(map<anydata> structure, string tableKey, [string, map<anydata>][] standardTables) returns error? {
+        // Check if there are more than one value nested to it.
+        if (structure.length() == 1) {
+            string firstKey = structure.keys()[0];
+            if (structure[firstKey] is map<anydata>) {
+                check self.processTable(<map<anydata>>structure[firstKey], self.constructTableKey(tableKey, firstKey), standardTables);
+            } else {
+                self.output.push(self.constructTableKey(tableKey,firstKey) + " = " + check self.processPrimitiveValue(structure[firstKey]));
+            }
+        }
 
+        // If there are more than two values, construct a standard table.
+        standardTables.push([tableKey, structure]);
+        return;
+    }
+
+    private function constructTableKey(string parentKey, string currentKey) returns string {
+        return parentKey == "" ? currentKey : parentKey + "." + currentKey;
     }
 
     private function getWhitespace(int policy) returns string {

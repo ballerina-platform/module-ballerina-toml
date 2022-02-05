@@ -166,7 +166,7 @@ class Lexer {
                     return self.generateToken(DECIMAL);
                 }
 
-                if (regex:matches(peekValue, DECIMAL_DIGIT_PATTERN)) {
+                if (regex:matches(<string>peekValue, DECIMAL_DIGIT_PATTERN)) {
                     return check self.iterate(self.digit(DECIMAL_DIGIT_PATTERN), DECIMAL);
                 }
 
