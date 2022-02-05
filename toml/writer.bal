@@ -87,7 +87,7 @@ class Writer {
             // This structure should be processed at the end of this depth level.
             // Builds both inline arrays or array tables.
             if (value is anydata[]) {
-                check self.processArray(key, value, arrayTables, whitespace);
+                check self.processArray(key, value, tableKey, arrayTables, whitespace);
                 continue;
             }
 
@@ -148,12 +148,13 @@ class Writer {
     # Creates an inline array if there is at least one primitive value.
     # Else, add it to the queue to create an array table.
     #
-    # + key - Key of the array
-    # + value - Values of the array
+    # + key - Key of the array  
+    # + value - Values of the array  
+    # + tableKey - Current table key
     # + arrayTables - List of array tables under the current table  
     # + whitespace - Indentation of the current table
     # + return - An error on failure
-    private function processArray(string key, anydata[] value, [string, anydata[]][] arrayTables, string whitespace) returns error? {
+    private function processArray(string key, anydata[] value, string tableKey, [string, anydata[]][] arrayTables, string whitespace) returns error? {
         // Check if all the array values are object
         boolean isAllObject = value.reduce(function(boolean assertion, anydata arrayValue) returns boolean {
             return assertion && arrayValue is map<anydata>;
@@ -161,7 +162,7 @@ class Writer {
 
         // Construct an array table
         if (isAllObject) {
-            arrayTables.push([key, value]);
+            arrayTables.push([self.constructTableKey(tableKey, key), value]);
             return;
         }
 
@@ -188,11 +189,11 @@ class Writer {
             } else {
                 self.output.push(whitespace + self.constructTableKey(tableKey, firstKey) + " = " + check self.processPrimitiveValue(structure[firstKey]));
             }
+            return;
         }
 
         // If there are more than two values, construct a standard table.
         standardTables.push([tableKey, structure]);
-        return;
     }
 
     # Creates the dotted key for the new table.
