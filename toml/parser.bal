@@ -708,7 +708,7 @@ class Parser {
                 self.definedTableKeys.push(tableKeyName);
                 self.currentTableKey = tableKeyName;
 
-                // Cannot define an standard table for an already defined array table.
+                // Cannot define a standard table for an already defined array table.
                 if (structure.hasKey(tomlKey) && !(structure[tomlKey] is map<anydata>)) {
                     return self.generateError(check self.formatErrorMessage(2, value = tableKeyName));
                 }
