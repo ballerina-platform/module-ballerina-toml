@@ -7,18 +7,17 @@ type WritingError distinct error;
 # Handles the process of writing the TOML structure to a file.
 class Writer {
 
-    # The table key which the Writer currently processing. 
-    # Root if the string is empty.  
-    private string tableKey = "";
-
     # TOML lines to be written
     private string[] output = [];
 
-    # Whitespace for an indent
-    private int indentationPolicy;
+    # Whitespaces for an indent
+    private string indent = "";
 
     function init(int indentationPolicy = 2) {
-        self.indentationPolicy = indentationPolicy;
+        // Initialize the indent space
+        foreach int i in 1 ... indentationPolicy {
+            self.indent += " ";
+        }
     }
 
     # Write the TOML structure to the given file.
@@ -27,17 +26,17 @@ class Writer {
     # + structure - TOML structure to be written
     # + return - An error on failure
     public function write(map<anydata> structure) returns string[]|error {
-        check self.processStructure(structure, 0, "");
+        check self.processStructure(structure, "", "");
 
         // Remove the start of document whitespace if exists.
-        if (self.output[0] == " ") {
+        if (self.output[0].length() == 0) {
             _ = self.output.remove(0);
         }
 
         return self.output;
     }
 
-    # Checks izf the file exists. If not, creates a new file.
+    # Checks if the file exists. If not, creates a new file.
     #
     # + fileName - Path to the file
     # + return - An error on failure
@@ -53,7 +52,13 @@ class Writer {
         }
     }
 
-    private function processStructure(map<anydata> structure, int depth, string tableKey) returns error? {
+    # Constructs the key value pairs for the current table
+    #
+    # + structure - Current table
+    # + tableKey - Current table key
+    # + whitespace - Indentation for the current table
+    # + return - An error on failure
+    private function processStructure(map<anydata> structure, string tableKey, string whitespace) returns error? {
         string[] keys = structure.keys();
 
         // List of array tables to be created
@@ -62,14 +67,11 @@ class Writer {
         // List of standard tables to be created
         [string, map<anydata>][] standardTables = [];
 
-        // Indentation of the key
-        string whitespace = self.getWhitespace(depth);
-
         // Traverse all the keys .
         foreach string key in keys {
             anydata value = structure[key];
 
-            // This structure should be processed at the end of this depth level
+            // This structure should be processed at the end of this depth level.
             // Builds both dotted keys or standard tables.
             if (value is map<anydata>) {
                 check self.processTable(value, self.constructTableKey(tableKey, key), standardTables, whitespace);
@@ -94,26 +96,28 @@ class Writer {
 
         // Construct the array tables
         if (arrayTables.length() > 0) {
+            string newWhitespace = tableKey.length() == 0 ? whitespace : whitespace + self.indent;
             foreach [string, anydata[]] arrayTable in arrayTables {
                 foreach anydata arrayObject in arrayTable[1] {
                     self.output.push("");
-                    self.output.push(whitespace + "[[" + arrayTable[0] + "]]");
-                    check self.processStructure(<map<anydata>>arrayObject, depth + 1, arrayTable[0]);
+                    self.output.push(newWhitespace + "[[" + arrayTable[0] + "]]");
+                    check self.processStructure(<map<anydata>>arrayObject, arrayTable[0], newWhitespace);
                 }
             }
         }
 
         // Construct the standard tables
         if (standardTables.length() > 0) {
+            string newWhitespace = tableKey.length() == 0 ? whitespace : whitespace + self.indent;
             foreach [string, map<anydata>] standardTable in standardTables {
                 self.output.push("");
-                self.output.push(whitespace + "[" + standardTable[0] + "]");
-                check self.processStructure(standardTable[1], depth + 1, standardTable[0]);
+                self.output.push(newWhitespace + "[" + standardTable[0] + "]");
+                check self.processStructure(standardTable[1], standardTable[0], newWhitespace);
             }
         }
     }
 
-    # Generate the TOML equivalent of the given Ballerina type
+    # Generate the TOML equivalent of the given Ballerina type.
     #
     # + value - Value to converted
     # + return - Converted string on success. Else, an error.
@@ -141,7 +145,16 @@ class Writer {
         return self.generateError("Unknown data type to process");
     }
 
+    # Creates an inline array if there is at least one primitive value.
+    # Else, add it to the queue to create an array table.
+    #
+    # + key - Key of the array
+    # + value - Values of the array
+    # + arrayTables - List of array tables under the current table  
+    # + whitespace - Indentation of the current table
+    # + return - An error on failure
     private function processArray(string key, anydata[] value, [string, anydata[]][] arrayTables, string whitespace) returns error? {
+        // Check if all the array values are object
         boolean isAllObject = value.reduce(function(boolean assertion, anydata arrayValue) returns boolean {
             return assertion && arrayValue is map<anydata>;
         }, true);
@@ -154,10 +167,18 @@ class Writer {
 
         // Construct an inline array
         self.output.push(key + " = [");
-        value.forEach(arrayValue => self.output.push(whitespace + check self.processPrimitiveValue(arrayValue) + ","));
+        value.forEach(arrayValue => self.output.push(whitespace + self.indent + check self.processPrimitiveValue(arrayValue) + ","));
         self.output.push("]");
     }
 
+    # Creates a dotted key if there is only one value.
+    # Else, add it to the queue to create a standard table.
+    #
+    # + structure - Current table
+    # + tableKey - Current table key  
+    # + standardTables - List of standard tables under the current table  
+    # + whitespace - Indentation of the current table
+    # + return - An error on failure
     private function processTable(map<anydata> structure, string tableKey, [string, map<anydata>][] standardTables, string whitespace) returns error? {
         // Check if there are more than one value nested to it.
         if (structure.length() == 1) {
@@ -174,16 +195,13 @@ class Writer {
         return;
     }
 
+    # Creates the dotted key for the new table.
+    #
+    # + parentKey - Key of the parent table
+    # + currentKey - Key of the current table
+    # + return - Dotted key representing the current table
     private function constructTableKey(string parentKey, string currentKey) returns string {
         return parentKey == "" ? currentKey : parentKey + "." + currentKey;
-    }
-
-    private function getWhitespace(int depth) returns string {
-        string whitespace = "";
-        foreach int i in 1 ... self.indentationPolicy * depth {
-            whitespace += " ";
-        }
-        return whitespace;
     }
 
     # Generates a Parsing Error Error.
