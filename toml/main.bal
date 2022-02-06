@@ -23,10 +23,12 @@ public function readFile(string filePath) returns map<anydata>|error {
 # Writes the toml structure to a TOML document.
 #
 # + fileName - Path to the file  
-# + tomlStructure - Structure to be written to the file.
+# + tomlStructure - Structure to be written to the file.  
+# + indentationPolicy - Number of whitespaces for an indentation. Default = 2  
+# + allowDottedKeys - If set, dotted keys are used instead of standard tables. Default = true
 # + return - An error on failure
-public function write(string fileName, map<anydata> tomlStructure) returns error? {
-    Writer writer = new Writer();
+public function write(string fileName, map<anydata> tomlStructure, int indentationPolicy = 2, boolean allowDottedKeys = true) returns error? {
+    Writer writer = new Writer(indentationPolicy, allowDottedKeys);
     check writer.openFile(fileName);
     string[] output = check writer.write(tomlStructure);
     check io:fileWriteLines(fileName, output);

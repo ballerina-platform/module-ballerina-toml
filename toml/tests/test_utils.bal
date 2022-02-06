@@ -173,7 +173,7 @@ class AssertKey {
 # + content - Words to be which should be in the file
 # + return - An error on fail
 function assertStringArray(map<anydata> structure, string|string[] content) returns error? {
-    Writer writer = new Writer();
+    Writer writer = new Writer(2, true);
     string[] output = check writer.write(structure);
 
     if (content is string) {

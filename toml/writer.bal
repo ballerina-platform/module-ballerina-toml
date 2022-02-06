@@ -13,11 +13,19 @@ class Writer {
     # Whitespaces for an indent
     private string indent = "";
 
-    function init(int indentationPolicy = 2) {
+    # If flag is set, write dotted keys instead of standard tables.
+    private boolean allowDottedKeys;
+
+    # Initializes the Writer class
+    #
+    # + indentationPolicy - Number of whitespaces for an indent  
+    # + allowDottedKeys - If flag is set, write dotted keys instead of standard tables.
+    function init(int indentationPolicy, boolean allowDottedKeys) {
         // Initialize the indent space
         foreach int i in 1 ... indentationPolicy {
             self.indent += " ";
         }
+        self.allowDottedKeys = allowDottedKeys;
     }
 
     # Write the TOML structure to the given file.
@@ -187,7 +195,12 @@ class Writer {
             if (structure[firstKey] is map<anydata>) {
                 check self.processTable(<map<anydata>>structure[firstKey], self.constructTableKey(tableKey, firstKey), standardTables, whitespace);
             } else {
-                self.output.push(whitespace + self.constructTableKey(tableKey, firstKey) + " = " + check self.processPrimitiveValue(structure[firstKey]));
+                if (self.allowDottedKeys) {
+                    self.output.push(whitespace + self.constructTableKey(tableKey, firstKey) + " = " + check self.processPrimitiveValue(structure[firstKey]));
+                }
+                else {
+                    standardTables.push([tableKey, structure]);
+                }
             }
             return;
         }
@@ -205,7 +218,7 @@ class Writer {
         return parentKey == "" ? currentKey : parentKey + "." + currentKey;
     }
 
-    # Generates a Parsing Error Error.
+    # Generates a Writing error
     #
     # + message - Error message
     # + return - Constructed Parsing Error message  
