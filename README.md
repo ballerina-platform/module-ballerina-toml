@@ -2,7 +2,7 @@
 
 ![Build](https://github.com/nipunayf/module-ballerina-toml/actions/workflows/ci.yml/badge.svg)
 
-`Ballerina TOML Parser` converts a TOML configuration file to the Ballerina type of `map<any>`, and vice-versa.     
+`Ballerina TOML Parser` converts a TOML configuration file to the Ballerina type of `map<anydata>`, and vice-versa.     
 
 ## Compatibility
 
@@ -16,7 +16,7 @@
 Initially, import the `nipuanyf/toml` into the Ballerina project.
 
 ```ballerina
-import nipunayf/twitter
+import nipunayf/toml;
 ```
 
 Currently, the module supports to both parse and write a TOML document. 
@@ -123,5 +123,5 @@ The module contains three main types of errors
 | Errors        | Description                                                                                    |
 | ------------- | ---------------------------------------------------------------------------------------------- |
 | Lexical Error | Generated when there is an invalid character for the token's lexeme.                           |
-| Parsing Error | Generated when there the token sequence does not mach with the grammar.                        |
+| Parsing Error | Generated when the token sequence does not mach with the grammar.                              |
 | Writing Error | Generated when there is an issue during the conversion from `map<anydata>` to a TOML document. |
