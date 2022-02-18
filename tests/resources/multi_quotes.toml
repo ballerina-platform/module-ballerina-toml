@@ -1,0 +1,5 @@
+str1 = """single-quote" 
+double-quotes"" 
+single-apastrophe' 
+double-appastrophe'' 
+"""

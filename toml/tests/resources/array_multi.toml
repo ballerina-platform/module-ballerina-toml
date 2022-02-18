@@ -1,5 +1,0 @@
-arr = [ # first comment
-    1  , 
-    's', true, # second comment
-    [1, 2], 
-    1.0]
