@@ -31,7 +31,7 @@ class Parser {
     # Already defined table keys
     private string[] definedTableKeys;
 
-    # If the token for a next grammar rule has been bufferred to the current token
+    # If the token for a next grammar rule has been buffered to the current token
     private boolean tokenConsumed;
 
     # Buffers the key in the full format
@@ -68,7 +68,7 @@ class Parser {
     #
     # + return - If success, map object for the TOML document. 
     # Else, a lexical or a parsing error. 
-    public function parse() returns map<anydata>|error {
+    public function parse() returns map<anydata>|LexicalError|ParsingError {
 
         // Iterating each line of the document.
         while self.lineIndex < self.numLines - 1 {
@@ -87,7 +87,7 @@ class Parser {
                     self.tomlObject = check self.buildTOMLObject(self.tomlObject.clone());
                     self.isArrayTable = false;
 
-                    check self.checkToken([UNQUOTED_KEY, BASIC_STRING, LITERAL_STRING], "Expected a key after '[' in a table key");
+                    check self.checkToken([UNQUOTED_KEY, BASIC_STRING, LITERAL_STRING]);
                     check self.standardTable(self.tomlObject.clone());
                 }
                 ARRAY_TABLE_OPEN => { // Process an array table
@@ -95,13 +95,13 @@ class Parser {
                     self.tomlObject = check self.buildTOMLObject(self.tomlObject.clone());
                     self.isArrayTable = true;
 
-                    check self.checkToken([UNQUOTED_KEY, BASIC_STRING, LITERAL_STRING], "Expected a key after '[[' in a table key");
+                    check self.checkToken([UNQUOTED_KEY, BASIC_STRING, LITERAL_STRING]);
                     check self.arrayTable(self.tomlObject.clone());
                 }
             }
 
             // Comments and new lines are ignored.
-            // However, other expressions cannot have addtional tokens in their line.
+            // However, other expressions cannot have additional tokens in their line.
             if (self.currentToken.token != EOL) {
                 check self.checkToken(EOL);
             }
@@ -230,7 +230,7 @@ class Parser {
 
     # Generate any TOML data value.
     #
-    # + return - If sucess, returns the formatted data value. Else, an error.
+    # + return - If success, returns the formatted data value. Else, an error.
     private function dataValue() returns anydata|error {
         anydata returnData;
         match self.currentToken.token {
@@ -281,7 +281,7 @@ class Parser {
                     self.bufferedKey = "";
                 }
             }
-            _ => { // Latter primitve data types
+            _ => { // Latter primitive data types
                 returnData = self.currentToken.value;
             }
         }
@@ -296,7 +296,7 @@ class Parser {
         self.lexer.state = MULTILINE_BSTRING;
         self.lexemeBuffer = "";
 
-        // Predict the next toknes
+        // Predict the next tokens
         check self.checkToken([
             MULTI_BSTRING_CHARS,
             MULTI_BSTRING_ESCAPE,
@@ -333,14 +333,14 @@ class Parser {
         self.lexer.state = EXPRESSION_KEY;
     }
 
-    # Process mulit-line literal string.
+    # Process multi-line literal string.
     #
     # + return - An error if the grammar production is not made.  
     private function multiLiteralString() returns error? {
         self.lexer.state = MULITLINE_LSTRING;
         self.lexemeBuffer = "";
 
-        // Predict the next toknes
+        // Predict the next tokens
         check self.checkToken([
             MULTI_LSTRING_CHARS,
             MULTI_LSTRING_DELIMITER,
@@ -421,7 +421,7 @@ class Parser {
     # + value - Actual value in the TOML document 
     # + lowerBound - Minimum acceptable value
     # + upperBound - Maximum acceptable value
-    # + valueName - Name of the time compoenent
+    # + valueName - Name of the time component
     # + return - Returns an error if the requirements are not met.
     private function checkTime(string value, int lowerBound, int upperBound, string valueName) returns error? {
         // Expected the time digits to be 2.
@@ -482,7 +482,7 @@ class Parser {
         }
     }
 
-    # Returns the formattd time in UTC
+    # Returns the formatted time in UTC
     #
     # + datePrefixed - True if there is a date before the time
     # + return - UTC object representing the time on success. Else, an parsing error.
@@ -496,12 +496,12 @@ class Parser {
                 if (datePrefixed) {
                     self.lexemeBuffer += self.currentToken.token == PLUS ? "+" : "-";
 
-                    // Valdiate hours
+                    // Validate hours
                     check self.checkToken(DECIMAL, "Expected a 2 digit hours after time offset");
                     check self.checkTime(self.currentToken.value, 0, 24, "hours");
                     self.lexemeBuffer += self.currentToken.value;
 
-                    // Validate minutess
+                    // Validate minutes
                     check self.checkToken(COLON, "Expected a ':' after hours");
                     check self.checkToken(DECIMAL, "Expected 2 digit minutes after ':'");
                     check self.checkTime(self.currentToken.value, 0, 60, "minutes");
@@ -742,7 +742,7 @@ class Parser {
 
             ARRAY_TABLE_CLOSE => { // Initialize the current structure
 
-                // Check if there is an static array or a standard table key aready defined.
+                // Check if there is an static array or a standard table key already defined.
                 check self.verifyTableKey(keyName + tomlKey);
 
                 // Cannot define an array table for already defined standard table.
@@ -844,7 +844,7 @@ class Parser {
 
     # Initialize the lexer with the attributes of a new line.
     #
-    # + message - Error messgae to display when if the initalization fails 
+    # + message - Error message to display when if the initialization fails 
     # + incrementLine - Sets the next line to the lexer
     # + return - An error if it fails to initialize  
     private function initLexer(string message, boolean incrementLine = true) returns error? {
@@ -882,7 +882,7 @@ class Parser {
     #
     # + messageType - Number of the template message
     # + expectedTokens - Predicted tokens  
-    # + beforeToken - Toekn before the predicetd token  
+    # + beforeToken - Token before the predicted token  
     # + value - Any value name. Commonly used to indicate keys.
     # + return - If success, the generated error message. Else, an error message.
     private function formatErrorMessage(
@@ -897,12 +897,12 @@ class Parser {
                     return error("Token parameters cannot be null for this template error message.");
                 }
                 string expectedTokensMessage;
-                if (expectedTokens is TOMLToken[]) { // If multiplke tokens
+                if (expectedTokens is TOMLToken[]) { // If multiple tokens
                     string tempMessage = expectedTokens.reduce(function(string message, TOMLToken token) returns string {
                         return message + " '" + token + "' or";
                     }, "");
                     expectedTokensMessage = tempMessage.substring(0, tempMessage.length() - 3);
-                } else { // If a singel token
+                } else { // If a single token
                     expectedTokensMessage = " '" + expectedTokens + "'";
                 }
                 return "Expected" + expectedTokensMessage + " after '" + beforeToken + "', but found '" + self.currentToken.token + "'";
