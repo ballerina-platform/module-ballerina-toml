@@ -169,7 +169,7 @@ class Parser {
                 return structure;
             }
 
-            KEY_VALUE_SEPERATOR => { // Process value assignment
+            KEY_VALUE_SEPARATOR => { // Process value assignment
                 self.lexer.state = EXPRESSION_VALUE;
 
                 check self.checkToken([
@@ -197,7 +197,7 @@ class Parser {
                 return structure;
             }
             _ => {
-                return self.generateError(check self.formatErrorMessage(1, [DOT, KEY_VALUE_SEPERATOR], UNQUOTED_KEY));
+                return self.generateError(check self.formatErrorMessage(1, [DOT, KEY_VALUE_SEPARATOR], UNQUOTED_KEY));
             }
         }
     }

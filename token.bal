@@ -5,7 +5,7 @@ type Token record {|
 
 enum TOMLToken {
     DUMMY = "",
-    KEY_VALUE_SEPERATOR = "=",
+    KEY_VALUE_SEPARATOR = "=",
     DOT = ".",
     UNQUOTED_KEY = "Unquoted key",
     BASIC_STRING = "Basic string",

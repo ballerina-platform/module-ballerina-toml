@@ -38,6 +38,16 @@ class Lexer {
     # Current state of the Lexer
     State state = EXPRESSION_KEY;
 
+    private map<string> escapedCharMap = {
+        "b": "\u{08}",
+        "t": "\t",
+        "n": "\n",
+        "f": "\u{0c}",
+        "r": "\r",
+        "\"": "\"",
+        "\\": "\\"
+    };
+
     # Generates a Token for the next immediate lexeme.
     #
     # + return - If success, returns a token, else returns a Lexical Error 
@@ -107,7 +117,7 @@ class Lexer {
                 return self.generateToken(EOL);
             }
             "=" => { // Key value separator
-                return self.generateToken(KEY_VALUE_SEPERATOR);
+                return self.generateToken(KEY_VALUE_SEPARATOR);
             }
             "[" => { // Array values and standard tables
                 if (self.peek(1) == "[" && self.state == EXPRESSION_KEY) { // Array tables
@@ -248,13 +258,21 @@ class Lexer {
     # + return - True if the end of the string, An error message for an invalid character.  
     private function basicString() returns LexicalError|boolean {
         if self.matchRegexPattern(BASIC_STRING_PATTERN) {
+            // Process escaped characters
+            if (self.peek() == "\\") {
+                self.forward();
+                check self.escapedCharacter();
+                return false;
+            }
+
             self.lexeme += <string>self.peek();
             return false;
-
         }
+
         if self.peek() == "\"" {
             return true;
         }
+
         return self.generateError(self.formatErrorMessage(BASIC_STRING));
     }
 
@@ -287,7 +305,7 @@ class Lexer {
             return true;
         }
 
-        // Ignore whitespaces if the multiline escape symbol is detected
+        // Ignore whitespace if the multiline escape symbol is detected
         if (self.state == MULTILINE_ESCAPE && self.checkCharacter(" ")) {
             return false;
         }
@@ -295,6 +313,76 @@ class Lexer {
         self.lexeme += <string>self.peek();
         self.state = MULTILINE_BSTRING;
         return false;
+    }
+
+    # Scan lexemes for the escaped characters.
+    # Adds the processed escaped character to the lexeme.
+    #
+    # + return - An error on failure
+    private function escapedCharacter() returns LexicalError? {
+        string currentChar;
+
+        // Check if the character is empty
+        if (self.peek() == ()) {
+            return self.generateError("Escaped character cannot be empty");
+        } else {
+            currentChar = <string>self.peek();
+        }
+
+        // Check for predefined escape characters
+        if (self.escapedCharMap.hasKey(currentChar)) {
+            self.lexeme += <string>self.escapedCharMap[currentChar];
+            return;
+        }
+
+        // Check for unicode characters
+        match currentChar {
+            "u" => {
+                check self.unicodeEscapedCharacters("u", 4);
+                return;
+            }
+            "U" => {
+                check self.unicodeEscapedCharacters("U", 8);
+                return;
+            }
+        }
+        return self.generateError(self.formatErrorMessage(BASIC_STRING));
+    }
+
+    # Process the hex codes under the unicode escaped character.
+    #
+    # + escapedChar - Escaped character before the digits  
+    # + length - Number of digits
+    # + return - An error on failure
+    private function unicodeEscapedCharacters(string escapedChar, int length) returns LexicalError? {
+
+        // Check if the required digits do not overflow the current line.
+        if self.line.length() < length + self.index {
+            return self.generateError("Expected " + length.toString() + " characters for the '\\" + escapedChar + "' unicode escape");
+        }
+
+        string unicodeDigits = "";
+
+        // Check if the digits adhere to the hexadecimal code pattern.
+        foreach int i in 0 ... length - 1 {
+            self.forward();
+            if self.matchRegexPattern(HEXADECIMAL_DIGIT_PATTERN) {
+                unicodeDigits += <string>self.peek();
+                continue;
+            }
+            return self.generateError(self.formatErrorMessage(HEXADECIMAL));
+        }
+        int|error hexResult = 'int:fromHexString(unicodeDigits);
+        if hexResult is error {
+            return self.generateError('error:message(hexResult));
+        }
+
+        string|error unicodeResult = 'string:fromCodePointInt(hexResult);
+        if unicodeResult is error {
+            return self.generateError('error:message(unicodeResult));
+        }
+
+        self.lexeme += unicodeResult;
     }
 
     # Check for the lexemes to create an literal string.
@@ -360,7 +448,7 @@ class Lexer {
     # Check for the lexemes to crete an DECIMAL token.
     #
     # + digitPattern - Regex pattern of the number system
-    # + return - Generates a function which checks the lexems for the given number system.  
+    # + return - Generates a function which checks the lexemes for the given number system.  
     private function digit(string digitPattern) returns function () returns boolean|LexicalError {
         return function() returns boolean|LexicalError {
             if self.matchRegexPattern(digitPattern) {
@@ -498,7 +586,7 @@ class Lexer {
     # Generates a Lexical Error.
     #
     # + message - Error message  
-    # + return - Constructed Lexcial Error message
+    # + return - Constructed Lexical Error message
     private function generateError(string message) returns LexicalError {
         string text = "Lexical Error at line "
                         + (self.lineNumber + 1).toString()

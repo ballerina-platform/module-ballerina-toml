@@ -202,3 +202,43 @@ function testProcessNaNValues() returns error? {
         .hasKey("sf3", 'float:NaN)
         .close();
 }
+
+@test:Config {
+    dataProvider: excapedCharacterDataGen
+}
+function testEscapedCharacterToken(string lexeme, string value) returns error? {
+    Lexer lexer = setLexerString("\"\\"+ lexeme + "\"");
+    check assertToken(lexer, BASIC_STRING, lexeme = value);
+}
+
+function excapedCharacterDataGen() returns map<[string, string]> {
+    return {
+        "backspace": ["b", "\u{08}"],
+        "tab": ["t", "\t"],
+        "linefeed": ["n", "\n"],
+        "form-feed": ["f", "\u{0c}"],
+        "carriage-return": ["r", "\r"],
+        "double-quote": ["\"", "\""],
+        "backslash": ["\\", "\\"],
+        "u-4": ["u0041", "A"],
+        "U-8": ["U00000041", "A"]
+    };
+}
+
+@test:Config {
+    dataProvider: invalidEscapedCharDataGen
+}
+function testInvalidExcapedCharacter(string lexeme) {
+    assertLexicalError("\\" + lexeme);
+}
+
+function invalidEscapedCharDataGen() returns map<[string]> {
+    return {
+        "u-3": ["u333"],
+        "u-5": ["u55555"],
+        "U-7": ["u7777777"],
+        "U-9": ["u999999999"],
+        "no-char": [""],
+        "invalid-char": ["z"]
+    };
+}
