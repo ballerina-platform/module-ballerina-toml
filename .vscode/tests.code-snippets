@@ -1,0 +1,48 @@
+{
+	"Parser Key Assestion Test": {
+		"scope": "ballerina",
+		"prefix": "testParserKey",
+		"body": [
+			"@test:Config {}",
+			"function test$1() returns error? {",
+			"\tAssertKey ak = check new AssertKey(\"$2\");",
+			"\t$3",
+			"}"
+		],
+		"description": "Write a ballerina test case"
+	},
+	"Parser Error Assestion Test": {
+		"scope": "ballerina",
+		"prefix": "testParserError",
+		"body": [
+			"@test:Config {}",
+			"function test$1() {",
+			"\tassertParsingError(\"$2\");",
+			"}"
+		],
+		"description": "Write a ballerina test case"
+	},
+	"Lexer Error Assestion Test": {
+		"scope": "ballerina",
+		"prefix": "testLexerError",
+		"body": [
+			"@test:Config {}",
+			"function test$1() {",
+			"\tassertLexicalError(\"$2\");",
+			"}"
+		],
+		"description": "Write a ballerina test case"
+	},
+	"Lexical Token Assestion Test": {
+		"scope": "ballerina",
+		"prefix": "testLexicalToken",
+		"body": [
+			"@test:Config {}",
+			"function test$1() returns error? {",
+			"\tLexer lexer = setLexerString(\"$2\");",
+			"\tcheck assertToken(lexer, $3);",
+			"}"
+		],
+		"description": "Write a ballerina test case"
+	}
+}
