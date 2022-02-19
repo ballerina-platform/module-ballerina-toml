@@ -51,7 +51,7 @@ class Lexer {
     # Generates a Token for the next immediate lexeme.
     #
     # + return - If success, returns a token, else returns a Lexical Error 
-    function getToken() returns Token|error {
+    function getToken() returns Token|LexicalError {
 
         // Generate EOL token 
         if (self.index >= self.line.length()) {

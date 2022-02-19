@@ -20,9 +20,9 @@ jobs:
       - name: Build TOML package
         uses: ballerina-platform/ballerina-action@master
         with:
-          args: build toml
+          args: build
 
       - name: Run the tests
         uses: ballerina-platform/ballerina-action@master
         with:
-          args: test toml
+          args: test

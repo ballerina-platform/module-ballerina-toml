@@ -32,7 +32,7 @@ function testUnquotedKeyWithInvalidChar() {
 @test:Config {}
 function testKeyValueSeparator() returns error? {
     Lexer lexer = setLexerString("somekey = 1");
-    check assertToken(lexer, KEY_VALUE_SEPERATOR, 2);
+    check assertToken(lexer, KEY_VALUE_SEPARATOR, 2);
 }
 
 @test:Config {}

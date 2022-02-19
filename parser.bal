@@ -119,7 +119,7 @@ class Parser {
     # + expectedTokens - Predicted token or tokens
     # + customMessage - Error message to be displayed if the expected token not found  
     # + return - Parsing error if not found
-    private function checkToken(TOMLToken|TOMLToken[] expectedTokens = DUMMY, string customMessage = "") returns error? {
+    private function checkToken(TOMLToken|TOMLToken[] expectedTokens = DUMMY, string customMessage = "") returns ParsingError|LexicalError|() {
         TOMLToken prevToken = self.currentToken.token;
         self.currentToken = check self.lexer.getToken();
 
@@ -154,7 +154,7 @@ class Parser {
     #
     # + structure - The structure for the previous key. Null if there is no value.
     # + return - Returns the structure after assigning the value.
-    private function keyValue(map<anydata> structure) returns map<anydata>|error {
+    private function keyValue(map<anydata> structure) returns map<anydata>|ParsingError|LexicalError {
         string tomlKey = self.currentToken.value;
         check self.verifyKey(structure, tomlKey);
         check self.verifyTableKey(self.currentTableKey == "" ? self.bufferedKey : self.currentTableKey + "." + self.bufferedKey);
@@ -208,7 +208,7 @@ class Parser {
     # + structure - Parent key of the provided one 
     # + key - Key to be verified in the structure  
     # + return - Error, if there already exists a primitive value.
-    private function verifyKey(map<anydata>? structure, string key) returns error? {
+    private function verifyKey(map<anydata>? structure, string key) returns ParsingError? {
         if (structure is map<anydata>) {
             map<anydata> castedStructure = <map<anydata>>structure;
             if (castedStructure.hasKey(key) && !(castedStructure[key] is anydata[] || castedStructure[key] is map<anydata>)) {
@@ -222,7 +222,7 @@ class Parser {
     #
     # + tableKeyName - Table key name to be checked
     # + return - An error if the key already exists.  
-    private function verifyTableKey(string tableKeyName) returns error? {
+    private function verifyTableKey(string tableKeyName) returns ParsingError? {
         if (self.definedTableKeys.indexOf(tableKeyName) != ()) {
             return self.generateError("Duplicate table key exists for '" + tableKeyName + "'");
         }
@@ -231,7 +231,7 @@ class Parser {
     # Generate any TOML data value.
     #
     # + return - If success, returns the formatted data value. Else, an error.
-    private function dataValue() returns anydata|error {
+    private function dataValue() returns anydata|LexicalError|ParsingError {
         anydata returnData;
         match self.currentToken.token {
             MULTI_BSTRING_DELIMITER => {
@@ -292,7 +292,7 @@ class Parser {
     # Process multi-line basic string.
     #
     # + return - An error if the grammar rule is not made  
-    private function multiBasicString() returns error? {
+    private function multiBasicString() returns LexicalError|ParsingError|() {
         self.lexer.state = MULTILINE_BSTRING;
         self.lexemeBuffer = "";
 
@@ -336,7 +336,7 @@ class Parser {
     # Process multi-line literal string.
     #
     # + return - An error if the grammar production is not made.  
-    private function multiLiteralString() returns error? {
+    private function multiLiteralString() returns LexicalError|ParsingError|() {
         self.lexer.state = MULITLINE_LSTRING;
         self.lexemeBuffer = "";
 
@@ -373,7 +373,7 @@ class Parser {
     #
     # + fractional - Flag is set when processing the fractional segment
     # + return - Parsing error if occurred
-    private function number(boolean fractional = false) returns anydata|error {
+    private function number(boolean fractional = false) returns anydata|LexicalError|ParsingError {
         self.lexemeBuffer += self.currentToken.value;
         check self.checkToken();
 
@@ -423,7 +423,7 @@ class Parser {
     # + upperBound - Maximum acceptable value
     # + valueName - Name of the time component
     # + return - Returns an error if the requirements are not met.
-    private function checkTime(string value, int lowerBound, int upperBound, string valueName) returns error? {
+    private function checkTime(string value, int lowerBound, int upperBound, string valueName) returns ParsingError? {
         // Expected the time digits to be 2.
         if (value.length() != 2) {
             return self.generateError("Expected number of digits in " + valueName + " to be 2");
@@ -439,7 +439,7 @@ class Parser {
     # + hours - Hours in the TOML document
     # + datePrefixed - True if there is a date before the time
     # + return - Returns the formatted time on success. Else, an parsing error.
-    private function time(string hours, boolean datePrefixed = false) returns anydata|error {
+    private function time(string hours, boolean datePrefixed = false) returns anydata|LexicalError|ParsingError {
         // Validate hours
         check self.checkTime(hours, 0, 24, "hours");
 
@@ -486,10 +486,10 @@ class Parser {
     #
     # + datePrefixed - True if there is a date before the time
     # + return - UTC object representing the time on success. Else, an parsing error.
-    private function timeOffset(boolean datePrefixed) returns anydata|error {
+    private function timeOffset(boolean datePrefixed) returns anydata|LexicalError|ParsingError {
         match self.currentToken.token {
             ZULU => {
-                return datePrefixed ? time:utcFromString(self.lexemeBuffer + "Z")
+                return datePrefixed ? check self.processTypeCastingError(time:utcFromString(self.lexemeBuffer + "Z"))
                     : self.generateError("Cannot crate a UTC time for a local time");
             }
             PLUS|MINUS => {
@@ -507,7 +507,7 @@ class Parser {
                     check self.checkTime(self.currentToken.value, 0, 60, "minutes");
                     self.lexemeBuffer += ":" + self.currentToken.value;
 
-                    return time:utcFromString(self.lexemeBuffer);
+                    return self.processTypeCastingError(time:utcFromString(self.lexemeBuffer));
                 }
                 return self.generateError("Cannot crate a UTC time for a local time");
             }
@@ -520,7 +520,7 @@ class Parser {
     # + numDigits - Required number of digits to the component. 
     # + valueName - Name of the date component.
     # + return - Returns the value in integer. Else, an parsing error.
-    private function checkDate(string value, int numDigits, string valueName) returns int|error {
+    private function checkDate(string value, int numDigits, string valueName) returns int|ParsingError {
         if (value.length() != numDigits) {
             return self.generateError("Expected number of digits in " + valueName + " to be " + numDigits.toString());
         }
@@ -530,7 +530,7 @@ class Parser {
     # Process the date component.
     #
     # + return - An error if the grammar rules are not met.  
-    private function date() returns anydata|error {
+    private function date() returns anydata|LexicalError|ParsingError {
         // Validate the year
         int year = check self.checkDate(self.lexemeBuffer, 4, "year");
 
@@ -575,7 +575,7 @@ class Parser {
     #
     # + tempArray - Recursively constructing array
     # + return - Completed array on success. An error if the grammar rules are not met.
-    private function array(anydata[] tempArray = []) returns anydata[]|error {
+    private function array(anydata[] tempArray = []) returns anydata[]|LexicalError|ParsingError {
 
         check self.checkToken([
             BASIC_STRING,
@@ -614,7 +614,7 @@ class Parser {
     #
     # + tempArray - Recursively constructing array
     # + return - Completed array on success. An error if the grammar rules are not met.
-    private function arrayValue(anydata[] tempArray = []) returns anydata[]|error {
+    private function arrayValue(anydata[] tempArray = []) returns anydata[]|LexicalError|ParsingError {
         TOMLToken prevToken;
 
         if (self.tokenConsumed) {
@@ -647,7 +647,7 @@ class Parser {
     # + tempTable - Recursively constructing inline table
     # + isStart - True if the function is being called for the first time.
     # + return - Map structure representing the table on success. Else, an error if the grammar rules are not met.
-    private function inlineTable(map<anydata> tempTable = {}, boolean isStart = true) returns map<anydata>|error {
+    private function inlineTable(map<anydata> tempTable = {}, boolean isStart = true) returns map<anydata>|LexicalError|ParsingError {
         self.lexer.state = EXPRESSION_KEY;
         check self.checkToken([
             UNQUOTED_KEY,
@@ -685,7 +685,7 @@ class Parser {
     # + structure - Mapping of the parent key
     # + keyName - Recursively constructing the table key name
     # + return - An error if the grammar rules are not met or any duplicate values.
-    private function standardTable(map<anydata> structure, string keyName = "") returns error? {
+    private function standardTable(map<anydata> structure, string keyName = "") returns LexicalError|ParsingError|() {
 
         // Verifies the current key
         string tomlKey = self.currentToken.value;
@@ -725,7 +725,7 @@ class Parser {
     # + structure - Mapping of the parent key
     # + keyName - Recursively constructing the table key name
     # + return - An error if the grammar rules are not met or any duplicate values. 
-    private function arrayTable(map<anydata> structure, string keyName = "") returns error? {
+    private function arrayTable(map<anydata> structure, string keyName = "") returns LexicalError|ParsingError|() {
 
         // Verifies the current key
         string tomlKey = self.currentToken.value;
@@ -761,7 +761,7 @@ class Parser {
     #
     # + structure - Structure to which the changes are made.
     # + return - Constructed final toml object on success. Else, a parsing error.
-    private function buildTOMLObject(map<anydata> structure) returns map<anydata>|error {
+    private function buildTOMLObject(map<anydata> structure) returns map<anydata>|ParsingError {
         // Under the root table
         if (self.keyStack.length() == 0) {
             return self.currentStructure;
@@ -817,12 +817,12 @@ class Parser {
     #
     # + numberSystem - Number system of the value
     # + return - Processed integer. Error if there is a string.
-    private function processInteger(int numberSystem) returns int|error {
+    private function processInteger(int numberSystem) returns int|ParsingError {
         int value = 0;
         int power = 1;
         int length = self.currentToken.value.length() - 1;
         foreach int i in 0 ... length {
-            value += check 'int:fromString(self.currentToken.value[length - i]) * power;
+            value += <int>(check self.processTypeCastingError('int:fromString(self.currentToken.value[length - i]))) * power;
             power *= numberSystem;
         }
         return value;
@@ -847,7 +847,7 @@ class Parser {
     # + message - Error message to display when if the initialization fails 
     # + incrementLine - Sets the next line to the lexer
     # + return - An error if it fails to initialize  
-    private function initLexer(string message, boolean incrementLine = true) returns error? {
+    private function initLexer(string message, boolean incrementLine = true) returns ParsingError? {
         if (incrementLine) {
             self.lineIndex += 1;
         }
@@ -889,7 +889,7 @@ class Parser {
             int messageType,
             TOMLToken|TOMLToken[] expectedTokens = DUMMY,
             TOMLToken beforeToken = DUMMY,
-            string value = "") returns string|error {
+            string value = "") returns string|ParsingError {
 
         match messageType {
             1 => { // Expected ${expectedTokens} after ${beforeToken}, but found ${actualToken}
