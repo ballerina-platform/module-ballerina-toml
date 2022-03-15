@@ -18,7 +18,7 @@ function setLexerString(string line, State lexerState = EXPRESSION_KEY) returns 
 #
 # + lexer - Testing lexer  
 # + assertingToken - Expected TOML token  
-# + index - Index of the targetted token (default = 0) 
+# + index - Index of the targeted token (default = 0) 
 # + lexeme - Expected lexeme of the token (optional)
 # + return - Returns an lexical error if unsuccessful
 function assertToken(Lexer lexer, TOMLToken assertingToken, int index = 0, string lexeme = "") returns error? {
@@ -34,17 +34,17 @@ function assertToken(Lexer lexer, TOMLToken assertingToken, int index = 0, strin
 # Assert if a lexical error is generated during the tokenization
 #
 # + tomlString - String to generate a Lexer token  
-# + index - Index of the targetted token (defualt = 0)
+# + index - Index of the targeted token (default = 0)
 function assertLexicalError(string tomlString, int index = 0) {
     Lexer lexer = setLexerString(tomlString);
     Token|error token = getToken(lexer, index);
     test:assertTrue(token is LexicalError);
 }
 
-# Obtian the token at the given index
+# Obtain the token at the given index
 #
 # + lexer - Testing lexer
-# + index - Index of the targetted token
+# + index - Index of the targeted token
 # + return - If success, returns the token. Else a Lexical Error.  
 function getToken(Lexer lexer, int index) returns Token|error {
     Token token;
@@ -76,7 +76,7 @@ function assertKey(map<any> toml, string key, string value) {
 # + isFile - If set, reads the TOML file. default = false.  
 # + isLexical - If set, checks for Lexical errors. Else, checks for Parsing errors.
 function assertParsingError(string text, boolean isFile = false, boolean isLexical = false) {
-    map<any>|error toml = isFile ? readFile(ORIGIN_FILE_PATH + text + ".toml") : read(text);
+    anydata|error toml = isFile ? readFile(ORIGIN_FILE_PATH + text + ".toml") : read(text);
     if (isLexical) {
         test:assertTrue(toml is LexicalError);
     } else {
@@ -96,13 +96,13 @@ class AssertKey {
     # + text - If isFile is set, file path else TOML string  
     # + isFile - If set, reads the TOML file. default = false.    
     function init(string text, boolean isFile = false) returns error? {
-        self.toml = isFile ? check readFile(ORIGIN_FILE_PATH + text + ".toml") : check read(text);
+        self.toml = isFile ? <map<anydata>>(check readFile(ORIGIN_FILE_PATH + text + ".toml")) : <map<anydata>>(check read(text));
         self.innerData = ();
         self.stack = [];
     }
 
     # Assert the key and value of the TOML object.
-    # Recall this method to check mulitple values of the same TOML object.
+    # Recall this method to check multiple values of the same TOML object.
     #
     # + tomlKey - Expected key of the TOML object  
     # + tomlValue - Expected value of the key. If no value is provided, value won't be checked.
@@ -150,13 +150,13 @@ class AssertKey {
             return self;
         }
 
-        // Set the innderData to its parent map
-        map<anydata>? targettedObject;
+        // Set the innerData to its parent map
+        map<anydata>? targetedObject;
         foreach int i in 0 ... self.stack.length() - 2 {
-            targettedObject = <map<anydata>?>self.toml[self.stack[i]];
+            targetedObject = <map<anydata>?>self.toml[self.stack[i]];
             _ = self.stack.remove(i);
         }
-        self.innerData = targettedObject;
+        self.innerData = targetedObject;
 
         return self;
     }
