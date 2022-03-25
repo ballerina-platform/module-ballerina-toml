@@ -18,12 +18,20 @@ function testSimpleQuotedLiteralStringKey() returns error? {
     ak.hasKey("somekey", "somevalue").close();
 }
 
-@test:Config {}
-function testInvalidSimpleKey() {
-    assertParsingError("somekey = somevalue", isLexical = true);
-    assertParsingError("somekey = #somecomment");
-    assertParsingError("somekey somevalue");
-    assertParsingError("somekey =");
+@test:Config {
+    dataProvider: invalidSimpleKeyDataGen
+}
+function testInvalidSimpleKey(string testingLine, boolean isLexical) returns error? {
+    assertParsingError(testingLine, isLexical = isLexical);
+}
+
+function invalidSimpleKeyDataGen() returns map<[string, boolean]> {
+    return {
+        "bare keys as value": ["somekey = somevalue", true],
+        "comment as value": ["somekey = #somecomment", false],
+        "no equal sign": ["somekey somevalue", false],
+        "no value": ["somekey =", false]
+    };
 }
 
 @test:Config {}

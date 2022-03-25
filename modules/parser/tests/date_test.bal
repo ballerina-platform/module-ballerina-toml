@@ -8,12 +8,6 @@ function testODTZulu() returns error? {
 }
 
 @test:Config {}
-function testInvalidODT() {
-    assertParsingError("odt = 1979-05-2707:32:00Z");
-    assertParsingError("odt = 1979-05-27T07:32:00-");
-}
-
-@test:Config {}
 function testODTTimeDifferenceOffset() returns error? {
     AssertKey ak = check new AssertKey("odt = 1979-05-27T00:32:00-07:00");
     ak.hasKey("odt", check time:utcFromString("1979-05-27T07:32:00Z")).close();
@@ -46,14 +40,31 @@ function testLocalDate() returns error? {
     ak.hasKey("ld", "1922-12-12").close();
 }
 
-@test:Config {}
-function testInvalidLocalDate() {
-    assertParsingError("ld = 192-12-12");
-    assertParsingError("ld = 1922-2-12");
-    assertParsingError("ld = 1922-02-2");
-    assertParsingError("ld = 1922-2-");
-    assertParsingError("ld = 1922--1");
-    assertParsingError("ld = -02-01");
+@test:Config {
+    dataProvider: invalidDateTimeDataGen
+}
+function testInvalidDateTime(string testingLine, boolean isLexical) returns error? {
+    assertParsingError(testingLine, isLexical = isLexical);
+}
+
+function invalidDateTimeDataGen() returns map<[string, boolean]> {
+    return {
+        "no delimiter in offset date time": ["odt = 1979-05-2707:32:00Z", false],
+        "no offset in offset date time": ["odt = 1979-05-2707:32:00-", false],
+        "invalid digits for year": ["ld = 192-12-12", false],
+        "invalid digits for month": ["ld = 1922-2-12", false],
+        "invalid digits for day": ["ld = 1922-02-2", false],
+        "no year": ["ld = -02-01", false],
+        "no month": ["ld = 1922-2-", false],
+        "no day": ["ld = 1922-2-", false],
+        "invalid digits for hours": ["ldt = 7:32:00", false],
+        "invalid digits for minutes": ["ldt = 07:2:00", false],
+        "invalid digits for seconds": ["ldt = 07:02:1", false],
+        "no hours": ["ldt = :02:01", true],
+        "no minutes": ["ldt = 07::01", false],
+        "no seconds": ["ldt = 07:02:", false],
+        "no fraction indicator": ["ldt = 07:32:0099", false]
+    };
 }
 
 @test:Config {}
@@ -66,17 +77,6 @@ function testLocalTime() returns error? {
 function testLocalTimeWithFraction() returns error? {
     AssertKey ak = check new AssertKey("lt = 07:32:00.99");
     ak.hasKey("lt", "07:32:00.99").close();
-}
-
-@test:Config {}
-function testInvalidLocalTime() {
-    assertParsingError("ldt = 7:32:00");
-    assertParsingError("ldt = 07:2:00");
-    assertParsingError("ldt = 07:02:1");
-    assertParsingError("ldt = :02:01", isLexical = true);
-    assertParsingError("ldt = 07::01");
-    assertParsingError("ldt = 07:02:");
-    assertParsingError("ldt = 07:32:0099");
 }
 
 @test:Config {}

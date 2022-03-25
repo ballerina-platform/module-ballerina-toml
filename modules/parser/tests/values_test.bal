@@ -1,9 +1,17 @@
 import ballerina/test;
 
-@test:Config {}
-function testIllegalUnderscoe() {
-    assertParsingError("somekey = _1", isLexical = true);
-    assertParsingError("somekey = 1_", isLexical = true);
+@test:Config {
+    dataProvider: illegalUnderscoreDataGen
+}
+function testIllegalUnderscore(string testingLine) returns error? {
+    assertParsingError(testingLine, isLexical = true);
+}
+
+function illegalUnderscoreDataGen() returns map<[string]> {
+    return {
+        "at start": ["flt = _1"],
+        "at end": ["flt = 1_"]
+    };
 }
 
 @test:Config {}
@@ -34,11 +42,20 @@ function testPorcessExponentialNumbers() returns error? {
     ak.hasKey("flt1", 500.0).hasKey("flt2", -0.02).close();
 }
 
-@test:Config {}
-function testInvalidDecimalPoint() {
-    assertParsingError("flt = .1");
-    assertParsingError("flt = 1.");
-    assertParsingError("flt = 1.e+20");
+
+@test:Config {
+    dataProvider: invalidDecimalPointDataGen
+}
+function testInvalidDecimalPoint(string testingLine) returns error? {
+    assertParsingError(testingLine);
+}
+
+function invalidDecimalPointDataGen() returns map<[string]> {
+    return {
+        "at start": ["flt = .1"],
+        "at end": ["flt = 1."],
+        "before exponential": ["flt = 1."]
+    };
 }
 
 @test:Config {}
