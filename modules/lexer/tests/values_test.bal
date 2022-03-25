@@ -13,102 +13,38 @@ function testLiteralString() returns error? {
     check assertToken(LITERAL_STRING, 3, "somevalue");
 }
 
-@test:Config {}
-function testUnclosedString() {
-    assertLexicalError("'hello");
+@test:Config {
+    dataProvider: simpleDataValueDataGen
+}
+function testSimpleDataValueToken(string testingLine, TOMLToken expectedToken, string expectedLexeme) returns error? {
+    setLexerString(testingLine, EXPRESSION_VALUE);
+    check assertToken(expectedToken, lexeme = expectedLexeme);
 }
 
-// DECIMAL tokens
-@test:Config {}
-function testPositiveDecimal() returns error? {
-    setLexerString("+1", EXPRESSION_VALUE);
-    check assertToken(DECIMAL, lexeme = "+1");
+function simpleDataValueDataGen() returns map<[string, TOMLToken, string]> {
+    return {
+        "positive decimal": ["+1", DECIMAL, "+1"],
+        "negative decimal": ["-1", DECIMAL, "-1"],
+        "unsigned decimal": ["1", DECIMAL, "1"],
+        "zero decimal": ["0", DECIMAL, "0"],
+        "underscore decimal": ["111_222_333", DECIMAL, "111222333"],
+        "underscore hexadecimal": ["0xdead_beef", HEXADECIMAL, "deadbeef"],
+        "underscore binary": ["0b001_010", BINARY, "001010"],
+        "underscore octal": ["0o007_610", OCTAL, "007610"],
+        "boolean true": ["true", BOOLEAN, "true"],
+        "boolean false": ["false", BOOLEAN, "false"],
+        "positive infinity": ["+inf", INFINITY, "+inf"],
+        "negative infinity": ["-inf", INFINITY, "-inf"],
+        "unsigned infinity": ["inf", INFINITY, "+inf"],
+        "positive nan": ["+nan", NAN, ""],
+        "negative nan": ["-nan", NAN, ""],
+        "unsigned nan": ["nan", NAN, ""],
+        "simple exponential": ["e", EXPONENTIAL, ""],
+        "capital exponential": ["E", EXPONENTIAL, ""]
+    };
 }
 
-@test:Config {}
-function testNegativeDecimal() returns error? {
-    setLexerString("-1", EXPRESSION_VALUE);
-    check assertToken(DECIMAL, lexeme = "-1");
-}
-
-@test:Config {}
-function testDecimal() returns error? {
-    setLexerString("1", EXPRESSION_VALUE);
-    check assertToken(DECIMAL, lexeme = "1");
-}
-
-@test:Config {}
-function testDecimalZero() returns error? {
-    setLexerString("0", EXPRESSION_VALUE);
-    check assertToken(DECIMAL, lexeme = "0");
-
-    setLexerString("+0", EXPRESSION_VALUE);
-    check assertToken(DECIMAL, lexeme = "+0");
-
-    setLexerString("-0", EXPRESSION_VALUE);
-    check assertToken(DECIMAL, lexeme = "-0");
-}
-
-@test:Config {}
-function testUnderscoreDecimal() returns error? {
-    setLexerString("111_222_333", EXPRESSION_VALUE);
-    check assertToken(DECIMAL, lexeme = "111222333");
-
-    setLexerString("0xdead_beef", EXPRESSION_VALUE);
-    check assertToken(HEXADECIMAL, lexeme = "deadbeef");
-
-    setLexerString("0b001_010", EXPRESSION_VALUE);
-    check assertToken(BINARY, lexeme = "001010");
-
-    setLexerString("0o007_610", EXPRESSION_VALUE);
-    check assertToken(OCTAL, lexeme = "007610");
-}
-
-// Boolean tokens
-@test:Config {}
-function testBooleanValues() returns error? {
-    setLexerString("true", EXPRESSION_VALUE);
-    check assertToken(BOOLEAN, lexeme = "true");
-
-    setLexerString("false", EXPRESSION_VALUE);
-    check assertToken(BOOLEAN, lexeme = "false");
-}
-
-
-@test:Config {}
-function testInfinityToken() returns error? {
-    setLexerString("inf", EXPRESSION_VALUE);
-    check assertToken(INFINITY, lexeme = "+inf");
-
-    setLexerString("+inf", EXPRESSION_VALUE);
-    check assertToken(INFINITY, lexeme = "+inf");
-
-    setLexerString("-inf", EXPRESSION_VALUE);
-    check assertToken(INFINITY, lexeme = "-inf");
-}
-
-@test:Config {}
-function testNanToken() returns error? {
-    setLexerString("nan", EXPRESSION_VALUE);
-    check assertToken(NAN);
-
-    setLexerString("+nan", EXPRESSION_VALUE);
-    check assertToken(NAN);
-
-    setLexerString("-nan", EXPRESSION_VALUE);
-    check assertToken(NAN);
-}
-
-@test:Config {}
-function testExponentialToken() returns error? {
-    setLexerString("e", EXPRESSION_VALUE);
-    check assertToken(EXPONENTIAL);
-
-    setLexerString("E", EXPRESSION_VALUE);
-    check assertToken(EXPONENTIAL);
-}
-
-@test:Config {}
+    @test:Config {}
 function testExponentialTokenWithDECIMAL() returns error? {
     setLexerString("123e2", EXPRESSION_VALUE);
     check assertToken(EXPONENTIAL, 2);
@@ -118,6 +54,11 @@ function testExponentialTokenWithDECIMAL() returns error? {
 function testDecimalToken() returns error? {
     setLexerString("123.123", EXPRESSION_VALUE);
     check assertToken(DOT, 2);
+}
+
+@test:Config {}
+function testUnclosedString() {
+    assertLexicalError("'hello");
 }
 
 @test:Config {

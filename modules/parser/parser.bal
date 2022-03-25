@@ -38,8 +38,9 @@ string currentTableKey = "";
 # Generates a map object for the TOML document.
 # Considers the predictions for the 'expression', 'table', and 'array table'.
 #
-# + return - If success, map object for the TOML document. 
-# Else, a lexical or a parsing error. 
+# + inputLines - TOML lines to be parsed.
+# + return - If success, map object for the TOML document.
+# Else, a lexical or a parsing error.
 public function parse(string[] inputLines) returns map<anydata>|lexer:LexicalError|ParsingError {
     lines = inputLines;
     numLines = inputLines.length();

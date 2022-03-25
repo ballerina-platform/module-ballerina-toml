@@ -1,28 +1,20 @@
 import ballerina/test;
 
-@test:Config {}
-function testMultiLineDelimiter() returns error? {
-    setLexerString("\"\"\"");
-    check assertToken(MULTI_BSTRING_DELIMITER);
+@test:Config {
+    dataProvider: multilineTextDataGen
+}
+function testMutltilineString(string testLine, State testingState, TOMLToken expectedToken, int number, string expectedLexeme) returns error? {
+    setLexerString(testLine, testingState);
+    check assertToken(expectedToken, number, expectedLexeme);
 }
 
-@test:Config {}
-function testMultiLineBasicStringChars() returns error? {
-    setLexerString("\"\"\"somevalues\"\"\"");
-    state = MULTILINE_BSTRING;
-    check assertToken(MULTI_BSTRING_CHARS, 2, "somevalues");
-}
-
-@test:Config {}
-function testValidQuotesInBasicMultilineString() returns error? {
-    setLexerString("\"\"\"single-quote\"double-quotes\"\"single-apastrophe'double-appastrophe''\"\"\"");
-    state = MULTILINE_BSTRING;
-    check assertToken(MULTI_BSTRING_CHARS, 2, "single-quote\"double-quotes\"\"single-apastrophe'double-appastrophe''");
-}
-
-@test:Config {}
-function testMultilineEscape() returns error? {
-    setLexerString("\"\"\"escape\\  whitespace\"\"\"");
-    state = MULTILINE_BSTRING;
-    check assertToken(MULTI_BSTRING_ESCAPE, 3);
+function multilineTextDataGen() returns map<[string, State, TOMLToken, int, string]> {
+    return {
+        "escape": ["\"\"\"escape\\  whitespace\"\"\"", MULTILINE_BSTRING, MULTI_BSTRING_ESCAPE, 3, ""],
+        "valid quotes": ["\"\"\"single-quote\"double-quotes\"\"single-apastrophe'double-appastrophe''\"\"\"", MULTILINE_BSTRING, MULTI_BSTRING_CHARS, 2, "single-quote\"double-quotes\"\"single-apastrophe'double-appastrophe''"],
+        "literal": ["'''somevalue'''", MULITLINE_LSTRING, MULTI_LSTRING_CHARS, 2, "somevalue"],
+        "literal delimiter": ["'''", EXPRESSION_VALUE, MULTI_LSTRING_DELIMITER, 0, ""],
+        "basic": ["\"\"\"somevalue\"\"\"", MULTILINE_BSTRING, MULTI_BSTRING_CHARS, 2, "somevalue"],
+        "basic delimiter": ["\"\"\"", EXPRESSION_VALUE, MULTI_BSTRING_DELIMITER, 0, ""]
+    };
 }

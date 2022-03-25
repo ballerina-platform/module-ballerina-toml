@@ -1,19 +1,18 @@
 import ballerina/test;
 
-@test:Config {}
-function testDoubleBracketTerminalTokens() returns error? {
-    setLexerString("[[");
-    check assertToken(ARRAY_TABLE_OPEN);
-
-    setLexerString("]]");
-    check assertToken(ARRAY_TABLE_CLOSE);
+@test:Config {
+    dataProvider: tableDelimiterDataGen
+}
+function testTableDelimiterToken(string testingLine, TOMLToken expectedToken) returns error? {
+    setLexerString(testingLine);
+    check assertToken(expectedToken);
 }
 
-@test:Config {}
-function testInlineTableTerminalTokens() returns error? {
-    setLexerString("{", EXPRESSION_VALUE);
-    check assertToken(INLINE_TABLE_OPEN);
-
-    setLexerString("}", EXPRESSION_VALUE);
-    check assertToken(INLINE_TABLE_CLOSE);
+function tableDelimiterDataGen() returns map<[string, TOMLToken]> {
+    return {
+        "starting array table token": ["[[", ARRAY_TABLE_OPEN],
+        "closing array table token": ["]]", ARRAY_TABLE_CLOSE],
+        "starting table token": ["[", OPEN_BRACKET],
+        "closing table token": ["]", CLOSE_BRACKET]
+    };
 }

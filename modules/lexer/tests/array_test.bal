@@ -1,29 +1,23 @@
 import ballerina/test;
 
-@test:Config {}
-function testBracketTerminalTokens() returns error? {
-    setLexerString("[", EXPRESSION_VALUE);
-    check assertToken(OPEN_BRACKET);
-
-    setLexerString("]", EXPRESSION_VALUE);
-    check assertToken(CLOSE_BRACKET);
-
+@test:Config {
+    dataProvider: arrayValueDataGen
+}
+function testArrayValue(string testingLine, TOMLToken expectedToken, int number, string expectedLexeme) returns error? {
+    setLexerString(testingLine, EXPRESSION_VALUE);
+    check assertToken(expectedToken, number);
 }
 
-@test:Config {}
-function testArraySeparator() returns error? {
-    setLexerString("[1, 2]", EXPRESSION_VALUE);
-    check assertToken(SEPARATOR, 3);
-
-    setLexerString("[\"1\", 2]", EXPRESSION_VALUE);
-    check assertToken(SEPARATOR, 3);
-
-    setLexerString("[true, 2]", EXPRESSION_VALUE);
-    check assertToken(SEPARATOR, 3);
-
-    setLexerString("[1.0, 2]", EXPRESSION_VALUE);
-    check assertToken(SEPARATOR, 5);
-
-    setLexerString("[[1], 2]", EXPRESSION_VALUE);
-    check assertToken(SEPARATOR, 5);
+function arrayValueDataGen() returns map<[string, TOMLToken, int, string]> {
+    return {
+        "starting array delimiter": ["[", OPEN_BRACKET, 0, ""],
+        "ending array delimiter": ["]", CLOSE_BRACKET, 0, ""],
+        "starting inline table delimiter": ["{", INLINE_TABLE_OPEN, 0, ""],
+        "ending inline table delimiter": ["}", INLINE_TABLE_CLOSE, 0, ""],
+        "same integers": ["[1, 2]", SEPARATOR, 3, ""],
+        "string": ["[\"1\", 2]", SEPARATOR, 3, ""],
+        "boolean": ["[true, 2]", SEPARATOR, 3, ""],
+        "float": ["[1.0, 2]", SEPARATOR, 5, ""],
+        "nested array": ["[[1], 2]", SEPARATOR, 5, ""]
+    };
 }
