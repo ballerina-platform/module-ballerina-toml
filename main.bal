@@ -1,28 +1,23 @@
 import ballerina/io;
 import toml.writer;
+import toml.parser;
 
 # Parses a single line of a TOML string into a Ballerina map object.
 #
-# + tomlString - Single line of a TOML string  
-# + outputType - Type of the output structure. The default is map<anydata>
+# + tomlString - Single line of a TOML string
 # + return - TOML map object is success. Else, returns an error
-public function read(string tomlString, typedesc<anydata>? outputType = ()) returns anydata|error {
+public function read(string tomlString) returns map<anydata>|error {
     string[] lines = [tomlString];
-    Parser parser = new Parser(lines);
-    map<anydata> output = check parser.parse();
-    return outputType == () ? output : output.cloneWithType(outputType);
+    return check parser:parse(lines);
 }
 
 # Parses a TOML file into a Ballerina map object.
 #
 # + filePath - Path to the toml file
-# + outputType - Type of the output structure. The default is map<anydata>
 # + return - TOML map object is success. Else, returns an error
-public function readFile(string filePath, typedesc<anydata>? outputType = ()) returns anydata|error {
+public function readFile(string filePath) returns map<anydata>|error {
     string[] lines = check io:fileReadLines(filePath);
-    Parser parser = new Parser(lines);
-    map<anydata> output = check parser.parse();
-    return outputType == () ? output : output.cloneWithType(outputType);
+    return check parser:parse(lines);
 }
 
 # Writes the toml structure to a TOML document.

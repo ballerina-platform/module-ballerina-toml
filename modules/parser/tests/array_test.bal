@@ -1,34 +1,6 @@
 import ballerina/test;
 
 @test:Config {}
-function testBracketTerminalTokens() returns error? {
-    Lexer lexer = setLexerString("[", EXPRESSION_VALUE);
-    check assertToken(lexer, OPEN_BRACKET);
-
-    lexer = setLexerString("]", EXPRESSION_VALUE);
-    check assertToken(lexer, CLOSE_BRACKET);
-
-}
-
-@test:Config {}
-function testArraySeparator() returns error? {
-    Lexer lexer = setLexerString("[1, 2]", EXPRESSION_VALUE);
-    check assertToken(lexer, SEPARATOR, 3);
-
-    lexer = setLexerString("[\"1\", 2]", EXPRESSION_VALUE);
-    check assertToken(lexer, SEPARATOR, 3);
-
-    lexer = setLexerString("[true, 2]", EXPRESSION_VALUE);
-    check assertToken(lexer, SEPARATOR, 3);
-
-    lexer = setLexerString("[1.0, 2]", EXPRESSION_VALUE);
-    check assertToken(lexer, SEPARATOR, 5);
-
-    lexer = setLexerString("[[1], 2]", EXPRESSION_VALUE);
-    check assertToken(lexer, SEPARATOR, 5);
-}
-
-@test:Config {}
 function testArrayEndingWithSeparator() returns error? {
     AssertKey ak = check new AssertKey("arr = [1,2,]");
     ak.hasKey("arr", [1, 2]).close();
@@ -91,7 +63,7 @@ function testArrayTableSubtables() returns error? {
 }
 
 @test:Config {}
-function testSubtableDefinedBeforeArrayTables() {
+function testSubTableDefinedBeforeArrayTables() {
     assertParsingError("array_table_sub_before", true);
 }
 

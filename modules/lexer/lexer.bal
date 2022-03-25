@@ -11,7 +11,7 @@ enum RegexPatterns {
     BINARY_DIGIT_PATTERN = "[0-1]{1}"
 }
 
-enum State {
+public enum State {
     EXPRESSION_KEY,
     EXPRESSION_VALUE,
     DATE_TIME,
@@ -21,17 +21,17 @@ enum State {
 }
 
 # Properties to represent current position 
-int index = 0;
-int lineNumber = 0;
+public int index = 0;
+public int lineNumber = 0;
 
 # Line to be lexically analyzed
-string line = "";
+public string line = "";
 
 # Value of the generated token
 string lexeme = "";
 
 # Current state of the Lexer
-State state = EXPRESSION_KEY;
+public State state = EXPRESSION_KEY;
 
 map<string> escapedCharMap = {
     "b": "\u{08}",

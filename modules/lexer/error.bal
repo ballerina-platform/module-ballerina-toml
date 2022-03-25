@@ -1,6 +1,6 @@
 
 # Represent an error caused by the lexical analyzer
-type LexicalError distinct error;
+public type LexicalError distinct error;
 
 # Generate the template error message "Invalid character '${char}' for a '${token}'"
 #

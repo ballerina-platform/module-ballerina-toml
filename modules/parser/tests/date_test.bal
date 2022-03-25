@@ -2,46 +2,6 @@ import ballerina/test;
 import ballerina/time;
 
 @test:Config {}
-function testDateTimeSeparatorTokens() returns error? {
-    Lexer lexer = setLexerString("12:12", DATE_TIME);
-    check assertToken(lexer, COLON, 2);
-
-    lexer = setLexerString("1982-12", DATE_TIME);
-    check assertToken(lexer, MINUS, 2);
-}
-
-@test:Config {}
-function testTimeDelimiterTokens() returns error? {
-    Lexer lexer = setLexerString("12t12", DATE_TIME);
-    check assertToken(lexer, TIME_DELIMITER, 2);
-
-    lexer = setLexerString("12T12", DATE_TIME);
-    check assertToken(lexer, TIME_DELIMITER, 2);
-
-    lexer = setLexerString("12 12", DATE_TIME);
-    check assertToken(lexer, TIME_DELIMITER, 2);
-}
-
-@test:Config {}
-function testTimeOffsetTokens() returns error? {
-    Lexer lexer = setLexerString("10+7:30", DATE_TIME);
-    check assertToken(lexer, PLUS, 2);
-
-    lexer = setLexerString("10-6:30", DATE_TIME);
-    check assertToken(lexer, MINUS, 2);
-
-    lexer = setLexerString("10Z", DATE_TIME);
-    check assertToken(lexer, ZULU, 2);
-}
-
-@test:Config {}
-function testDateTimeSimilarSyntax() returns error? {
-    Lexer lexer = setLexerString("[1, \"-\"]", EXPRESSION_VALUE);
-    check assertToken(lexer, DECIMAL, 2);
-    check assertToken(lexer, BASIC_STRING, 2);
-}
-
-@test:Config {}
 function testODTZulu() returns error? {
     AssertKey ak = check new AssertKey("odt = 1979-05-27T07:32:00Z");
     ak.hasKey("odt", check time:utcFromString("1979-05-27T07:32:00Z")).close();

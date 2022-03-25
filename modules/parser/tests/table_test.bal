@@ -1,15 +1,6 @@
 import ballerina/test;
 
 @test:Config {}
-function testDoubleBracketTerminalTokens() returns error? {
-    Lexer lexer = setLexerString("[[");
-    check assertToken(lexer, ARRAY_TABLE_OPEN);
-
-    lexer = setLexerString("]]");
-    check assertToken(lexer, ARRAY_TABLE_CLOSE);
-}
-
-@test:Config {}
 function testMultipleStandardTables() returns error? {
     AssertKey ak = check new AssertKey("table_standard", true);
     ak.hasKey("table1")
@@ -52,15 +43,6 @@ function testTableUndefinedDottedKey() returns error? {
             .hasKey("key", 1)
             .hasKey("inner", 1)
             .close();
-}
-
-@test:Config {}
-function testInlineTableTerminalTokens() returns error? {
-    Lexer lexer = setLexerString("{", EXPRESSION_VALUE);
-    check assertToken(lexer, INLINE_TABLE_OPEN);
-
-    lexer = setLexerString("}", EXPRESSION_VALUE);
-    check assertToken(lexer, INLINE_TABLE_CLOSE);
 }
 
 @test:Config {}

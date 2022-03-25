@@ -2,12 +2,12 @@
 #
 # + token - TOML token type
 # + value - Lexeme of the token. Empty string if not exists.
-type Token record {|
+public type Token record {|
     TOMLToken token;
     string value = "";
 |};
 
-enum TOMLToken {
+public enum TOMLToken {
     DUMMY = "",
     KEY_VALUE_SEPARATOR = "=",
     DOT = ".",

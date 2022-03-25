@@ -1,71 +1,16 @@
 import ballerina/test;
+import toml.lexer;
+import ballerina/io;
 
-const ORIGIN_FILE_PATH = "tests/resources/";
-
-# Returns a new lexer with the configured line for testing
-#
-# + line - Testing TOML string  
-# + lexerState - The state for the lexer to be initialized with
-# + return - Configured lexer
-function setLexerString(string line, State lexerState = EXPRESSION_KEY) returns Lexer {
-    Lexer lexer = new Lexer();
-    lexer.line = line;
-    lexer.state = lexerState;
-    return lexer;
-}
-
-# Assert the token at the given index
-#
-# + lexer - Testing lexer  
-# + assertingToken - Expected TOML token  
-# + index - Index of the targeted token (default = 0) 
-# + lexeme - Expected lexeme of the token (optional)
-# + return - Returns an lexical error if unsuccessful
-function assertToken(Lexer lexer, TOMLToken assertingToken, int index = 0, string lexeme = "") returns error? {
-    Token token = check getToken(lexer, index);
-
-    test:assertEquals(token.token, assertingToken);
-
-    if (lexeme != "") {
-        test:assertEquals(token.value, lexeme);
-    }
-}
-
-# Assert if a lexical error is generated during the tokenization
-#
-# + tomlString - String to generate a Lexer token  
-# + index - Index of the targeted token (default = 0)
-function assertLexicalError(string tomlString, int index = 0) {
-    Lexer lexer = setLexerString(tomlString);
-    Token|error token = getToken(lexer, index);
-    test:assertTrue(token is LexicalError);
-}
-
-# Obtain the token at the given index
-#
-# + lexer - Testing lexer
-# + index - Index of the targeted token
-# + return - If success, returns the token. Else a Lexical Error.  
-function getToken(Lexer lexer, int index) returns Token|error {
-    Token token;
-
-    if (index == 0) {
-        token = check lexer.getToken();
-    } else {
-        foreach int i in 0 ... index - 1 {
-            token = check lexer.getToken();
-        }
-    }
-
-    return token;
-}
+const ORIGIN_FILE_PATH = "modules/parser/tests/resources/";
 
 # Assert if the key and value is properly set in the TOML object.
 #
 # + toml - TOML object to be asserted  
 # + key - Expected key  
 # + value - Expected value of the key  
-function assertKey(map<any> toml, string key, string value) {
+function assertKey(map<anydata> toml, string key, string value) {
+    resetParams();
     test:assertTrue(toml.hasKey(key));
     test:assertEquals(<string>toml[key], value);
 }
@@ -76,13 +21,34 @@ function assertKey(map<any> toml, string key, string value) {
 # + isFile - If set, reads the TOML file. default = false.  
 # + isLexical - If set, checks for Lexical errors. Else, checks for Parsing errors.
 function assertParsingError(string text, boolean isFile = false, boolean isLexical = false) {
+    resetParams();
     anydata|error toml = isFile ? readFile(ORIGIN_FILE_PATH + text + ".toml") : read(text);
     if (isLexical) {
-        test:assertTrue(toml is LexicalError);
+        test:assertTrue(toml is lexer:LexicalError);
     } else {
         test:assertTrue(toml is ParsingError);
     }
+}
 
+function resetParams() {
+    lines = [];
+    numLines = 0;
+    lineIndex = -1;
+    currentToken = {token: lexer:DUMMY};
+    lexemeBuffer = "";
+    tomlObject = {};
+    currentStructure = {};
+    keyStack = [];
+    definedTableKeys = [];
+    tokenConsumed = false;
+    bufferedKey = "";
+    isArrayTable = false;
+    currentTableKey = "";
+
+    lexer:line = "";
+    lexer:state = lexer:EXPRESSION_KEY;
+    lexer:index = 0;
+    lexer:lineNumber = 0;
 }
 
 # Assertions to validate the values of the TOML object.  
@@ -96,6 +62,7 @@ class AssertKey {
     # + text - If isFile is set, file path else TOML string  
     # + isFile - If set, reads the TOML file. default = false.    
     function init(string text, boolean isFile = false) returns error? {
+        resetParams();
         self.toml = isFile ? <map<anydata>>(check readFile(ORIGIN_FILE_PATH + text + ".toml")) : <map<anydata>>(check read(text));
         self.innerData = ();
         self.stack = [];
@@ -167,20 +134,20 @@ class AssertKey {
     }
 }
 
-# Assert if given word(s) are in the output array
+# Parses a single line of a TOML string into a Ballerina map object.
 #
-# + structure - TOML structure to be tested
-# + content - Words to be which should be in the file
-# + return - An error on fail
-function assertStringArray(map<anydata> structure, string|string[] content) returns error? {
-    Writer writer = new Writer(2, true);
-    string[] output = check writer.write(structure);
+# + tomlString - Single line of a TOML string
+# + return - TOML map object is success. Else, returns an error
+function read(string tomlString) returns map<anydata>|error {
+    string[] lines = [tomlString];
+    return check parse(lines);
+}
 
-    if (content is string) {
-        test:assertTrue(output.indexOf(content) != ());
-    } else {
-        test:assertTrue(content.reduce(function(boolean assertion, string word) returns boolean {
-            return assertion && output.indexOf(word) != ();
-        }, true));
-    }
+# Parses a TOML file into a Ballerina map object.
+#
+# + filePath - Path to the toml file
+# + return - TOML map object is success. Else, returns an error
+function readFile(string filePath) returns map<anydata>|error {
+    string[] lines = check io:fileReadLines(filePath);
+    return check parse(lines);
 }
