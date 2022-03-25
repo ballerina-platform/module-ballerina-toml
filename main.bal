@@ -1,4 +1,5 @@
 import ballerina/io;
+import toml.writer;
 
 # Parses a single line of a TOML string into a Ballerina map object.
 #
@@ -32,27 +33,7 @@ public function readFile(string filePath, typedesc<anydata>? outputType = ()) re
 # + allowDottedKeys - If set, dotted keys are used instead of standard tables. Default = true
 # + return - An error on failure
 public function write(string fileName, map<anydata> tomlStructure, int indentationPolicy = 2, boolean allowDottedKeys = true) returns error? {
-    Writer writer = new Writer(indentationPolicy, allowDottedKeys);
-    check writer.openFile(fileName);
-    string[] output = check writer.write(tomlStructure);
+    check writer:openFile(fileName);
+    string[] output = check writer:write(tomlStructure, indentationPolicy, allowDottedKeys);
     check io:fileWriteLines(fileName, output);
-}
-
-type Cricketer record {
-    string name;
-    Stats TestStats;
-    string nationality;
-};
-
-type Stats record {|
-    int hundreds;
-    int fifties;
-    int runs;
-|};
-
-public function main() returns error? {
-    Cricketer dimuthRecord = <Cricketer>(check readFile("dimuth_prev.toml", Cricketer));
-    dimuthRecord.TestStats.hundreds += 1;
-    dimuthRecord.TestStats.runs += 107;
-    check write("dimuth_after.toml", dimuthRecord);
 }

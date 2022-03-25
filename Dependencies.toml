@@ -168,7 +168,10 @@ dependencies = [
 	{org = "ballerinai", name = "observe"}
 ]
 modules = [
-	{org = "nipunayf", packageName = "toml", moduleName = "toml"}
+	{org = "nipunayf", packageName = "toml", moduleName = "toml"},
+	{org = "nipunayf", packageName = "toml", moduleName = "toml.lexer"},
+	{org = "nipunayf", packageName = "toml", moduleName = "toml.parser"},
+	{org = "nipunayf", packageName = "toml", moduleName = "toml.writer"}
 ]
 
 

@@ -26,7 +26,7 @@ class Writer {
             self.indent += " ";
         }
         self.allowDottedKeys = allowDottedKeys;
-    }
+    }   
 
     # Write the TOML structure to the given file.
     # Follows an extension of the BFS.
