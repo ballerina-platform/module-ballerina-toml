@@ -9,7 +9,7 @@ const ORIGIN_FILE_PATH = "modules/parser/tests/resources/";
 # + toml - TOML object to be asserted  
 # + key - Expected key  
 # + value - Expected value of the key  
-function assertKey(map<anydata> toml, string key, string value) {
+function assertKey(map<json> toml, string key, string value) {
     resetParams();
     test:assertTrue(toml.hasKey(key));
     test:assertEquals(<string>toml[key], value);
@@ -22,7 +22,7 @@ function assertKey(map<anydata> toml, string key, string value) {
 # + isLexical - If set, checks for Lexical errors. Else, checks for Parsing errors.
 function assertParsingError(string text, boolean isFile = false, boolean isLexical = false) {
     resetParams();
-    anydata|error toml = isFile ? readFile(ORIGIN_FILE_PATH + text + ".toml") : read(text);
+    json|error toml = isFile ? readFile(ORIGIN_FILE_PATH + text + ".toml") : read(text);
     if (isLexical) {
         test:assertTrue(toml is lexer:LexicalError);
     } else {
@@ -53,8 +53,8 @@ function resetParams() {
 
 # Assertions to validate the values of the TOML object.  
 class AssertKey {
-    private map<anydata> toml;
-    private map<anydata>? innerData;
+    private map<json> toml;
+    private map<json>? innerData;
     private string[] stack;
 
     # Init the AssertKey class.
@@ -63,7 +63,7 @@ class AssertKey {
     # + isFile - If set, reads the TOML file. default = false.    
     function init(string text, boolean isFile = false) returns error? {
         resetParams();
-        self.toml = isFile ? <map<anydata>>(check readFile(ORIGIN_FILE_PATH + text + ".toml")) : <map<anydata>>(check read(text));
+        self.toml = isFile ? <map<json>>(check readFile(ORIGIN_FILE_PATH + text + ".toml")) : <map<json>>(check read(text));
         self.innerData = ();
         self.stack = [];
     }
@@ -74,13 +74,13 @@ class AssertKey {
     # + tomlKey - Expected key of the TOML object  
     # + tomlValue - Expected value of the key. If no value is provided, value won't be checked.
     # + return - AssertKey object to reapply methods.  
-    function hasKey(string tomlKey, anydata tomlValue = ()) returns AssertKey {
-        map<anydata> assertedMap = self.innerData ?: self.toml;
+    function hasKey(string tomlKey, json tomlValue = ()) returns AssertKey {
+        map<json> assertedMap = self.innerData ?: self.toml;
 
         test:assertTrue(assertedMap.hasKey(tomlKey));
 
         if (tomlValue != ()) {
-            test:assertEquals(<anydata>assertedMap[tomlKey], tomlValue);
+            test:assertEquals(<json>assertedMap[tomlKey], tomlValue);
         }
         return self;
     }
@@ -93,12 +93,12 @@ class AssertKey {
 
         // If the current node is the root
         if (self.innerData == ()) {
-            self.innerData = <map<anydata>?>self.toml[tomlKey];
+            self.innerData = <map<json>?>self.toml[tomlKey];
         }
 
         // If the current node is nested
         else {
-            self.innerData = <map<anydata?>>self.innerData[tomlKey];
+            self.innerData = <map<json?>>self.innerData[tomlKey];
         }
 
         self.stack.push(tomlKey);
@@ -118,9 +118,9 @@ class AssertKey {
         }
 
         // Set the innerData to its parent map
-        map<anydata>? targetedObject;
+        map<json>? targetedObject;
         foreach int i in 0 ... self.stack.length() - 2 {
-            targetedObject = <map<anydata>?>self.toml[self.stack[i]];
+            targetedObject = <map<json>?>self.toml[self.stack[i]];
             _ = self.stack.remove(i);
         }
         self.innerData = targetedObject;
@@ -138,7 +138,7 @@ class AssertKey {
 #
 # + tomlString - Single line of a TOML string
 # + return - TOML map object is success. Else, returns an error
-function read(string tomlString) returns map<anydata>|error {
+function read(string tomlString) returns map<json>|error {
     string[] lines = [tomlString];
     return check parse(lines);
 }
@@ -147,7 +147,7 @@ function read(string tomlString) returns map<anydata>|error {
 #
 # + filePath - Path to the toml file
 # + return - TOML map object is success. Else, returns an error
-function readFile(string filePath) returns map<anydata>|error {
+function readFile(string filePath) returns map<json>|error {
     string[] lines = check io:fileReadLines(filePath);
     return check parse(lines);
 }

@@ -5,14 +5,14 @@ import ballerina/time;
     dataProvider: primitiveDataGen,
     groups: ["writer"]
 }
-function testPrimitiveValuesUnderCurrentKey(string key, anydata value, string expectedString) returns error? {
-    map<anydata> toml = {};
+function testPrimitiveValuesUnderCurrentKey(string key, json value, string expectedString) returns error? {
+    map<json> toml = {};
     toml[key] = value;
     check assertStringArray(toml, expectedString);
 }
 
-function primitiveDataGen() returns map<[string, anydata, string]>|error {
-    map<[string, anydata, string]> dataSet = {
+function primitiveDataGen() returns map<[string, json, string]>|error {
+    map<[string, json, string]> dataSet = {
         "int": ["int", 1, "int = 1"],
         "str": ["str", "s", "str = \"s\""],
         "float": ["float", 1.01, "float = 1.01"],
@@ -29,7 +29,7 @@ function primitiveDataGen() returns map<[string, anydata, string]>|error {
     groups: ["writer"]
 }
 function testWriteDottedKeys() returns error? {
-    map<anydata> toml = {
+    map<json> toml = {
         "a": {
             "b": 1
         }
@@ -41,7 +41,7 @@ function testWriteDottedKeys() returns error? {
     groups: ["writer"]
 }
 function testWriteInlineArrays() returns error? {
-    map<anydata> toml = {
+    map<json> toml = {
         "a": [
             {"b": 1, "c": 2},
             3
@@ -54,7 +54,7 @@ function testWriteInlineArrays() returns error? {
     groups: ["writer"]
 }
 function testWriteArrayTable() returns error? {
-    map<anydata> toml = {
+    map<json> toml = {
         "a": [
             {"b": 1, "c": 2},
             {"b": 2, "d": 3}
@@ -67,7 +67,7 @@ function testWriteArrayTable() returns error? {
     groups: ["writer"]
 }
 function testWriteStandardTableUnderArrayTable() returns error? {
-    map<anydata> toml = {
+    map<json> toml = {
         "a": [
             {"b": 1, "c": 2},
             {
@@ -87,7 +87,7 @@ function testWriteStandardTableUnderArrayTable() returns error? {
 # + structure - TOML structure to be tested
 # + content - Words to be which should be in the file
 # + return - An error on fail
-function assertStringArray(map<anydata> structure, string|string[] content) returns error? {
+function assertStringArray(map<json> structure, string|string[] content) returns error? {
     string[] output = check write(structure, 2, true);
 
     if (content is string) {

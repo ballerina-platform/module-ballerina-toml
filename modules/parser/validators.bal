@@ -4,10 +4,10 @@
 # + structure - Parent key of the provided one 
 # + key - Key to be verified in the structure  
 # + return - Error, if there already exists a primitive value.
-function verifyKey(map<anydata>? structure, string key) returns ParsingError? {
-    if (structure is map<anydata>) {
-        map<anydata> castedStructure = <map<anydata>>structure;
-        if (castedStructure.hasKey(key) && !(castedStructure[key] is anydata[] || castedStructure[key] is map<anydata>)) {
+function verifyKey(map<json>? structure, string key) returns ParsingError? {
+    if (structure is map<json>) {
+        map<json> castedStructure = <map<json>>structure;
+        if (castedStructure.hasKey(key) && !(castedStructure[key] is json[] || castedStructure[key] is map<json>)) {
             return generateError("Duplicate values exists for '" + bufferedKey + "'");
         }
     }

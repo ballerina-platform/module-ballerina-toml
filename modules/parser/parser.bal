@@ -12,10 +12,10 @@ lexer:Token currentToken = {token: lexer:DUMMY};
 string lexemeBuffer = "";
 
 # Output TOML object
-map<anydata> tomlObject = {};
+map<json> tomlObject = {};
 
 # Current map structure the parser is working on
-map<anydata> currentStructure = {};
+map<json> currentStructure = {};
 
 # Key stack to the current structure
 string[] keyStack = [];
@@ -41,7 +41,7 @@ string currentTableKey = "";
 # + inputLines - TOML lines to be parsed.
 # + return - If success, map object for the TOML document.
 # Else, a lexical or a parsing error.
-public function parse(string[] inputLines) returns map<anydata>|lexer:LexicalError|ParsingError {
+public function parse(string[] inputLines) returns map<json>|lexer:LexicalError|ParsingError {
     lines = inputLines;
     numLines = inputLines.length();
 

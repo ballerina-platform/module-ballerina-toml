@@ -2,7 +2,7 @@
 
 ![Build](https://github.com/nipunayf/module-ballerina-toml/actions/workflows/ci.yml/badge.svg)
 
-`Ballerina TOML Parser` converts a TOML configuration file to the Ballerina type of `map<anydata>`, and vice-versa.     
+`Ballerina TOML Parser` converts a TOML configuration file to the Ballerina type of `map<json>`, and vice-versa.     
 
 ## Compatibility
 
@@ -27,18 +27,18 @@ Since the parser is following LL(1) grammar, it follows a non-recursive predicti
 
 ```ballerina
 // Parsing a TOML file
-map<anydata>|error toml = readFile("path/to/file.toml");
+map<json>|error toml = readFile("path/to/file.toml");
 ```
 
 ```ballerina
 // Parsing a TOML string
-map<anydata>|error toml = read("outer.inner = 1");
+map<json>|error toml = read("outer.inner = 1");
 ```
 
 For instance, we can convert the parsed TOML document to JSON and create a `.json` file to view the converted structure.
 
 ```ballerina
-if (toml is map<anydata>) {
+if (toml is map<json>) {
     // If successful, conver the TOML structure to JSON and write it.
     io:fileWriteJson("myfile.json", toml.toJson());
 } else {
@@ -58,10 +58,10 @@ Once it is processed, the output JSON file can be shown as below.
 
 ### Writing to a TOML Document
 
-Any `map<anydata>` structure containing the [supported data types](#Supported-Data-Types) can be converted to a TOML document. 
+Any `map<json>` structure containing the [supported data types](#Supported-Data-Types) can be converted to a TOML document. 
 
 ```ballerina
-map<anydata> toml = {
+map<json> toml = {
         "str": "string",
         "float": 0.01,
         "inline": {
@@ -74,7 +74,7 @@ if (result is error) {
 }
 ```
 
-The TOML document of the `map<anydata>` structure can be shown as below.
+The TOML document of the `map<json>` structure can be shown as below.
 
 ```toml
 str = "string"
@@ -89,7 +89,7 @@ The following options can be set to further format the output TOML file.
 | `int indentationPolicy`     | `2`     | The number of whitespaces considered to a indent. An indentation is made once a standard or an array table is defined under the current one. |
 | `boolean allowedDottedKeys` | `true`  | If set, dotted keys are used instead of standard tables.                                                                                     |
 
-Consider the `map<anydata>` structure of  `{table: key = "value"}`. The output TOML document of this can be diverted based on the `allowedDottedKeys` property as follow.
+Consider the `map<json>` structure of  `{table: key = "value"}`. The output TOML document of this can be diverted based on the `allowedDottedKeys` property as follow.
 
 ```toml
 table.key = "value" # allowedDottedKeys = true
@@ -111,8 +111,8 @@ TOML primitives are mapped to the Ballerina types as follow.
 | NaN                                         | `ballerina.lang.'float.NaN`      |
 | Unquoted, Basic and Literal Strings         | `ballerina.lang.'string`         |
 | Boolean                                     | `ballerina.lang.'boolean`        |
-| Array                                       | `anydata[]`                      |
-| Table                                       | `map<anydata>`                   |
+| Array                                       | `json[]`                      |
+| Table                                       | `map<json>`                   |
 | Offset Date-Time                            | `ballerina.time.Utc`             |
 | Local Date-Time, Local Date, and Local Time | `ballerina.lang.'string`         |
 
@@ -124,4 +124,4 @@ The module contains three main types of errors
 | ------------- | ---------------------------------------------------------------------------------------------- |
 | Lexical Error | Generated when there is an invalid character for the token's lexeme.                           |
 | Parsing Error | Generated when the token sequence does not mach with the grammar.                              |
-| Writing Error | Generated when there is an issue during the conversion from `map<anydata>` to a TOML document. |
+| Writing Error | Generated when there is an issue during the conversion from `map<json>` to a TOML document. |

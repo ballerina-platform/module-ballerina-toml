@@ -18,7 +18,7 @@ type State record {|
 # + indentationPolicy - Number of whitespace for an indent  
 # + allowDottedKeys - If flag is set, write dotted keys instead of standard tables.
 # + return - An error on failure
-public function write(map<anydata> structure, int indentationPolicy, boolean allowDottedKeys) returns string[]|error {
+public function write(map<json> structure, int indentationPolicy, boolean allowDottedKeys) returns string[]|error {
     string indent = "";
     foreach int i in 1 ... indentationPolicy {
         indent += " ";

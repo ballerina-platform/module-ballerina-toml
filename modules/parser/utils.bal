@@ -38,7 +38,7 @@ function checkToken(lexer:TOMLToken|lexer:TOMLToken[] expectedTokens = lexer:DUM
 #
 # + structure - Structure to which the changes are made.
 # + return - Constructed final toml object on success. Else, a parsing error.
-function buildTOMLObject(map<anydata> structure) returns map<anydata>|ParsingError {
+function buildTOMLObject(map<json> structure) returns map<json>|ParsingError {
     // Under the root table
     if (keyStack.length() == 0) {
         return currentStructure;
@@ -50,8 +50,8 @@ function buildTOMLObject(map<anydata> structure) returns map<anydata>|ParsingErr
         if (isArrayTable) {
 
             // Adds the current structure to the end of the array.
-            if (structure[key] is anydata[]) {
-                (<anydata[]>structure[key]).push(currentStructure.clone());
+            if (structure[key] is json[]) {
+                (<json[]>structure[key]).push(currentStructure.clone());
 
                 // If the array does not exist, initialize and add it.
             } else {
@@ -67,18 +67,18 @@ function buildTOMLObject(map<anydata> structure) returns map<anydata>|ParsingErr
 
     // Dotted tables
     string key = keyStack.shift();
-    map<anydata> value;
+    map<json> value;
 
     // If the key is a table
-    if (structure[key] is map<anydata>) {
-        value = check buildTOMLObject(<map<anydata>>structure[key]);
+    if (structure[key] is map<json>) {
+        value = check buildTOMLObject(<map<json>>structure[key]);
         structure[key] = value;
     }
 
         // If there is a standard table under an array table, obtain the latest object.
-        else if (structure[key] is anydata[]) {
-        value = check buildTOMLObject(<map<anydata>>(<anydata[]>structure[key]).pop());
-        (<anydata[]>structure[key]).push(value);
+        else if (structure[key] is json[]) {
+        value = check buildTOMLObject(<map<json>>(<json[]>structure[key]).pop());
+        (<json[]>structure[key]).push(value);
     }
 
         // Creates a new structure if not exists.
@@ -109,7 +109,7 @@ function processInteger(int numberSystem) returns int|ParsingError {
 #
 # + value - Value to be type casted.
 # + return - Value as a Ballerina data type  
-function processTypeCastingError(anydata|error value) returns anydata|ParsingError {
+function processTypeCastingError(json|error value) returns json|ParsingError {
     // Check if the type casting has any errors
     if value is error {
         return generateError("Invalid value for assignment");

@@ -12,7 +12,7 @@ import ballerina/time;
 #
 # + structure - The structure for the previous key. Null if there is no value.
 # + return - Returns the structure after assigning the value.
-function keyValue(map<anydata> structure) returns map<anydata>|ParsingError|lexer:LexicalError {
+function keyValue(map<json> structure) returns map<json>|ParsingError|lexer:LexicalError {
     string tomlKey = currentToken.value;
     check verifyKey(structure, tomlKey);
     check verifyTableKey(currentTableKey == "" ? bufferedKey : currentTableKey + "." + bufferedKey);
@@ -22,7 +22,7 @@ function keyValue(map<anydata> structure) returns map<anydata>|ParsingError|lexe
         lexer:DOT => { // Process dotted keys
             check checkToken([lexer:UNQUOTED_KEY, lexer:BASIC_STRING, lexer:LITERAL_STRING]);
             bufferedKey += "." + currentToken.value;
-            map<anydata> value = check keyValue(structure[tomlKey] is map<anydata> ? <map<anydata>>structure[tomlKey] : {});
+            map<json> value = check keyValue(structure[tomlKey] is map<json> ? <map<json>>structure[tomlKey] : {});
             structure[tomlKey] = value;
             return structure;
         }
@@ -47,7 +47,7 @@ function keyValue(map<anydata> structure) returns map<anydata>|ParsingError|lexe
             ]);
 
             // Existing tables cannot be overwritten by inline tables
-            if (currentToken.token == lexer:INLINE_TABLE_OPEN && structure[tomlKey] is map<anydata>) {
+            if (currentToken.token == lexer:INLINE_TABLE_OPEN && structure[tomlKey] is map<json>) {
                 return generateError(check formatErrorMessage(2, value = bufferedKey));
             }
 
@@ -63,8 +63,8 @@ function keyValue(map<anydata> structure) returns map<anydata>|ParsingError|lexe
 # Generate any TOML data value.
 #
 # + return - If success, returns the formatted data value. Else, an error.
-function dataValue() returns anydata|lexer:LexicalError|ParsingError {
-    anydata returnData;
+function dataValue() returns json|lexer:LexicalError|ParsingError {
+    json returnData;
     match currentToken.token {
         lexer:MULTI_BSTRING_DELIMITER => {
             check multiBasicString();
@@ -206,7 +206,7 @@ function multiLiteralString() returns lexer:LexicalError|ParsingError|() {
 #
 # + fractional - Flag is set when processing the fractional segment
 # + return - Parsing error if occurred
-function number(boolean fractional = false) returns anydata|lexer:LexicalError|ParsingError {
+function number(boolean fractional = false) returns json|lexer:LexicalError|ParsingError {
     lexemeBuffer += currentToken.value;
     check checkToken();
 
@@ -254,7 +254,7 @@ function number(boolean fractional = false) returns anydata|lexer:LexicalError|P
 # + hours - Hours in the TOML document
 # + datePrefixed - True if there is a date before the time
 # + return - Returns the formatted time on success. Else, an parsing error.
-function time(string hours, boolean datePrefixed = false) returns anydata|lexer:LexicalError|ParsingError {
+function time(string hours, boolean datePrefixed = false) returns json|lexer:LexicalError|ParsingError {
     // Validate hours
     check checkTime(hours, 0, 24, "hours");
 
@@ -301,7 +301,7 @@ function time(string hours, boolean datePrefixed = false) returns anydata|lexer:
 #
 # + datePrefixed - True if there is a date before the time
 # + return - UTC object representing the time on success. Else, an parsing error.
-function timeOffset(boolean datePrefixed) returns anydata|lexer:LexicalError|ParsingError {
+function timeOffset(boolean datePrefixed) returns json|lexer:LexicalError|ParsingError {
     match currentToken.token {
         lexer:ZULU => {
             return datePrefixed ? check processTypeCastingError(time:utcFromString(lexemeBuffer + "Z"))
@@ -332,7 +332,7 @@ function timeOffset(boolean datePrefixed) returns anydata|lexer:LexicalError|Par
 # Process the date component.
 #
 # + return - An error if the grammar rules are not met.  
-function date() returns anydata|lexer:LexicalError|ParsingError {
+function date() returns json|lexer:LexicalError|ParsingError {
     // Validate the year
     int year = check checkDate(lexemeBuffer, 4, "year");
 
@@ -377,7 +377,7 @@ function date() returns anydata|lexer:LexicalError|ParsingError {
 #
 # + tempArray - Recursively constructing array
 # + return - Completed array on success. An error if the grammar rules are not met.
-function array(anydata[] tempArray = []) returns anydata[]|lexer:LexicalError|ParsingError {
+function array(json[] tempArray = []) returns json[]|lexer:LexicalError|ParsingError {
 
     check checkToken([
         lexer:BASIC_STRING,
@@ -416,7 +416,7 @@ function array(anydata[] tempArray = []) returns anydata[]|lexer:LexicalError|Pa
 #
 # + tempArray - Recursively constructing array
 # + return - Completed array on success. An error if the grammar rules are not met.
-function arrayValue(anydata[] tempArray = []) returns anydata[]|lexer:LexicalError|ParsingError {
+function arrayValue(json[] tempArray = []) returns json[]|lexer:LexicalError|ParsingError {
     lexer:TOMLToken prevToken;
 
     if (tokenConsumed) {
@@ -449,7 +449,7 @@ function arrayValue(anydata[] tempArray = []) returns anydata[]|lexer:LexicalErr
 # + tempTable - Recursively constructing inline table
 # + isStart - True if the function is being called for the first time.
 # + return - Map structure representing the table on success. Else, an error if the grammar rules are not met.
-function inlineTable(map<anydata> tempTable = {}, boolean isStart = true) returns map<anydata>|lexer:LexicalError|ParsingError {
+function inlineTable(map<json> tempTable = {}, boolean isStart = true) returns map<json>|lexer:LexicalError|ParsingError {
     lexer:state = lexer:EXPRESSION_KEY;
     check checkToken([
         lexer:UNQUOTED_KEY,
@@ -465,7 +465,7 @@ function inlineTable(map<anydata> tempTable = {}, boolean isStart = true) return
     }
 
     // Add the key value to the inline table.
-    map<anydata> newTable = check keyValue(tempTable.clone());
+    map<json> newTable = check keyValue(tempTable.clone());
 
     if (tokenConsumed) {
         tokenConsumed = false;
@@ -487,7 +487,7 @@ function inlineTable(map<anydata> tempTable = {}, boolean isStart = true) return
 # + structure - Mapping of the parent key
 # + keyName - Recursively constructing the table key name
 # + return - An error if the grammar rules are not met or any duplicate values.
-function standardTable(map<anydata> structure, string keyName = "") returns lexer:LexicalError|ParsingError|() {
+function standardTable(map<json> structure, string keyName = "") returns lexer:LexicalError|ParsingError|() {
 
     // Verifies the current key
     string tomlKey = currentToken.value;
@@ -499,7 +499,7 @@ function standardTable(map<anydata> structure, string keyName = "") returns lexe
     match currentToken.token {
         lexer:DOT => { // Build the dotted key
             check checkToken([lexer:UNQUOTED_KEY, lexer:BASIC_STRING, lexer:LITERAL_STRING]);
-            return check standardTable(structure[tomlKey] is map<anydata> ? <map<anydata>>structure[tomlKey] : {}, keyName + tomlKey + ".");
+            return check standardTable(structure[tomlKey] is map<json> ? <map<json>>structure[tomlKey] : {}, keyName + tomlKey + ".");
         }
 
         lexer:CLOSE_BRACKET => { // Initialize the current structure
@@ -511,11 +511,11 @@ function standardTable(map<anydata> structure, string keyName = "") returns lexe
             currentTableKey = tableKeyName;
 
             // Cannot define a standard table for an already defined array table.
-            if (structure.hasKey(tomlKey) && !(structure[tomlKey] is map<anydata>)) {
+            if (structure.hasKey(tomlKey) && !(structure[tomlKey] is map<json>)) {
                 return generateError(check formatErrorMessage(2, value = tableKeyName));
             }
 
-            currentStructure = structure[tomlKey] is map<anydata> ? <map<anydata>>structure[tomlKey] : {};
+            currentStructure = structure[tomlKey] is map<json> ? <map<json>>structure[tomlKey] : {};
             return;
         }
     }
@@ -527,7 +527,7 @@ function standardTable(map<anydata> structure, string keyName = "") returns lexe
 # + structure - Mapping of the parent key
 # + keyName - Recursively constructing the table key name
 # + return - An error if the grammar rules are not met or any duplicate values. 
-function arrayTable(map<anydata> structure, string keyName = "") returns lexer:LexicalError|ParsingError|() {
+function arrayTable(map<json> structure, string keyName = "") returns lexer:LexicalError|ParsingError|() {
 
     // Verifies the current key
     string tomlKey = currentToken.value;
@@ -539,7 +539,7 @@ function arrayTable(map<anydata> structure, string keyName = "") returns lexer:L
     match currentToken.token {
         lexer:DOT => { // Build the dotted key
             check checkToken([lexer:UNQUOTED_KEY, lexer:BASIC_STRING, lexer:LITERAL_STRING]);
-            return check arrayTable(structure[tomlKey] is map<anydata> ? <map<anydata>>structure[tomlKey] : {}, tomlKey + ".");
+            return check arrayTable(structure[tomlKey] is map<json> ? <map<json>>structure[tomlKey] : {}, tomlKey + ".");
         }
 
         lexer:ARRAY_TABLE_CLOSE => { // Initialize the current structure
@@ -548,7 +548,7 @@ function arrayTable(map<anydata> structure, string keyName = "") returns lexer:L
             check verifyTableKey(keyName + tomlKey);
 
             // Cannot define an array table for already defined standard table.
-            if (structure.hasKey(tomlKey) && !(structure[tomlKey] is anydata[])) {
+            if (structure.hasKey(tomlKey) && !(structure[tomlKey] is json[])) {
                 return generateError(check formatErrorMessage(2, value = keyName + tomlKey));
             }
 

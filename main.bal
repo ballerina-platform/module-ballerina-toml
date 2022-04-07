@@ -6,7 +6,7 @@ import toml.parser;
 #
 # + tomlString - Single line of a TOML string
 # + return - TOML map object is success. Else, returns an error
-public function read(string tomlString) returns map<anydata>|error {
+public function read(string tomlString) returns map<json>|error {
     string[] lines = [tomlString];
     return check parser:parse(lines);
 }
@@ -15,7 +15,7 @@ public function read(string tomlString) returns map<anydata>|error {
 #
 # + filePath - Path to the toml file
 # + return - TOML map object is success. Else, returns an error
-public function readFile(string filePath) returns map<anydata>|error {
+public function readFile(string filePath) returns map<json>|error {
     string[] lines = check io:fileReadLines(filePath);
     return check parser:parse(lines);
 }
@@ -27,7 +27,7 @@ public function readFile(string filePath) returns map<anydata>|error {
 # + indentationPolicy - Number of whitespace for an indentation. Default = 2  
 # + allowDottedKeys - If set, dotted keys are used instead of standard tables. Default = true
 # + return - An error on failure
-public function write(string fileName, map<anydata> tomlStructure, int indentationPolicy = 2, boolean allowDottedKeys = true) returns error? {
+public function write(string fileName, map<json> tomlStructure, int indentationPolicy = 2, boolean allowDottedKeys = true) returns error? {
     check writer:openFile(fileName);
     string[] output = check writer:write(tomlStructure, indentationPolicy, allowDottedKeys);
     check io:fileWriteLines(fileName, output);
