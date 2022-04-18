@@ -20,20 +20,7 @@ public enum State {
     MULTILINE_ESCAPE
 }
 
-# Properties to represent current position 
-public int index = 0;
-public int lineNumber = 0;
-
-# Line to be lexically analyzed
-public string line = "";
-
-# Value of the generated token
-string lexeme = "";
-
-# Current state of the Lexer
-public State state = EXPRESSION_KEY;
-
-map<string> escapedCharMap = {
+final readonly & map<string> escapedCharMap = {
     "b": "\u{08}",
     "t": "\t",
     "n": "\n",

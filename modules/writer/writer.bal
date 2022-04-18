@@ -7,8 +7,8 @@ import ballerina/file;
 # + allowDottedKeys - If flag is set, write dotted keys instead of standard tables.
 type State record {|
     string[] output;
-    string indent;
-    boolean allowDottedKeys;
+    readonly string indent;
+    readonly boolean allowDottedKeys;
 |};
 
 # Write the TOML structure to the given file.
