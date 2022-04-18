@@ -9,7 +9,7 @@ function multiBasicString(ParserState state) returns lexer:LexicalError|ParsingE
     string lexemeBuffer = "";
 
     // Predict the next tokens
-    check checkToken(state,[
+    check checkToken(state, [
         lexer:MULTILINE_BASIC_STRING_LINE,
         lexer:MULTILINE_BASIC_STRING_ESCAPE,
         lexer:MULTILINE_BASIC_STRING_DELIMITER,
@@ -35,7 +35,7 @@ function multiBasicString(ParserState state) returns lexer:LexicalError|ParsingE
                 }
             }
         }
-        check checkToken(state,[
+        check checkToken(state, [
             lexer:MULTILINE_BASIC_STRING_LINE,
             lexer:MULTILINE_BASIC_STRING_ESCAPE,
             lexer:MULTILINE_BASIC_STRING_DELIMITER,
@@ -56,7 +56,7 @@ function multiLiteralString(ParserState state) returns lexer:LexicalError|Parsin
     string lexemeBuffer = "";
 
     // Predict the next tokens
-    check checkToken(state,[
+    check checkToken(state, [
         lexer:MULTILINE_LITERAL_STRING_LINE,
         lexer:MULTILINE_LITERAL_STRING_DELIMITER,
         lexer:EOL
@@ -68,12 +68,12 @@ function multiLiteralString(ParserState state) returns lexer:LexicalError|Parsin
             lexer:MULTILINE_LITERAL_STRING_LINE => { // Regular literal string
                 lexemeBuffer += state.currentToken.value;
             }
-            lexer:EOL => { // Processing new lines
-                check state.initLexer(check formatErrorMessage(1, lexer:MULTILINE_LITERAL_STRING_DELIMITER, lexer:MULTILINE_BASIC_STRING_DELIMITER));
+            lexer:EOL => { // Processing new lines    
+                check state.initLexer(formatExpectErrorMessage(state.currentToken.token, lexer:MULTILINE_LITERAL_STRING_DELIMITER, lexer:MULTILINE_BASIC_STRING_DELIMITER));
                 lexemeBuffer += "\\n";
             }
         }
-        check checkToken(state,[
+        check checkToken(state, [
             lexer:MULTILINE_LITERAL_STRING_LINE,
             lexer:MULTILINE_LITERAL_STRING_DELIMITER,
             lexer:EOL

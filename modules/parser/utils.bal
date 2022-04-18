@@ -20,7 +20,7 @@ function checkToken(ParserState state, lexer:TOMLToken|lexer:TOMLToken[] expecte
 
     // Automatically generates a template error message if there is no custom message.
     string errorMessage = customMessage.length() == 0
-                                ? check formatErrorMessage(1, expectedTokens, prevToken)
+                                ? formatExpectErrorMessage(state.currentToken.token, expectedTokens, prevToken)
                                 : customMessage;
 
     // Generate an error if the expected token differ from the actual token.

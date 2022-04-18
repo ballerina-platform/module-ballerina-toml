@@ -70,7 +70,7 @@ function standardTable(ParserState state, map<json> structure, string keyName = 
 
             // Cannot define a standard table for an already defined array table.
             if (structure.hasKey(tomlKey) && !(structure[tomlKey] is map<json>)) {
-                return generateError(state, check formatErrorMessage(2, value = tableKeyName));
+                return generateError(state, formateDuplicateErrorMessage(tableKeyName));
             }
 
             state.currentStructure = structure[tomlKey] is map<json> ? <map<json>>structure[tomlKey] : {};
@@ -108,7 +108,7 @@ function arrayTable(ParserState state, map<json> structure, string keyName = "")
 
             // Cannot define an array table for already defined standard table.
             if (structure.hasKey(tomlKey) && !(structure[tomlKey] is json[])) {
-                return generateError(state, check formatErrorMessage(2, value = keyName + tomlKey));
+                return generateError(state, formateDuplicateErrorMessage(keyName + tomlKey));
             }
 
             // An array table always create a new object.

@@ -27,7 +27,7 @@ function array(ParserState state, json[] tempArray = []) returns json[]|lexer:Le
 
     match state.currentToken.token {
         lexer:EOL => {
-            check state.initLexer(check formatErrorMessage(1, lexer:CLOSE_BRACKET, lexer:OPEN_BRACKET));
+            check state.initLexer(formatExpectErrorMessage(state.currentToken.token, lexer:CLOSE_BRACKET, lexer:OPEN_BRACKET));
             return array(state, tempArray);
         }
         lexer:CLOSE_BRACKET => { // If the array ends with a ','
@@ -68,7 +68,7 @@ function arrayValue(ParserState state, json[] tempArray = []) returns json[]|lex
             return array(state, tempArray);
         }
         _ => {
-            return generateError(state, check formatErrorMessage(1, [lexer:EOL, lexer:CLOSE_BRACKET, lexer:SEPARATOR], prevToken));
+            return generateError(state, formatExpectErrorMessage(state.currentToken.token, [lexer:EOL, lexer:CLOSE_BRACKET, lexer:SEPARATOR], prevToken));
         }
     }
 }

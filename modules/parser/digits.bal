@@ -85,7 +85,6 @@ function date(ParserState state, string prevValue) returns json|lexer:LexicalErr
             return valueBuffer;
         }
         lexer:TIME_DELIMITER => { // Adding a time component to the date
-
             // Obtain the hours
             check checkToken(state, lexer:DECIMAL);
             string hours = state.currentToken.value;
@@ -94,7 +93,7 @@ function date(ParserState state, string prevValue) returns json|lexer:LexicalErr
             return time(state, hours, valueBuffer, true);
         }
         _ => {
-            return generateError(state, check formatErrorMessage(1, [lexer:EOL, lexer:TIME_DELIMITER], lexer:DECIMAL));
+            return generateError(state, formatExpectErrorMessage(state.currentToken.token, [lexer:EOL, lexer:TIME_DELIMITER], lexer:DECIMAL));
         }
     }
 }
@@ -144,7 +143,8 @@ function time(ParserState state, string hours, string prevValue, boolean datePre
             return timeOffset(state, valueBuffer, datePrefixed);
         }
         _ => {
-            return generateError(state, check formatErrorMessage(1, [lexer:EOL, lexer:DOT, lexer:PLUS, lexer:MINUS, lexer:ZULU], lexer:DECIMAL));
+
+            return generateError(state, formatExpectErrorMessage(state.currentToken.token, [lexer:EOL, lexer:DOT, lexer:PLUS, lexer:MINUS, lexer:ZULU], lexer:DECIMAL));
         }
     }
 }
