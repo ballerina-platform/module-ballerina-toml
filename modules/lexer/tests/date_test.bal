@@ -4,8 +4,8 @@ import ballerina/test;
     dataProvider: dateTimeDataGen
 }
 function testDateTimeToken(string testingLine, TOMLToken expectedToken) returns error? {
-    setLexerString(testingLine, DATE_TIME);
-    check assertToken(expectedToken, 2);
+    LexerState state = setLexerString(testingLine, DATE_TIME);
+    check assertToken(state, expectedToken, 2);
 }
 
 function dateTimeDataGen() returns map<[string, TOMLToken]> {
@@ -23,7 +23,7 @@ function dateTimeDataGen() returns map<[string, TOMLToken]> {
 
 @test:Config {}
 function testDateTimeSimilarSyntax() returns error? {
-    setLexerString("[1, \"-\"]", EXPRESSION_VALUE);
-    check assertToken(DECIMAL, 2);
-    check assertToken(BASIC_STRING, 2);
+    LexerState state = setLexerString("[1, \"-\"]", EXPRESSION_VALUE);
+    check assertToken(state,DECIMAL, 2);
+    check assertToken(state,BASIC_STRING, 2);
 }

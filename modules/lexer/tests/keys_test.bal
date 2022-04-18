@@ -2,26 +2,26 @@ import ballerina/test;
 
 @test:Config {}
 function testFullLineComment() returns error? {
-    setLexerString("# someComment");
-    check assertToken(EOL);
+    LexerState state = setLexerString("# someComment");
+    check assertToken(state,EOL);
 }
 
 @test:Config {}
 function testEOLComment() returns error? {
-    setLexerString("someKey = \"someValue\" # someComment");
-    check assertToken(EOL, 4);
+    LexerState state = setLexerString("someKey = \"someValue\" # someComment");
+    check assertToken(state,EOL, 4);
 }
 
 @test:Config {}
 function testMultipleWhiteSpaces() returns error? {
-    setLexerString("  ");
-    check assertToken(EOL);
+    LexerState state = setLexerString("  ");
+    check assertToken(state,EOL);
 }
 
 @test:Config {}
 function testUnquotedKey() returns error? {
-    setLexerString("somekey = \"Some Value\"");
-    check assertToken(UNQUOTED_KEY, lexeme = "somekey");
+    LexerState state = setLexerString("somekey = \"Some Value\"");
+    check assertToken(state,UNQUOTED_KEY, lexeme = "somekey");
 }
 
 @test:Config {}
@@ -31,14 +31,14 @@ function testUnquotedKeyWithInvalidChar() {
 
 @test:Config {}
 function testKeyValueSeparator() returns error? {
-    setLexerString("somekey = 1");
-    check assertToken(KEY_VALUE_SEPARATOR, 2);
+    LexerState state = setLexerString("somekey = 1");
+    check assertToken(state,KEY_VALUE_SEPARATOR, 2);
 }
 
 @test:Config {}
 function testDot() returns error? {
-    setLexerString("outer.'inner' = 3");
-    check assertToken(UNQUOTED_KEY, lexeme = "outer");
-    check assertToken(DOT);
-    check assertToken(LITERAL_STRING, lexeme = "inner");
+    LexerState state = setLexerString("outer.'inner' = 3");
+    check assertToken(state,UNQUOTED_KEY, lexeme = "outer");
+    check assertToken(state,DOT);
+    check assertToken(state,LITERAL_STRING, lexeme = "inner");
 }

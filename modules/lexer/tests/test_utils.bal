@@ -4,22 +4,23 @@ import ballerina/test;
 #
 # + testingLine - Testing TOML string  
 # + lexerState - The state for the lexer to be initialized with
-function setLexerString(string testingLine, State lexerState = EXPRESSION_KEY) {
-    line = testingLine;
-    state = lexerState;
-    index = 0;
-    lineNumber = 0;
-    lexeme = "";
+# + return - Originated lexer state for testing
+function setLexerString(string testingLine, Context lexerState = EXPRESSION_KEY) returns LexerState {
+    LexerState state = new ();
+    state.line = testingLine;
+    state.context = lexerState;
+    return state;
 }
 
 # Assert the token at the given index
 #
+# + state - Lexer state configured for testing  
 # + assertingToken - Expected TOML token  
-# + currentIndex - Index of the targeted token (default = 0) 
+# + currentIndex - Index of the targeted token (default = 0)  
 # + lexeme - Expected lexeme of the token (optional)
 # + return - Returns an lexical error if unsuccessful
-function assertToken(TOMLToken assertingToken, int currentIndex = 0, string lexeme = "") returns error? {
-    Token token = check getToken(currentIndex);
+function assertToken(LexerState state, TOMLToken assertingToken, int currentIndex = 0, string lexeme = "") returns error? {
+    Token token = check getToken(state, currentIndex);
 
     test:assertEquals(token.token, assertingToken);
 
@@ -33,25 +34,25 @@ function assertToken(TOMLToken assertingToken, int currentIndex = 0, string lexe
 # + tomlString - String to generate a Lexer token  
 # + currentIndex - Index of the targeted token (default = 0)
 function assertLexicalError(string tomlString, int currentIndex = 0) {
-    setLexerString(tomlString);
-    Token|error token = getToken(currentIndex);
+    Token|error token = getToken(setLexerString(tomlString), currentIndex);
     test:assertTrue(token is LexicalError);
 }
 
 # Obtain the token at the given index
 #
+# + state - Lexer state configured for testing  
 # + currentIndex - Index of the targeted token
 # + return - If success, returns the token. Else a Lexical Error.
-function getToken(int currentIndex) returns Token|error {
-    Token token;
+function getToken(LexerState state, int currentIndex) returns Token|error {
+    LexerState token;
 
     if (currentIndex == 0) {
-        token = check scan();
+        token = check scan(state);
     } else {
         foreach int i in 0 ... currentIndex - 1 {
-            token = check scan();
+            token = check scan(state);
         }
     }
 
-    return token;
+    return token.getToken();
 }

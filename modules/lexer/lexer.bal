@@ -11,12 +11,12 @@ enum RegexPatterns {
     BINARY_DIGIT_PATTERN = "[0-1]{1}"
 }
 
-public enum State {
+public enum Context {
     EXPRESSION_KEY,
     EXPRESSION_VALUE,
     DATE_TIME,
-    MULTILINE_BSTRING,
-    MULITLINE_LSTRING,
+    MULTILINE_BASIC_STRING,
+    MULTILINE_LITERAL_STRING,
     MULTILINE_ESCAPE
 }
 
@@ -32,205 +32,206 @@ final readonly & map<string> escapedCharMap = {
 
 # Generates a Token for the next immediate lexeme.
 #
-# + return - If success, returns a token, else returns a Lexical Error 
-public function scan() returns Token|LexicalError {
+# + state - The lexer state for the next token
+# + return - If success, returns a token, else returns a Lexical Error
+public function scan(LexerState state) returns LexerState|LexicalError {
 
     // Generate EOL token 
-    if (index >= line.length()) {
-        return {token: EOL};
+    if (state.index >= state.line.length()) {
+        return state.tokenize(EOL);
     }
 
     // Check for bare keys at the start of a line.
-    if (state == EXPRESSION_KEY && regex:matches(line[index], UNQUOTED_STRING_PATTERN)) {
-        return check iterate(unquotedKey, UNQUOTED_KEY);
+    if (state.context == EXPRESSION_KEY && regex:matches(<string>state.peek(), UNQUOTED_STRING_PATTERN)) {
+        return check iterate(state, unquotedKey, UNQUOTED_KEY);
     }
 
     // Generate tokens related to multi line basic strings
-    if (state == MULTILINE_BSTRING || state == MULTILINE_ESCAPE) {
+    if (state.context == MULTILINE_BASIC_STRING || state.context == MULTILINE_ESCAPE) {
         // Process the escape symbol
-        if (line[index] == "\\") {
-            return generateToken(MULTI_BSTRING_ESCAPE);
+        if (state.peek() == "\\") {
+            return state.tokenize(MULTILINE_BASIC_STRING_ESCAPE);
         }
 
         // Process multiline string regular characters
-        if (regex:matches(line[index], BASIC_STRING_PATTERN)) {
-            return check iterate(multilineBasicString, MULTI_BSTRING_CHARS);
+        if (regex:matches(<string>state.peek(), BASIC_STRING_PATTERN)) {
+            return check iterate(state, multilineBasicString, MULTILINE_BASIC_STRING_LINE);
         }
 
     }
 
     // Generate tokens related to multi-line literal string
-    if (state == MULITLINE_LSTRING && regex:matches(line[index], LITERAL_STRING_PATTERN)) {
-        return iterate(multilineLiteralString, MULTI_LSTRING_CHARS);
+    if (state.context == MULTILINE_LITERAL_STRING && regex:matches(<string>state.peek(), LITERAL_STRING_PATTERN)) {
+        return iterate(state, multilineLiteralString, MULTILINE_LITERAL_STRING_LINE);
     }
 
     // Process tokens related to date time
-    if (state == DATE_TIME) {
-        match peek() {
+    if (state.context == DATE_TIME) {
+        match state.peek() {
             ":" => { // Time separator
-                return generateToken(COLON);
+                return state.tokenize(COLON);
             }
             "-" => { // Date separator or negative offset
-                return generateToken(MINUS);
+                return state.tokenize(MINUS);
             }
             "t"|"T"|" " => { // Time delimiter
-                return generateToken(TIME_DELIMITER);
+                return state.tokenize(TIME_DELIMITER);
             }
             "+" => { // Positive offset
-                return generateToken(PLUS);
+                return state.tokenize(PLUS);
             }
             "Z" => { // Zulu offset
-                return generateToken(ZULU);
+                return state.tokenize(ZULU);
             }
         }
 
         // Digits for date time
-        if (regex:matches(line[index], DECIMAL_DIGIT_PATTERN)) {
-            return check iterate(digit(DECIMAL_DIGIT_PATTERN), DECIMAL);
+        if (regex:matches(<string>state.peek(), DECIMAL_DIGIT_PATTERN)) {
+            return check iterate(state, digit(DECIMAL_DIGIT_PATTERN), DECIMAL);
         }
     }
 
-    match peek() {
+    match state.peek() {
         " "|"\t" => { // Whitespace
-            index += 1;
-            return check scan();
+            state.forward();
+            return check scan(state);
         }
         "#" => { // Comments
-            return generateToken(EOL);
+            return state.tokenize(EOL);
         }
         "=" => { // Key value separator
-            return generateToken(KEY_VALUE_SEPARATOR);
+            return state.tokenize(KEY_VALUE_SEPARATOR);
         }
         "[" => { // Array values and standard tables
-            if (peek(1) == "[" && state == EXPRESSION_KEY) { // Array tables
-                index += 1;
-                return generateToken(ARRAY_TABLE_OPEN);
+            if (state.peek(1) == "[" && state.context == EXPRESSION_KEY) { // Array tables
+                state.forward();
+                return state.tokenize(ARRAY_TABLE_OPEN);
             }
-            return generateToken(OPEN_BRACKET);
+            return state.tokenize(OPEN_BRACKET);
         }
         "]" => { // Array values and standard tables
-            if (peek(1) == "]" && state == EXPRESSION_KEY) { // Array tables
-                index += 1;
-                return generateToken(ARRAY_TABLE_CLOSE);
+            if (state.peek(1) == "]" && state.context == EXPRESSION_KEY) { // Array tables
+                state.forward();
+                return state.tokenize(ARRAY_TABLE_CLOSE);
             }
-            return generateToken(CLOSE_BRACKET);
+            return state.tokenize(CLOSE_BRACKET);
         }
         "," => {
-            return generateToken(SEPARATOR);
+            return state.tokenize(SEPARATOR);
         }
         "\"" => { // Basic strings
 
             // Multi-line basic strings
-            if (peek(1) == "\"" && peek(2) == "\"") {
-                index += 2;
-                return generateToken(MULTI_BSTRING_DELIMITER);
+            if (state.peek(1) == "\"" && state.peek(2) == "\"") {
+                state.forward(2);
+                return state.tokenize(MULTILINE_BASIC_STRING_DELIMITER);
             }
 
-            index += 1;
-            return check iterate(basicString, BASIC_STRING, "Expected '\"' at the end of the basic string");
+            state.forward();
+            return check iterate(state, basicString, BASIC_STRING, "Expected '\"' at the end of the basic string");
         }
         "'" => { // Literal strings
 
             // Multi-line literal string
-            if (peek(1) == "'" && peek(2) == "'") {
-                index += 2;
-                return generateToken(MULTI_LSTRING_DELIMITER);
+            if (state.peek(1) == "'" && state.peek(2) == "'") {
+                state.forward(2);
+                return state.tokenize(MULTILINE_LITERAL_STRING_DELIMITER);
             }
 
-            index += 1;
-            return check iterate(literalString, LITERAL_STRING, "Expected ''' at the end of the literal string");
+            state.forward();
+            return check iterate(state, literalString, LITERAL_STRING, "Expected ''' at the end of the literal string");
         }
         "." => { // Dotted keys
-            return generateToken(DOT);
+            return state.tokenize(DOT);
         }
         "0" => {
-            string? peekValue = peek(1);
+            string? peekValue = state.peek(1);
             if (peekValue == ()) {
-                lexeme = "0";
-                return generateToken(DECIMAL);
+                state.appendToLexeme("0");
+                return state.tokenize(DECIMAL);
             }
 
             if (regex:matches(<string>peekValue, DECIMAL_DIGIT_PATTERN)) {
-                return check iterate(digit(DECIMAL_DIGIT_PATTERN), DECIMAL);
+                return check iterate(state, digit(DECIMAL_DIGIT_PATTERN), DECIMAL);
             }
 
             match peekValue {
                 "x" => { // Hexadecimal numbers
-                    index += 2;
-                    return check iterate(digit(HEXADECIMAL_DIGIT_PATTERN), HEXADECIMAL);
+                    state.forward(2);
+                    return check iterate(state, digit(HEXADECIMAL_DIGIT_PATTERN), HEXADECIMAL);
                 }
                 "o" => { // Octal numbers
-                    index += 2;
-                    return check iterate(digit(OCTAL_DIGIT_PATTERN), OCTAL);
+                    state.forward(2);
+                    return check iterate(state, digit(OCTAL_DIGIT_PATTERN), OCTAL);
                 }
                 "b" => { // Binary numbers
-                    index += 2;
-                    return check iterate(digit(BINARY_DIGIT_PATTERN), BINARY);
+                    state.forward(2);
+                    return check iterate(state, digit(BINARY_DIGIT_PATTERN), BINARY);
                 }
                 " "|"#"|"."|","|"]" => { // Decimal numbers
-                    lexeme = "0";
-                    return generateToken(DECIMAL);
+                    state.appendToLexeme("0");
+                    return state.tokenize(DECIMAL);
                 }
                 _ => {
-                    return generateError("Invalid character '" + line[index + 1] + "' after '0'");
+                    return generateError(state, string `Invalid character '${peekValue}' after '0'`);
                 }
             }
         }
         "+"|"-" => { // Decimal numbers
-            match peek(1) {
+            match state.peek(1) {
                 "0" => { // There cannot be leading zero.
-                    lexeme = line[index] + "0";
-                    index += 1;
-                    return generateToken(DECIMAL);
+                    state.appendToLexeme(<string>state.peek() + "0");
+                    state.forward();
+                    return state.tokenize(DECIMAL);
                 }
                 () => { // Only '+' and '-' are invalid.
-                    return generateError("There must me digits after '+'");
+                    return generateError(state, "There must me digits after '+'");
                 }
                 "n" => { // NAN token
-                    lexeme = line[index];
-                    index += 1;
-                    return check tokensInSequence("nan", NAN);
+                    state.appendToLexeme(<string>state.peek());
+                    state.forward();
+                    return check tokensInSequence(state, "nan", NAN);
                 }
                 "i" => { // Infinity tokens
-                    lexeme = line[index];
-                    index += 1;
-                    return check tokensInSequence("inf", INFINITY);
+                    state.appendToLexeme(<string>state.peek());
+                    state.forward();
+                    return check tokensInSequence(state, "inf", INFINITY);
                 }
                 _ => { // Remaining digits of the decimal numbers
-                    lexeme = line[index];
-                    index += 1;
-                    return check iterate(digit(DECIMAL_DIGIT_PATTERN), DECIMAL);
+                    state.appendToLexeme(<string>state.peek());
+                    state.forward();
+                    return check iterate(state, digit(DECIMAL_DIGIT_PATTERN), DECIMAL);
                 }
             }
         }
         "t" => { // Boolean true token
-            return check tokensInSequence("true", BOOLEAN);
+            return check tokensInSequence(state, "true", BOOLEAN);
         }
         "f" => { // Boolean false token
-            return check tokensInSequence("false", BOOLEAN);
+            return check tokensInSequence(state, "false", BOOLEAN);
         }
         "n" => { // NAN token
-            return check tokensInSequence("nan", NAN);
+            return check tokensInSequence(state, "nan", NAN);
         }
         "i" => {
-            lexeme = "+";
-            return check tokensInSequence("inf", INFINITY);
+            state.appendToLexeme("+");
+            return check tokensInSequence(state, "inf", INFINITY);
         }
         "e"|"E" => { // Exponential tokens
-            return generateToken(EXPONENTIAL);
+            return state.tokenize(EXPONENTIAL);
         }
         "{" => { // Inline table
-            return generateToken(INLINE_TABLE_OPEN);
+            return state.tokenize(INLINE_TABLE_OPEN);
         }
         "}" => { // Inline table
-            return generateToken(INLINE_TABLE_CLOSE);
+            return state.tokenize(INLINE_TABLE_CLOSE);
         }
     }
 
     // Check for values starting with an integer.
-    if ((state == EXPRESSION_VALUE) && regex:matches(line[index], DECIMAL_DIGIT_PATTERN)) {
-        return check iterate(digit(DECIMAL_DIGIT_PATTERN), DECIMAL);
+    if ((state.context == EXPRESSION_VALUE) && regex:matches(<string>state.peek(), DECIMAL_DIGIT_PATTERN)) {
+        return check iterate(state, digit(DECIMAL_DIGIT_PATTERN), DECIMAL);
     }
 
-    return generateError("Invalid character '" + line[index] + "'");
+    return generateError(state, "Invalid character '" + <string>state.peek() + "'");
 }

@@ -4,8 +4,8 @@ import ballerina/test;
     dataProvider: arrayValueDataGen
 }
 function testArrayValue(string testingLine, TOMLToken expectedToken, int number, string expectedLexeme) returns error? {
-    setLexerString(testingLine, EXPRESSION_VALUE);
-    check assertToken(expectedToken, number);
+    LexerState state = setLexerString(testingLine, EXPRESSION_VALUE);
+    check assertToken(state, expectedToken, number);
 }
 
 function arrayValueDataGen() returns map<[string, TOMLToken, int, string]> {

@@ -39,8 +39,8 @@
 		"body": [
 			"@test:Config {}",
 			"function test$1() returns error? {",
-			"\tLexer lexer = setLexerString(\"$2\");",
-			"\tcheck assertToken(lexer, $3);",
+			"\tLexer lexer = LexerState state = setLexerString(\"$2\");",
+			"\tcheck assertToken(state,lexer, $3);",
 			"}"
 		],
 		"description": "Write a ballerina test case"

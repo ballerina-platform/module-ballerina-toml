@@ -33,8 +33,8 @@ function keyValue(map<json> structure) returns map<json>|ParsingError|lexer:Lexi
             check checkToken([
                 lexer:BASIC_STRING,
                 lexer:LITERAL_STRING,
-                lexer:MULTI_BSTRING_DELIMITER,
-                lexer:MULTI_LSTRING_DELIMITER,
+                lexer:MULTILINE_BASIC_STRING_DELIMITER,
+                lexer:MULTILINE_LITERAL_STRING_DELIMITER,
                 lexer:DECIMAL,
                 lexer:BINARY,
                 lexer:OCTAL,
@@ -66,11 +66,11 @@ function keyValue(map<json> structure) returns map<json>|ParsingError|lexer:Lexi
 function dataValue() returns json|lexer:LexicalError|ParsingError {
     json returnData;
     match currentToken.token {
-        lexer:MULTI_BSTRING_DELIMITER => {
+        lexer:MULTILINE_BASIC_STRING_DELIMITER => {
             check multiBasicString();
             returnData = lexemeBuffer;
         }
-        lexer:MULTI_LSTRING_DELIMITER => {
+        lexer:MULTILINE_LITERAL_STRING_DELIMITER => {
             check multiLiteralString();
             returnData = lexemeBuffer;
         }
@@ -125,25 +125,25 @@ function dataValue() returns json|lexer:LexicalError|ParsingError {
 #
 # + return - An error if the grammar rule is not made  
 function multiBasicString() returns lexer:LexicalError|ParsingError|() {
-    lexer:state = lexer:MULTILINE_BSTRING;
+    lexer:state = lexer:MULTILINE_BASIC_STRING;
     lexemeBuffer = "";
 
     // Predict the next tokens
     check checkToken([
-        lexer:MULTI_BSTRING_CHARS,
-        lexer:MULTI_BSTRING_ESCAPE,
-        lexer:MULTI_BSTRING_DELIMITER,
+        lexer:MULTILINE_BASIC_STRING_LINE,
+        lexer:MULTILINE_BASIC_STRING_ESCAPE,
+        lexer:MULTILINE_BASIC_STRING_DELIMITER,
         lexer:EOL
     ]);
 
     // Predicting the next tokens until the end of the string.
-    while (currentToken.token != lexer:MULTI_BSTRING_DELIMITER) {
+    while (currentToken.token != lexer:MULTILINE_BASIC_STRING_DELIMITER) {
         match currentToken.token {
-            lexer:MULTI_BSTRING_CHARS => { // Regular basic string
+            lexer:MULTILINE_BASIC_STRING_LINE => { // Regular basic string
                 lexemeBuffer += currentToken.value
 ;
             }
-            lexer:MULTI_BSTRING_ESCAPE => { // Escape token
+            lexer:MULTILINE_BASIC_STRING_ESCAPE => { // Escape token
                 lexer:state = lexer:MULTILINE_ESCAPE;
             }
             lexer:EOL => { // Processing new lines
@@ -156,9 +156,9 @@ function multiBasicString() returns lexer:LexicalError|ParsingError|() {
             }
         }
         check checkToken([
-            lexer:MULTI_BSTRING_CHARS,
-            lexer:MULTI_BSTRING_ESCAPE,
-            lexer:MULTI_BSTRING_DELIMITER,
+            lexer:MULTILINE_BASIC_STRING_LINE,
+            lexer:MULTILINE_BASIC_STRING_ESCAPE,
+            lexer:MULTILINE_BASIC_STRING_DELIMITER,
             lexer:EOL
         ]);
     }
@@ -170,30 +170,30 @@ function multiBasicString() returns lexer:LexicalError|ParsingError|() {
 #
 # + return - An error if the grammar production is not made.  
 function multiLiteralString() returns lexer:LexicalError|ParsingError|() {
-    lexer:state = lexer:MULITLINE_LSTRING;
+    lexer:state = lexer:MULTILINE_LITERAL_STRING;
     lexemeBuffer = "";
 
     // Predict the next tokens
     check checkToken([
-        lexer:MULTI_LSTRING_CHARS,
-        lexer:MULTI_LSTRING_DELIMITER,
+        lexer:MULTILINE_LITERAL_STRING_LINE,
+        lexer:MULTILINE_LITERAL_STRING_DELIMITER,
         lexer:EOL
     ]);
 
     // Predicting the next tokens until the end of the string.
-    while (currentToken.token != lexer:MULTI_LSTRING_DELIMITER) {
+    while (currentToken.token != lexer:MULTILINE_LITERAL_STRING_DELIMITER) {
         match currentToken.token {
-            lexer:MULTI_LSTRING_CHARS => { // Regular literal string
+            lexer:MULTILINE_LITERAL_STRING_LINE => { // Regular literal string
                 lexemeBuffer += currentToken.value;
             }
             lexer:EOL => { // Processing new lines
-                check initLexer(check formatErrorMessage(1, lexer:MULTI_LSTRING_DELIMITER, lexer:MULTI_BSTRING_DELIMITER));
+                check initLexer(check formatErrorMessage(1, lexer:MULTILINE_LITERAL_STRING_DELIMITER, lexer:MULTILINE_BASIC_STRING_DELIMITER));
                 lexemeBuffer += "\\n";
             }
         }
         check checkToken([
-            lexer:MULTI_LSTRING_CHARS,
-            lexer:MULTI_LSTRING_DELIMITER,
+            lexer:MULTILINE_LITERAL_STRING_LINE,
+            lexer:MULTILINE_LITERAL_STRING_DELIMITER,
             lexer:EOL
         ]);
     }
@@ -382,8 +382,8 @@ function array(json[] tempArray = []) returns json[]|lexer:LexicalError|ParsingE
     check checkToken([
         lexer:BASIC_STRING,
         lexer:LITERAL_STRING,
-        lexer:MULTI_BSTRING_DELIMITER,
-        lexer:MULTI_LSTRING_DELIMITER,
+        lexer:MULTILINE_BASIC_STRING_DELIMITER,
+        lexer:MULTILINE_LITERAL_STRING_DELIMITER,
         lexer:DECIMAL,
         lexer:HEXADECIMAL,
         lexer:OCTAL,

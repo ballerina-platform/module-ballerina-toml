@@ -4,21 +4,22 @@ public type LexicalError distinct error;
 
 # Generate the template error message "Invalid character '${char}' for a '${token}'"
 #
+# + character - The character which the error occurred  
 # + tokenName - Expected token name
 # + return - Generated error message
-function formatErrorMessage(TOMLToken tokenName) returns string {
-    return "Invalid character '" + <string>peek() + "' for a '" + tokenName + "'";
-}
+function formatErrorMessage(string character, TOMLToken tokenName) returns string =>
+    string `Invalid character '${character} for a '${tokenName}'`;
 
 # Generates a Lexical Error.
 #
-# + message - Error message  
+# + state - Current lexer state  
+# + message - Error message
 # + return - Constructed Lexical Error message
-function generateError(string message) returns LexicalError {
+function generateError(LexerState state, string message) returns LexicalError {
     string text = "Lexical Error at line "
-                        + (lineNumber + 1).toString()
+                        + (state.lineNumber + 1).toString()
                         + " index "
-                        + index.toString()
+                        + state.index.toString()
                         + ": "
                         + message
                         + ".";

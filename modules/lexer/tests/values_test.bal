@@ -3,22 +3,22 @@ import ballerina/test;
 // String tokens
 @test:Config {}
 function testBasicString() returns error? {
-    setLexerString("someKey = \"someValue\"");
-    check assertToken(BASIC_STRING, 3, "someValue");
+    LexerState state = setLexerString("someKey = \"someValue\"");
+    check assertToken(state,BASIC_STRING, 3, "someValue");
 }
 
 @test:Config {}
 function testLiteralString() returns error? {
-    setLexerString("somekey = 'somevalue'");
-    check assertToken(LITERAL_STRING, 3, "somevalue");
+    LexerState state = setLexerString("somekey = 'somevalue'");
+    check assertToken(state,LITERAL_STRING, 3, "somevalue");
 }
 
 @test:Config {
     dataProvider: simpleDataValueDataGen
 }
 function testSimpleDataValueToken(string testingLine, TOMLToken expectedToken, string expectedLexeme) returns error? {
-    setLexerString(testingLine, EXPRESSION_VALUE);
-    check assertToken(expectedToken, lexeme = expectedLexeme);
+    LexerState state = setLexerString(testingLine, EXPRESSION_VALUE);
+    check assertToken(state,expectedToken, lexeme = expectedLexeme);
 }
 
 function simpleDataValueDataGen() returns map<[string, TOMLToken, string]> {
@@ -46,14 +46,14 @@ function simpleDataValueDataGen() returns map<[string, TOMLToken, string]> {
 
     @test:Config {}
 function testExponentialTokenWithDECIMAL() returns error? {
-    setLexerString("123e2", EXPRESSION_VALUE);
-    check assertToken(EXPONENTIAL, 2);
+    LexerState state = setLexerString("123e2", EXPRESSION_VALUE);
+    check assertToken(state,EXPONENTIAL, 2);
 }
 
 @test:Config {}
 function testDecimalToken() returns error? {
-    setLexerString("123.123", EXPRESSION_VALUE);
-    check assertToken(DOT, 2);
+    LexerState state = setLexerString("123.123", EXPRESSION_VALUE);
+    check assertToken(state,DOT, 2);
 }
 
 @test:Config {}
@@ -65,8 +65,8 @@ function testUnclosedString() {
     dataProvider: excapedCharacterDataGen
 }
 function testEscapedCharacterToken(string lexeme, string value) returns error? {
-    setLexerString("\"\\"+ lexeme + "\"");
-    check assertToken(BASIC_STRING, lexeme = value);
+    LexerState state = setLexerString("\"\\"+ lexeme + "\"");
+    check assertToken(state,BASIC_STRING, lexeme = value);
 }
 
 function excapedCharacterDataGen() returns map<[string, string]> {
