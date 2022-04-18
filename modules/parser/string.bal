@@ -2,6 +2,7 @@ import toml.lexer;
 
 # Process multi-line basic string.
 #
+# + state - Current parser state
 # + return - An error if the grammar rule is not made  
 function multiBasicString(ParserState state) returns lexer:LexicalError|ParsingError|string {
     state.updateLexerContext(lexer:MULTILINE_BASIC_STRING);
@@ -48,6 +49,7 @@ function multiBasicString(ParserState state) returns lexer:LexicalError|ParsingE
 
 # Process multi-line literal string.
 #
+# + state - Current parser state
 # + return - An error if the grammar production is not made.  
 function multiLiteralString(ParserState state) returns lexer:LexicalError|ParsingError|string {
     state.updateLexerContext(lexer:MULTILINE_LITERAL_STRING);

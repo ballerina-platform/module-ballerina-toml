@@ -4,6 +4,7 @@ import toml.lexer;
 # If no token is provided, then the next token is retrieved without an error checking.
 # Hence, the error checking must be done explicitly.
 #
+# + state - Current parser state
 # + expectedTokens - Predicted token or tokens
 # + customMessage - Error message to be displayed if the expected token not found  
 # + return - Parsing error if not found
@@ -37,6 +38,7 @@ function checkToken(ParserState state, lexer:TOMLToken|lexer:TOMLToken[] expecte
 
 # Adds the current structure to the final TOML object.
 #
+# + state - Current parser state
 # + structure - Structure to which the changes are made.
 # + return - Constructed final toml object on success. Else, a parsing error.
 function buildTOMLObject(ParserState state, map<json> structure) returns map<json>|ParsingError {
@@ -93,6 +95,7 @@ function buildTOMLObject(ParserState state, map<json> structure) returns map<jso
 
 # Evaluates an integer of a different base
 #
+# + state - Current parser state
 # + numberSystem - Number system of the value
 # + return - Processed integer. Error if there is a string.
 function processInteger(ParserState state, int numberSystem) returns int|ParsingError {
@@ -108,6 +111,7 @@ function processInteger(ParserState state, int numberSystem) returns int|Parsing
 
 # Check errors during type casting to Ballerina types.
 #
+# + state - Current parser state
 # + value - Value to be type casted.
 # + return - Value as a Ballerina data type  
 function processTypeCastingError(ParserState state, json|error value) returns json|ParsingError {

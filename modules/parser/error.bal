@@ -5,8 +5,9 @@ type ParsingError distinct error;
 
 # Generates a Parsing Error Error.
 #
+# + state - Current parser state 
 # + message - Error message
-# + return - Constructed Parsing Error message  
+# + return - Constructed Parsing Error message
 function generateError(ParserState state, string message) returns ParsingError {
     string text = "Parsing Error at line "
                         + state.lexerState.lineNumber.toString()
@@ -64,5 +65,4 @@ function formatErrorMessage(
             return error("Invalid message type number. Enter a value between 1-2");
         }
     }
-
 }
