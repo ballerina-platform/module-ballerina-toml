@@ -16,15 +16,15 @@ function number(ParserState state, string prevValue, boolean fractional = false)
             if (lexemeBuffer.length() > 1 && lexemeBuffer[0] == "0") {
                 return generateError(state, "Cannot have leading 0's in integers or floats");
             }
-            return fractional ? check processTypeCastingError(state,'float:fromString(lexemeBuffer))
-                                        : check processTypeCastingError(state,'int:fromString(lexemeBuffer));
+            return fractional ? check processTypeCastingError(state, 'float:fromString(lexemeBuffer))
+                                        : check processTypeCastingError(state, 'int:fromString(lexemeBuffer));
         }
         lexer:EXPONENTIAL => { // Handles lexer: numbers
             check checkToken(state, lexer:DECIMAL);
 
             // Evaluating the lexer: value
-            float exponent = <float>(check processTypeCastingError(state,'float:fromString(state.currentToken.value)));
-            float prefix = <float>(check processTypeCastingError(state,'float:fromString(lexemeBuffer)));
+            float exponent = <float>(check processTypeCastingError(state, 'float:fromString(state.currentToken.value)));
+            float prefix = <float>(check processTypeCastingError(state, 'float:fromString(lexemeBuffer)));
             return prefix * 'float:pow(10, exponent);
         }
         lexer:DOT => { // Handles fractional numbers
@@ -41,7 +41,7 @@ function number(ParserState state, string prevValue, boolean fractional = false)
         }
         lexer:COLON => {
             state.updateLexerContext(lexer:DATE_TIME);
-            return check time(state, lexemeBuffer);
+            return check time(state, lexemeBuffer, lexemeBuffer);
         }
         _ => {
             return generateError(state, "Invalid token after an decimal integer");
@@ -87,7 +87,7 @@ function date(ParserState state, string prevValue) returns json|lexer:LexicalErr
             string hours = state.currentToken.value;
             lexemeBuffer += "T" + hours;
             check checkToken(state, lexer:COLON);
-            return time(state, hours, true);
+            return time(state, hours, lexemeBuffer, true);
         }
         _ => {
             return generateError(state, check formatErrorMessage(1, [lexer:EOL, lexer:TIME_DELIMITER], lexer:DECIMAL));
@@ -100,14 +100,14 @@ function date(ParserState state, string prevValue) returns json|lexer:LexicalErr
 # + hours - Hours in the TOML document
 # + datePrefixed - True if there is a date before the time
 # + return - Returns the formatted time on success. Else, an parsing error.
-function time(ParserState state, string hours, boolean datePrefixed = false) returns json|lexer:LexicalError|ParsingError {
+function time(ParserState state, string hours, string prevValue, boolean datePrefixed = false) returns json|lexer:LexicalError|ParsingError {
     // Validate hours
     check checkTime(state, hours, 0, 24, "hours");
 
     // Validate minutes
     check checkToken(state, lexer:DECIMAL, "Expected 2 digit minutes after ':'");
     check checkTime(state, state.currentToken.value, 0, 60, "minutes");
-    string lexemeBuffer = ":" + state.currentToken.value;
+    string lexemeBuffer = prevValue + ":" + state.currentToken.value;
 
     // Validate seconds
     check checkToken(state, lexer:COLON, "Expected a ':' after minutes");
@@ -152,7 +152,7 @@ function timeOffset(ParserState state, string prevValue, boolean datePrefixed) r
 
     match state.currentToken.token {
         lexer:ZULU => {
-            return datePrefixed ? check processTypeCastingError(state,time:utcFromString(lexemeBuffer + "Z"))
+            return datePrefixed ? check processTypeCastingError(state, time:utcFromString(lexemeBuffer + "Z"))
                     : generateError(state, "Cannot crate a UTC time for a local time");
         }
         lexer:PLUS|lexer:MINUS => {
@@ -170,7 +170,7 @@ function timeOffset(ParserState state, string prevValue, boolean datePrefixed) r
                 check checkTime(state, state.currentToken.value, 0, 60, "minutes");
                 lexemeBuffer += ":" + state.currentToken.value;
 
-                return processTypeCastingError(state,time:utcFromString(lexemeBuffer));
+                return processTypeCastingError(state, time:utcFromString(lexemeBuffer));
             }
             return generateError(state, "Cannot crate a UTC time for a local time");
         }
