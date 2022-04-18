@@ -4,11 +4,11 @@
 # + structure - Parent key of the provided one 
 # + key - Key to be verified in the structure  
 # + return - Error, if there already exists a primitive value.
-function verifyKey(map<json>? structure, string key) returns ParsingError? {
+function verifyKey(ParserState state, map<json>? structure, string key) returns ParsingError? {
     if (structure is map<json>) {
         map<json> castedStructure = <map<json>>structure;
         if (castedStructure.hasKey(key) && !(castedStructure[key] is json[] || castedStructure[key] is map<json>)) {
-            return generateError("Duplicate values exists for '" + bufferedKey + "'");
+            return generateError(state, "Duplicate values exists for '" + state.bufferedKey + "'");
         }
     }
 }
@@ -18,9 +18,9 @@ function verifyKey(map<json>? structure, string key) returns ParsingError? {
 #
 # + tableKeyName - Table key name to be checked
 # + return - An error if the key already exists.  
-function verifyTableKey(string tableKeyName) returns ParsingError? {
-    if (definedTableKeys.indexOf(tableKeyName) != ()) {
-        return generateError("Duplicate table key exists for '" + tableKeyName + "'");
+function verifyTableKey(ParserState state, string tableKeyName) returns ParsingError? {
+    if (state.definedTableKeys.indexOf(tableKeyName) != ()) {
+        return generateError(state, "Duplicate table key exists for '" + tableKeyName + "'");
     }
 }
 
@@ -31,14 +31,14 @@ function verifyTableKey(string tableKeyName) returns ParsingError? {
 # + upperBound - Maximum acceptable value
 # + valueName - Name of the time component
 # + return - Returns an error if the requirements are not met.
-function checkTime(string value, int lowerBound, int upperBound, string valueName) returns ParsingError? {
+function checkTime(ParserState state, string value, int lowerBound, int upperBound, string valueName) returns ParsingError? {
     // Expected the time digits to be 2.
     if (value.length() != 2) {
-        return generateError("Expected number of digits in " + valueName + " to be 2");
+        return generateError(state, "Expected number of digits in " + valueName + " to be 2");
     }
-    int intValue = <int>check processTypeCastingError('int:fromString(value));
+    int intValue = <int>check processTypeCastingError(state, 'int:fromString(value));
     if (intValue < lowerBound || intValue > upperBound) {
-        return generateError("Expected " + valueName + " to be between " + lowerBound.toString() + "-" + upperBound.toString());
+        return generateError(state, "Expected " + valueName + " to be between " + lowerBound.toString() + "-" + upperBound.toString());
     }
 }
 
@@ -48,9 +48,9 @@ function checkTime(string value, int lowerBound, int upperBound, string valueNam
 # + numDigits - Required number of digits to the component. 
 # + valueName - Name of the date component.
 # + return - Returns the value in integer. Else, an parsing error.
-function checkDate(string value, int numDigits, string valueName) returns int|ParsingError {
+function checkDate(ParserState state, string value, int numDigits, string valueName) returns int|ParsingError {
     if (value.length() != numDigits) {
-        return generateError("Expected number of digits in " + valueName + " to be " + numDigits.toString());
+        return generateError(state, "Expected number of digits in " + valueName + " to be " + numDigits.toString());
     }
-    return <int>check processTypeCastingError('int:fromString(value));
+    return <int>check processTypeCastingError(state, 'int:fromString(value));
 }

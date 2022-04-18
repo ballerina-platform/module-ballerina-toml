@@ -1,16 +1,16 @@
 public class LexerState {
     # Properties to represent current position 
-    int index = 0;
-    int lineNumber = 0;
+    public int index = 0;
+    public int lineNumber = 0;
 
     # Line to be lexically analyzed
-    string line = "";
+    public string line = "";
 
     # Value of the generated token
     string lexeme = "";
 
     # Current context of the Lexer
-    Context context = EXPRESSION_KEY;
+    public Context context = EXPRESSION_KEY;
 
     # Output TOML token
     TOMLToken token = DUMMY;

@@ -10,7 +10,6 @@ const ORIGIN_FILE_PATH = "modules/parser/tests/resources/";
 # + key - Expected key  
 # + value - Expected value of the key  
 function assertKey(map<json> toml, string key, string value) {
-    resetParams();
     test:assertTrue(toml.hasKey(key));
     test:assertEquals(<string>toml[key], value);
 }
@@ -21,34 +20,12 @@ function assertKey(map<json> toml, string key, string value) {
 # + isFile - If set, reads the TOML file. default = false.  
 # + isLexical - If set, checks for Lexical errors. Else, checks for Parsing errors.
 function assertParsingError(string text, boolean isFile = false, boolean isLexical = false) {
-    resetParams();
     json|error toml = isFile ? readFile(ORIGIN_FILE_PATH + text + ".toml") : read(text);
     if (isLexical) {
         test:assertTrue(toml is lexer:LexicalError);
     } else {
         test:assertTrue(toml is ParsingError);
     }
-}
-
-function resetParams() {
-    lines = [];
-    numLines = 0;
-    lineIndex = -1;
-    currentToken = {token: lexer:DUMMY};
-    lexemeBuffer = "";
-    tomlObject = {};
-    currentStructure = {};
-    keyStack = [];
-    definedTableKeys = [];
-    tokenConsumed = false;
-    bufferedKey = "";
-    isArrayTable = false;
-    currentTableKey = "";
-
-    lexer:line = "";
-    lexer:state = lexer:EXPRESSION_KEY;
-    lexer:index = 0;
-    lexer:lineNumber = 0;
 }
 
 # Assertions to validate the values of the TOML object.  
@@ -62,7 +39,6 @@ class AssertKey {
     # + text - If isFile is set, file path else TOML string  
     # + isFile - If set, reads the TOML file. default = false.    
     function init(string text, boolean isFile = false) returns error? {
-        resetParams();
         self.toml = isFile ? <map<json>>(check readFile(ORIGIN_FILE_PATH + text + ".toml")) : <map<json>>(check read(text));
         self.innerData = ();
         self.stack = [];

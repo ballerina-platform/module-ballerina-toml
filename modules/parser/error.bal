@@ -7,17 +7,18 @@ type ParsingError distinct error;
 #
 # + message - Error message
 # + return - Constructed Parsing Error message  
-function generateError(string message) returns ParsingError {
+function generateError(ParserState state, string message) returns ParsingError {
     string text = "Parsing Error at line "
-                        + lexer:lineNumber.toString()
+                        + state.lexerState.lineNumber.toString()
                         + " index "
-                        + lexer:index.toString()
+                        + state.lexerState.index.toString()
                         + ": "
                         + message
                         + ".";
     return error ParsingError(text);
 }
 
+//TODO: Decouple the error messages
 # Generate a standard error message based on the type.
 #
 # 1 - Expected ${expectedTokens} after ${beforeToken}, but found ${actualToken}
@@ -49,7 +50,7 @@ function formatErrorMessage(
             } else { // If a single token
                 expectedTokensMessage = " '" + expectedTokens + "'";
             }
-            return "Expected" + expectedTokensMessage + " after '" + beforeToken + "', but found '" + currentToken.token + "'";
+            return "Expected" + expectedTokensMessage + " after '" + beforeToken + "', but found '${currentToken}'";
         }
 
         2 => { // Duplicate key exists for ${value}

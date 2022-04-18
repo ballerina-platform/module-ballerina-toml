@@ -4,13 +4,13 @@ import ballerina/test;
 @test:Config {}
 function testBasicString() returns error? {
     LexerState state = setLexerString("someKey = \"someValue\"");
-    check assertToken(state,BASIC_STRING, 3, "someValue");
+    check assertToken(state, BASIC_STRING, 3, "someValue");
 }
 
 @test:Config {}
 function testLiteralString() returns error? {
     LexerState state = setLexerString("somekey = 'somevalue'");
-    check assertToken(state,LITERAL_STRING, 3, "somevalue");
+    check assertToken(state, LITERAL_STRING, 3, "somevalue");
 }
 
 @test:Config {
@@ -18,7 +18,7 @@ function testLiteralString() returns error? {
 }
 function testSimpleDataValueToken(string testingLine, TOMLToken expectedToken, string expectedLexeme) returns error? {
     LexerState state = setLexerString(testingLine, EXPRESSION_VALUE);
-    check assertToken(state,expectedToken, lexeme = expectedLexeme);
+    check assertToken(state, expectedToken, lexeme = expectedLexeme);
 }
 
 function simpleDataValueDataGen() returns map<[string, TOMLToken, string]> {
@@ -44,16 +44,16 @@ function simpleDataValueDataGen() returns map<[string, TOMLToken, string]> {
     };
 }
 
-    @test:Config {}
+@test:Config {}
 function testExponentialTokenWithDECIMAL() returns error? {
     LexerState state = setLexerString("123e2", EXPRESSION_VALUE);
-    check assertToken(state,EXPONENTIAL, 2);
+    check assertToken(state, EXPONENTIAL, 2);
 }
 
 @test:Config {}
 function testDecimalToken() returns error? {
     LexerState state = setLexerString("123.123", EXPRESSION_VALUE);
-    check assertToken(state,DOT, 2);
+    check assertToken(state, DOT, 2);
 }
 
 @test:Config {}
@@ -65,8 +65,8 @@ function testUnclosedString() {
     dataProvider: excapedCharacterDataGen
 }
 function testEscapedCharacterToken(string lexeme, string value) returns error? {
-    LexerState state = setLexerString("\"\\"+ lexeme + "\"");
-    check assertToken(state,BASIC_STRING, lexeme = value);
+    LexerState state = setLexerString("\"\\" + lexeme + "\"");
+    check assertToken(state, BASIC_STRING, lexeme = value);
 }
 
 function excapedCharacterDataGen() returns map<[string, string]> {
