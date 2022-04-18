@@ -44,15 +44,18 @@ function assertLexicalError(string tomlString, int currentIndex = 0) {
 # + currentIndex - Index of the targeted token
 # + return - If success, returns the token. Else a Lexical Error.
 function getToken(LexerState state, int currentIndex) returns Token|error {
-    LexerState token;
+    LexerState updatedState = state;
+    Token token;
 
     if (currentIndex == 0) {
-        token = check scan(state);
+        updatedState = check scan(state);
+        token = updatedState.getToken();
     } else {
         foreach int i in 0 ... currentIndex - 1 {
-            token = check scan(state);
+            updatedState = check scan(updatedState);
+            token = updatedState.getToken();
         }
     }
 
-    return token.getToken();
+    return token;
 }
