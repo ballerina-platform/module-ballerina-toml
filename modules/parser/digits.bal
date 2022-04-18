@@ -196,11 +196,12 @@ function timeOffset(ParserState state, string prevValue, boolean datePrefixed) r
 function checkTime(ParserState state, string value, int lowerBound, int upperBound, string valueName) returns ParsingError? {
     // Expected the time digits to be 2.
     if (value.length() != 2) {
-        return generateError(state, "Expected number of digits in " + valueName + " to be 2");
+        return generateError(state, string `Expected number of digits in '${valueName}' to be 2`);
     }
     int intValue = <int>check processTypeCastingError(state, 'int:fromString(value));
     if (intValue < lowerBound || intValue > upperBound) {
-        return generateError(state, "Expected " + valueName + " to be between " + lowerBound.toString() + "-" + upperBound.toString());
+
+        return generateError(state, string `Expected ${valueName} to be between ${lowerBound.toString()}-${upperBound.toString()}`);
     }
 }
 
@@ -213,7 +214,7 @@ function checkTime(ParserState state, string value, int lowerBound, int upperBou
 # + return - Returns the value in integer. Else, an parsing error.
 function checkDate(ParserState state, string value, int numDigits, string valueName) returns int|ParsingError {
     if (value.length() != numDigits) {
-        return generateError(state, "Expected number of digits in " + valueName + " to be " + numDigits.toString());
+        return generateError(state, string `Expected number of digits in ${valueName} to be ${numDigits.toString()}`);
     }
     return <int>check processTypeCastingError(state, 'int:fromString(value));
 }

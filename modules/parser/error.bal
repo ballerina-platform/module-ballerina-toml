@@ -40,7 +40,8 @@ function formatExpectErrorMessage(lexer:TOMLToken currentToken, lexer:TOMLToken|
 
 # Generate a standard error message of "Duplicate key exists for ${value}"
 #
-# + value - Any value name. Commonly used to indicate keys.
+# + value - Any value name. Commonly used to indicate keys.  
+# + valueType - Possible types - key, table, value
 # + return - Formatted error message
-function formateDuplicateErrorMessage(string value) returns string
-    => string `Duplicate key exists for '${value}'`;
+function formateDuplicateErrorMessage(string value, string valueType = "key") returns string
+    => string `Duplicate ${valueType} exists for '${value}'`;

@@ -129,7 +129,7 @@ function verifyKey(ParserState state, map<json>? structure, string key) returns 
     if (structure is map<json>) {
         map<json> castedStructure = <map<json>>structure;
         if (castedStructure.hasKey(key) && !(castedStructure[key] is json[] || castedStructure[key] is map<json>)) {
-            return generateError(state, "Duplicate values exists for '" + state.bufferedKey + "'");
+            return generateError(state, formateDuplicateErrorMessage(state.bufferedKey, "values"));
         }
     }
 }
@@ -142,7 +142,7 @@ function verifyKey(ParserState state, map<json>? structure, string key) returns 
 # + return - An error if the key already exists.  
 function verifyTableKey(ParserState state, string tableKeyName) returns ParsingError? {
     if (state.definedTableKeys.indexOf(tableKeyName) != ()) {
-        return generateError(state, "Duplicate table key exists for '" + tableKeyName + "'");
+        return generateError(state, formateDuplicateErrorMessage(state.bufferedKey, "table key"));
     }
 }
 

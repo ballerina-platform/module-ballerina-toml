@@ -109,7 +109,7 @@ function unicodeEscapedCharacters(LexerState state, string escapedChar, int leng
 
     // Check if the required digits do not overflow the current line.
     if state.line.length() < length + state.index {
-        return generateError(state, "Expected " + length.toString() + " characters for the '\\" + escapedChar + "' unicode escape");
+        return generateError(state, string `Expected ${length.toString()} characters for the '\\${escapedChar}' unicode escape`);
     }
 
     string unicodeDigits = "";
@@ -228,9 +228,10 @@ function digit(string digitPattern) returns function (LexerState state) returns 
                 if (regex:matches(<string>nextChr, digitPattern)) {
                     return false;
                 }
-                return generateError(state, "Invalid character \"" + <string>state.peek() + "\" after '_'");
+
+                return generateError(state, string `Invalid character '${<string>state.peek()}' after '_'`);
             }
-            return generateError(state, "Invalid character \"" + <string>state.peek() + "\" after '='");
+            return generateError(state, string `Invalid character '${<string>state.peek()}' after '='`);
         }
 
         // Float number allows only a decimal number a prefix.

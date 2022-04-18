@@ -233,5 +233,5 @@ public function scan(LexerState state) returns LexerState|LexicalError {
         return check iterate(state, digit(DECIMAL_DIGIT_PATTERN), DECIMAL);
     }
 
-    return generateError(state, "Invalid character '" + <string>state.peek() + "'");
+    return generateError(state, string `Invalid character '${<string>state.peek()}'`);
 }
