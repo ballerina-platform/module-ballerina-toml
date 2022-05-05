@@ -15,7 +15,7 @@ public type WriteConfig record {|
 #
 # + tomlString - Single line of a TOML string
 # + return - TOML map object is success. Else, returns an error
-public function read(string tomlString) returns map<json>|error {
+public function readString(string tomlString) returns map<json>|error {
     string[] lines = [tomlString];
     return check parser:parse(lines);
 }
@@ -24,7 +24,7 @@ public function read(string tomlString) returns map<json>|error {
 #
 # + filePath - Path to the toml file
 # + return - TOML map object is success. Else, returns an error
-public function readFile(string filePath) returns map<json>|error {
+public function read(string filePath) returns map<json>|error {
     string[] lines = check io:fileReadLines(filePath);
     return check parser:parse(lines);
 }

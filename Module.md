@@ -1,7 +1,5 @@
 # Ballerina TOML Parser
 
-![Build](https://github.com/nipunayf/module-ballerina-toml/actions/workflows/ci.yml/badge.svg)
-
 `Ballerina TOML Parser` converts a TOML configuration file to the Ballerina type of `map<json>`, and vice-versa.     
 
 Initially, import the `nipuanyf/toml` into the Ballerina project.
@@ -28,7 +26,9 @@ Since the parser is following LL(1) grammar, it follows a non-recursive predicti
 ```ballerina
 // Parsing a TOML file
 map<json>|error toml = read("path/to/file.toml");
+```
 
+```ballerina
 // Parsing a TOML string
 map<json>|error toml = readString("outer.inner = 1");
 ```

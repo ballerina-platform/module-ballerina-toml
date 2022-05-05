@@ -20,7 +20,7 @@ function assertKey(map<json> toml, string key, string value) {
 # + isFile - If set, reads the TOML file. default = false.  
 # + isLexical - If set, checks for Lexical errors. Else, checks for Parsing errors.
 function assertParsingError(string text, boolean isFile = false, boolean isLexical = false) {
-    json|error toml = isFile ? readFile(ORIGIN_FILE_PATH + text + ".toml") : read(text);
+    json|error toml = isFile ? read(ORIGIN_FILE_PATH + text + ".toml") : readString(text);
     if (isLexical) {
         test:assertTrue(toml is lexer:LexicalError);
     } else {
@@ -39,7 +39,7 @@ class AssertKey {
     # + text - If isFile is set, file path else TOML string  
     # + isFile - If set, reads the TOML file. default = false.    
     function init(string text, boolean isFile = false) returns error? {
-        self.toml = isFile ? <map<json>>(check readFile(ORIGIN_FILE_PATH + text + ".toml")) : <map<json>>(check read(text));
+        self.toml = isFile ? <map<json>>(check read(ORIGIN_FILE_PATH + text + ".toml")) : <map<json>>(check readString(text));
         self.innerData = ();
         self.stack = [];
     }
@@ -114,7 +114,7 @@ class AssertKey {
 #
 # + tomlString - Single line of a TOML string
 # + return - TOML map object is success. Else, returns an error
-function read(string tomlString) returns map<json>|error {
+function readString(string tomlString) returns map<json>|error {
     string[] lines = [tomlString];
     return check parse(lines);
 }
@@ -123,7 +123,7 @@ function read(string tomlString) returns map<json>|error {
 #
 # + filePath - Path to the toml file
 # + return - TOML map object is success. Else, returns an error
-function readFile(string filePath) returns map<json>|error {
+function read(string filePath) returns map<json>|error {
     string[] lines = check io:fileReadLines(filePath);
     return check parse(lines);
 }
