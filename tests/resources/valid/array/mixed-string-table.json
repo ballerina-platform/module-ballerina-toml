@@ -1,0 +1,8 @@
+{
+    "contributors": [
+        "Foo Bar <foo@example.com>",
+        "Baz Qux",
+        "bazqux@example.com",
+        "https://example.com/bazqux"
+    ]
+}
