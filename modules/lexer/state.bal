@@ -48,7 +48,7 @@ public class LexerState {
     }
 
     # Obtain the lexer token
-    # 
+    #
     # + return - Lexer token
     public function getToken() returns Token {
         TOMLToken tokenBuffer = self.token;

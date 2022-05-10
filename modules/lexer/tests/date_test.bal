@@ -24,6 +24,6 @@ function dateTimeDataGen() returns map<[string, TOMLToken]> {
 @test:Config {}
 function testDateTimeSimilarSyntax() returns error? {
     LexerState state = setLexerString("[1, \"-\"]", EXPRESSION_VALUE);
-    check assertToken(state,DECIMAL, 2);
-    check assertToken(state,BASIC_STRING, 2);
+    check assertToken(state, DECIMAL, 2);
+    check assertToken(state, BASIC_STRING, 2);
 }

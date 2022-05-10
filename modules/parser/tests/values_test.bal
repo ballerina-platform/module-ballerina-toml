@@ -24,6 +24,7 @@ function testProcessDecimalValue() returns error? {
     AssertKey ak = check new AssertKey("somekey = 123");
     ak.hasKey("somekey", 123).close();
 }
+
 @test:Config {}
 function testProcessBooleanValues() returns error? {
     AssertKey ak = check new AssertKey("somekey = true");
@@ -39,7 +40,7 @@ function testProcessFractionalNumbers() returns error? {
 @test:Config {}
 function testPorcessExponentialNumbers() returns error? {
     AssertKey ak = check new AssertKey("float_exponential", true);
-    ak  .hasKey("flt1", 500.0)
+    ak.hasKey("flt1", 500.0)
         .hasKey("flt2", -0.02)
         .hasKey("flt3", 0.0)
         .hasKey("flt4", 0.0)
@@ -47,7 +48,6 @@ function testPorcessExponentialNumbers() returns error? {
         .hasKey("flt6", 0.0)
         .close();
 }
-
 
 @test:Config {
     dataProvider: invalidDecimalPointDataGen

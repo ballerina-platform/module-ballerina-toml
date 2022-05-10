@@ -48,18 +48,21 @@ function testArrayTableRepeated() returns error? {
 @test:Config {}
 function testArrayTableSubtables() returns error? {
     AssertKey ak = check new AssertKey("array_table_sub", true);
-    ak.hasKey("a", [{
-        "key1" : 1,
-        "b" : {"key2": 2},
-        "c" : [
-            {"key3": 3}
-        ]
-    },{
-        "key4" : 4,
-        "c": [
-            {"key5": 5}
-        ]
-    }]).close();
+    ak.hasKey("a", [
+        {
+            "key1": 1,
+            "b": {"key2": 2},
+            "c": [
+                {"key3": 3}
+            ]
+        },
+        {
+            "key4": 4,
+            "c": [
+                {"key5": 5}
+            ]
+        }
+    ]).close();
 }
 
 @test:Config {}

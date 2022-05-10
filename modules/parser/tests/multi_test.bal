@@ -22,6 +22,7 @@ function testMultilineEscapeNewlines() returns error? {
 function testDelimiterInsideMultilineBasicString() {
     assertParsingError("str1 = \"\"\"\"\"\"\"\"\"");
 }
+
 @test:Config {}
 function testDelimiterInsideTheMultilinneLiteralString() {
     assertParsingError("str1 = '''''''''");

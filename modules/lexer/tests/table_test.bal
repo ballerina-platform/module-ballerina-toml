@@ -5,7 +5,7 @@ import ballerina/test;
 }
 function testTableDelimiterToken(string testingLine, TOMLToken expectedToken) returns error? {
     LexerState state = setLexerString(testingLine);
-    check assertToken(state,expectedToken);
+    check assertToken(state, expectedToken);
 }
 
 function tableDelimiterDataGen() returns map<[string, TOMLToken]> {
