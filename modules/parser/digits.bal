@@ -15,7 +15,7 @@ function number(ParserState state, string prevValue, boolean fractional = false)
     match state.currentToken.token {
         lexer:EOL|lexer:SEPARATOR|lexer:CLOSE_BRACKET|lexer:INLINE_TABLE_CLOSE => { // Generate the final number
             state.tokenConsumed = true;
-            if (valueBuffer.length() > 1 && valueBuffer[0] == "0") {
+            if (valueBuffer.length() > 1 && valueBuffer[0] == "0") && !fractional {
                 return generateError(state, "Cannot have leading 0's in integers or floats");
             }
             return fractional ? check processTypeCastingError(state, 'float:fromString(valueBuffer))

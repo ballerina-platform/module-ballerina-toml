@@ -39,7 +39,13 @@ function testProcessFractionalNumbers() returns error? {
 @test:Config {}
 function testPorcessExponentialNumbers() returns error? {
     AssertKey ak = check new AssertKey("float_exponential", true);
-    ak.hasKey("flt1", 500.0).hasKey("flt2", -0.02).close();
+    ak  .hasKey("flt1", 500.0)
+        .hasKey("flt2", -0.02)
+        .hasKey("flt3", 0.0)
+        .hasKey("flt4", 0.0)
+        .hasKey("flt5", 0.0)
+        .hasKey("flt6", 0.0)
+        .close();
 }
 
 

@@ -9,8 +9,9 @@ dependencies-toml-version = "2"
 [[package]]
 org = "ballerina"
 name = "file"
-version = "1.2.0"
+version = "1.2.2"
 dependencies = [
+	{org = "ballerina", name = "io"},
 	{org = "ballerina", name = "jballerina.java"},
 	{org = "ballerina", name = "log"},
 	{org = "ballerina", name = "os"},
@@ -24,7 +25,7 @@ modules = [
 [[package]]
 org = "ballerina"
 name = "io"
-version = "1.2.0"
+version = "1.2.1"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"},
 	{org = "ballerina", name = "lang.value"}
@@ -82,7 +83,7 @@ dependencies = [
 [[package]]
 org = "ballerina"
 name = "log"
-version = "2.2.0"
+version = "2.2.1"
 dependencies = [
 	{org = "ballerina", name = "io"},
 	{org = "ballerina", name = "jballerina.java"},
@@ -93,7 +94,7 @@ dependencies = [
 [[package]]
 org = "ballerina"
 name = "observe"
-version = "1.0.2"
+version = "1.0.4"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"}
 ]
@@ -101,7 +102,7 @@ dependencies = [
 [[package]]
 org = "ballerina"
 name = "os"
-version = "1.2.0"
+version = "1.2.1"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"}
 ]
@@ -109,7 +110,7 @@ dependencies = [
 [[package]]
 org = "ballerina"
 name = "regex"
-version = "1.2.0"
+version = "1.2.1"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"}
 ]
@@ -132,12 +133,24 @@ modules = [
 [[package]]
 org = "ballerina"
 name = "time"
-version = "2.2.0"
+version = "2.2.1"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"}
 ]
 modules = [
 	{org = "ballerina", packageName = "time", moduleName = "time"}
+]
+
+[[package]]
+org = "ballerinai"
+name = "observe"
+version = "0.0.0"
+dependencies = [
+	{org = "ballerina", name = "jballerina.java"},
+	{org = "ballerina", name = "observe"}
+]
+modules = [
+	{org = "ballerinai", packageName = "observe", moduleName = "observe"}
 ]
 
 [[package]]
@@ -152,7 +165,8 @@ dependencies = [
 	{org = "ballerina", name = "lang.int"},
 	{org = "ballerina", name = "regex"},
 	{org = "ballerina", name = "test"},
-	{org = "ballerina", name = "time"}
+	{org = "ballerina", name = "time"},
+	{org = "ballerinai", name = "observe"}
 ]
 modules = [
 	{org = "nipunayf", packageName = "toml", moduleName = "toml"},

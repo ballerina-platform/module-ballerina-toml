@@ -151,7 +151,7 @@ public function scan(LexerState state) returns LexerState|LexicalError {
                 return state.tokenize(DECIMAL);
             }
 
-            if (regex:matches(<string>peekValue, DECIMAL_DIGIT_PATTERN)) {
+            if (regex:matches(<string>peekValue, DECIMAL_DIGIT_PATTERN)) || <string>peekValue == "e" {
                 return check iterate(state, digit(DECIMAL_DIGIT_PATTERN), DECIMAL);
             }
 
