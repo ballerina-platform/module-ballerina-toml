@@ -47,6 +47,7 @@ function array(ParserState state, json[] tempArray = []) returns json[]|lexer:Le
 # + return - Completed array on success. An error if the grammar rules are not met.
 function arrayValue(ParserState state, json[] tempArray = []) returns json[]|lexer:LexicalError|ParsingError {
     lexer:TOMLToken prevToken;
+    state.updateLexerContext(lexer:EXPRESSION_VALUE);
 
     if (state.tokenConsumed) {
         prevToken = lexer:DECIMAL;
