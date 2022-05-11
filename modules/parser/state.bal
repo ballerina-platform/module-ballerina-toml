@@ -63,4 +63,10 @@ class ParserState {
         self.lexerState.index = 0;
         self.lexerState.lineNumber = self.lineIndex;
     }
+
+    function addTableKey(string tableKey) {
+        if tableKey.length() != 0 {
+            self.definedTableKeys.push(tableKey);
+        }
+    }
 }

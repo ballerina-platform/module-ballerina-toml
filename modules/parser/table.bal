@@ -66,7 +66,7 @@ function standardTable(ParserState state, map<json> structure, string keyName = 
             // Check if the table key is already defined.
             string tableKeyName = keyName + tomlKey;
             check verifyTableKey(state, keyName + tomlKeyRepresent);
-            state.definedTableKeys.push(tableKeyName);
+            state.addTableKey(tableKeyName);
             state.currentTableKey = tableKeyName;
 
             // Cannot define a standard table for an already defined array table.
