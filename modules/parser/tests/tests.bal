@@ -25,7 +25,7 @@ function read(string filePath) returns map<json>|error {
 @test:Config {
     dataProvider: validTOMLDataGen
 }
-function testValidTOML(string line, boolean isFile, json expectedOutput) returns error? {
+function testValidTOMLParse(string line, boolean isFile, json expectedOutput) returns error? {
     map<json> output = isFile
         ? <map<json>>(check read(ORIGIN_FILE_PATH + line + ".toml"))
         : <map<json>>(check readString(line));
@@ -35,7 +35,7 @@ function testValidTOML(string line, boolean isFile, json expectedOutput) returns
 @test:Config {
     dataProvider: validODTDataGen
 }
-function testValidODT(string line, string timeString) returns error? {
+function testValidODTParse(string line, string timeString) returns error? {
     time:Utc expectedTime = check time:utcFromString(timeString);
     map<json> output = check readString(line);
     test:assertEquals(output, {odt: expectedTime});
@@ -44,7 +44,7 @@ function testValidODT(string line, string timeString) returns error? {
 @test:Config {
     dataProvider: invalidTOMLDataGen
 }
-function testInvalidTOML(string line, boolean isFile) returns error? {
+function testInvalidTOMLParse(string line, boolean isFile) returns error? {
     map<json>|error toml = isFile ? read(ORIGIN_FILE_PATH + line + ".toml") : readString(line);
     test:assertTrue(toml is ParsingError);
 }

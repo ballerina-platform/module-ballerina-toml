@@ -18,16 +18,18 @@ function number(ParserState state, string prevValue, boolean fractional = false)
             if (valueBuffer.length() > 1 && valueBuffer[0] == "0") && !fractional {
                 return generateError(state, "Cannot have leading 0's in integers or floats");
             }
-            return fractional ? check processTypeCastingError(state, 'float:fromString(valueBuffer))
+            return fractional ? check processTypeCastingError(state, 'decimal:fromString(valueBuffer))
                                         : check processTypeCastingError(state, 'int:fromString(valueBuffer));
         }
-        lexer:EXPONENTIAL => { // Handles lexer: numbers
+        lexer:EXPONENTIAL => { // Handles exponential numbers
             check checkToken(state, lexer:DECIMAL);
-
-            // Evaluating the lexer: value
-            float exponent = <float>(check processTypeCastingError(state, 'float:fromString(state.currentToken.value)));
-            float prefix = <float>(check processTypeCastingError(state, 'float:fromString(valueBuffer)));
-            return prefix * 'float:pow(10, exponent);
+            return <decimal>(check processTypeCastingError(state, 
+                'decimal:fromString(string `${valueBuffer}E${state.currentToken.value}`)));
+            // Evaluating the exponential part
+            // float exponent = <float>(check processTypeCastingError(state, 'float:fromString(state.currentToken.value)));
+            // float prefix = <float>(check processTypeCastingError(state, 'float:fromString(valueBuffer)));
+            // float finalValue = prefix * 'float:pow(10, exponent);
+            // return <decimal>finalValue;
         }
         lexer:DOT => { // Handles fractional numbers
             if (fractional) {
