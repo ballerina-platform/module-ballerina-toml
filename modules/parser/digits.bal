@@ -14,7 +14,10 @@ function number(ParserState state, string prevValue, boolean fractional = false)
 
     match state.currentToken.token {
         lexer:EOL|lexer:SEPARATOR|lexer:CLOSE_BRACKET|lexer:INLINE_TABLE_CLOSE => { // Generate the final number
-            state.tokenConsumed = true;
+            if state.currentToken.token != lexer:EOL {
+                state.tokenConsumed = true;
+            }
+
             if (valueBuffer.length() > 1 && valueBuffer[0] == "0") && !fractional {
                 return generateError(state, "Cannot have leading 0's in integers or floats");
             }
@@ -87,8 +90,14 @@ function date(ParserState state, string prevValue) returns json|lexer:LexicalErr
             return valueBuffer;
         }
         lexer:TIME_DELIMITER => { // Adding a time component to the date
+            check checkToken(state, [lexer:DECIMAL, lexer:EOL]);
+
+            // Check if the whitespace is at trailing
+            if state.currentToken.token == lexer:EOL {
+                return valueBuffer;
+            }
+
             // Obtain the hours
-            check checkToken(state, lexer:DECIMAL);
             string hours = state.currentToken.value;
             valueBuffer += "T" + hours;
             check checkToken(state, lexer:COLON);
@@ -223,7 +232,7 @@ function checkDate(ParserState state, string value, int numDigits, string valueN
 
 function getODT(ParserState state, string inputTime) returns json|ParsingError {
     if state.parseOffsetDateTime {
-        return check processTypeCastingError(state, time:utcFromString(inputTime));   
+        return check processTypeCastingError(state, time:utcFromString(inputTime));
     }
     return inputTime;
 }

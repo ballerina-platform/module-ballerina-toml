@@ -96,6 +96,7 @@ public function scan(LexerState state) returns LexerState|LexicalError {
             return check scan(state);
         }
         "#" => { // Comments
+            state.forward(-1);
             return state.tokenize(EOL);
         }
         "=" => { // Key value separator

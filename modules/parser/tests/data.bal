@@ -28,6 +28,7 @@ function validTOMLDataGen() returns map<[string, boolean, json]> {
         "t as time delimiter": ["somekey = 1979-05-27t07:32:00", false, {somekey: "1979-05-27T07:32:00"}],
         "T as time delimiter": ["somekey = 1979-05-27T07:32:00", false, {somekey: "1979-05-27T07:32:00"}],
         "local date": ["somekey = 1922-12-12", false, {somekey: "1922-12-12"}],
+        "local date space at end": ["ld = 1979-05-27 # Comment", false, {ld: "1979-05-27"}],
         "local time": ["somekey = 07:32:00", false, {somekey: "07:32:00"}],
         "local time with fraction": ["somekey = 07:32:00.99", false, {somekey: "07:32:00.99"}],
         "multiple keys": ["simple_key", true, {"first-key": "first-value", "second-key": "second-value"}],
@@ -49,6 +50,7 @@ function validTOMLDataGen() returns map<[string, boolean, json]> {
                 }
             }
         ],
+        "nested array": ["arr = [['first', 'second'], [1,2]]", false, {arr: [["first", "second"], [1,2]]}],
         "array ending with separator": ["arr = [1,2,]", false, {arr: [1, 2]}],
         "empty array": ["arr = []", false, {arr: []}],
         "array with different values": ["arr = [1, 's', true, [1, 2], 1.0]", false, {arr: [1, "s", true, [1, 2], <decimal>1.0]}],
