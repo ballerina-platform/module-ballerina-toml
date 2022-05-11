@@ -32,7 +32,7 @@ equivalent_three = """\
 whitespace-after-bs = """\
        The quick brown \
        fox jumps over \   
-       the lazy dog.\	
+       the lazy dog.\ 
        """
 
 no-space = """a\

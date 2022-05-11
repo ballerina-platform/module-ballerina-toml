@@ -6,14 +6,14 @@ import ballerina/regex;
 # + return - True if the end of the string, An error message for an invalid character.
 function basicString(LexerState state) returns LexicalError|boolean {
     if regex:matches(<string>state.peek(), BASIC_STRING_PATTERN) {
-        // Process escaped characters
-        if (state.peek() == "\\") {
-            state.forward();
-            check escapedCharacter(state);
-            return false;
-        }
-
         state.appendToLexeme(<string>state.peek());
+        return false;
+    }
+
+    // Process escaped characters
+    if (state.peek() == "\\") {
+        state.forward();
+        check escapedCharacter(state);
         return false;
     }
 
@@ -30,6 +30,17 @@ function basicString(LexerState state) returns LexicalError|boolean {
 # + return - True if the end of the string, An error message for an invalid character.
 function multilineBasicString(LexerState state) returns boolean|LexicalError {
     if (!regex:matches(<string>state.peek(), BASIC_STRING_PATTERN)) {
+        // Process the escape symbol
+        if (checkCharacter(state, "\\")) {
+            if state.peek(1) == () || state.peek(1) == " " || state.peek(1) == "\t" {
+                state.forward(-1);
+                return true;
+            }
+            state.forward();
+            check escapedCharacter(state);
+            return false;
+        }
+
         if (checkCharacter(state, "\"")) {
             if (state.peek(1) == "\"" && state.peek(2) == "\"") {
 
@@ -46,17 +57,6 @@ function multilineBasicString(LexerState state) returns boolean|LexicalError {
         } else {
             return generateError(state, formatErrorMessage(<string>state.peek(), MULTILINE_BASIC_STRING_LINE));
         }
-    }
-
-    // Process the escape symbol
-    if (checkCharacter(state, "\\")) {
-        if state.peek(1) == () || state.peek(1) == " " {
-            state.forward(-1);
-            return true;
-        }
-        state.forward();
-        check escapedCharacter(state);
-        return false;
     }
 
     // Ignore whitespace if the multiline escape symbol is detected
