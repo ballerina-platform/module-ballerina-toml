@@ -50,8 +50,13 @@ function multilineBasicString(LexerState state) returns boolean|LexicalError {
 
     // Process the escape symbol
     if (checkCharacter(state, "\\")) {
-        state.forward(-1);
-        return true;
+        if state.peek(1) == () || state.peek(1) == " " {
+            state.forward(-1);
+            return true;
+        }
+        state.forward();
+        check escapedCharacter(state);
+        return false;
     }
 
     // Ignore whitespace if the multiline escape symbol is detected

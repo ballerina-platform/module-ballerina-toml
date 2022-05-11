@@ -9,7 +9,6 @@ function validTomlDataGen() returns map<[string, json]>|error {
     foreach file:MetaData item in data {
         file:MetaData[] testFiles = check file:readDir(item.absPath);
         foreach file:MetaData testFile in testFiles {
-
             string relativePath = check getRelativePath(testFile.absPath);
             string replacedDir = regex:replaceFirst(relativePath, "in", "out");
             string replacedExtension = replacedDir.substring(0, replacedDir.length() - 4) + "json";
