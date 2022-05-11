@@ -49,7 +49,7 @@ public function scan(LexerState state) returns LexerState|LexicalError {
     // Generate tokens related to multi line basic strings
     if (state.context == MULTILINE_BASIC_STRING || state.context == MULTILINE_ESCAPE) {
         // Process the escape symbol
-        if (state.peek() == "\\") {
+        if (state.peek() == "\\" && (state.peek(1) == () || state.peek(1) == " ")) {
             return state.tokenize(MULTILINE_BASIC_STRING_ESCAPE);
         }
 
