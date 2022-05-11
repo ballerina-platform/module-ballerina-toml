@@ -32,7 +32,7 @@ function multiBasicString(ParserState state) returns lexer:LexicalError|ParsingE
                 // Ignore new lines after the escape symbol
                 if !(state.lexerState.context == lexer:MULTILINE_ESCAPE
                     || (isFirstLine && lexemeBuffer.length() == 0)) {
-                    lexemeBuffer += "\\n";
+                    lexemeBuffer += "\n";
                 }
                 isFirstLine = false;
             }
@@ -75,7 +75,7 @@ function multiLiteralString(ParserState state) returns lexer:LexicalError|Parsin
                 check state.initLexer(formatExpectErrorMessage(state.currentToken.token, lexer:MULTILINE_LITERAL_STRING_DELIMITER, lexer:MULTILINE_BASIC_STRING_DELIMITER));
 
                 if !(isFirstLine && lexemeBuffer.length() == 0) {
-                    lexemeBuffer += "\\n";
+                    lexemeBuffer += "\n";
                 }
                 isFirstLine = false;
             }

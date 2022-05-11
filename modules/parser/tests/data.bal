@@ -59,7 +59,7 @@ function validTOMLDataGen() returns map<[string, boolean, json]> {
         "basic multiline literal string": ["str = '''somevalue'''", false, {"str": "somevalue"}],
         "ignore first line of multiline": ["multi_ignore_first", true, {"str": "ignore first line"}],
         "apostrophe in multiline literal string": ["str = '''single'double'''''", false, {"str": "single'double''"}],
-        "new lines in multiline literal string": ["multi_literal", true, {"str1": "single' \\ndouble''\\n"}],
+        "new lines in multiline literal string": ["multi_literal", true, {"str1": "single' \ndouble''\n"}],
         "escape whitespace in basic multiline string": [
             "str1 = \"\"\"escape\\  whitespace\"\"\"",
             false,
@@ -68,7 +68,7 @@ function validTOMLDataGen() returns map<[string, boolean, json]> {
         "valid quotes in basic multiline string": [
             "multi_quotes",
             true,
-            {"str1": "single-quote\" \\ndouble-quotes\"\" \\nsingle-apastrophe' \\ndouble-appastrophe'' \\n"}
+            {"str1": "single-quote\" \ndouble-quotes\"\" \nsingle-apastrophe' \ndouble-appastrophe'' \n"}
         ],
         "array table for same object": [
             "array_table_same_object",
