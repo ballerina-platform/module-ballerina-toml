@@ -1,9 +1,9 @@
 {
-    "zero": 0,
-    "signed-pos": 0,
-    "signed-neg": 0,
-    "exponent": 0,
-    "exponent-two-0": 0,
-    "exponent-signed-pos": 0,
-    "exponent-signed-neg": 0
+    "zero": 0.0,
+    "signed-pos": 0.0,
+    "signed-neg": 0.0,
+    "exponent": 0.0,
+    "exponent-two-0": 0.0,
+    "exponent-signed-pos": 0.0,
+    "exponent-signed-neg": 0.0
  }

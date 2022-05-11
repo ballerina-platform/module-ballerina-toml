@@ -29,7 +29,7 @@ function invalidTomlDataGen() returns map<[string]>|error {
         file:MetaData[] testFiles = check file:readDir(item.absPath);
         foreach file:MetaData testFile in testFiles {
             string relativePath = check getRelativePath(testFile.absPath);
-            string testCaseName = relativePath.substring(<int>relativePath.indexOf("in") + 3, relativePath.length() - 5);
+            string testCaseName = relativePath.substring(<int>relativePath.indexOf("invalid") + 8, relativePath.length() - 5);
             testMetaData[testCaseName] = [relativePath];
         }
     }
