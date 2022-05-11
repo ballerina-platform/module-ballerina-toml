@@ -186,6 +186,21 @@ function validTOMLDataGen() returns map<[string, boolean, json]> {
                 }
             }
         ],
+        "keys with basic string key": [
+            "table_basic_string",
+            true,
+            {"a": {"b": {"c": {"key": 1}}, "b.c": {"key": 2}}}
+        ],
+        "keys with literal string key": [
+            "table_literal_string",
+            true,
+            {"a": {"b": {"c": {"key": 1}}, "b.c": {"key": 2}}}
+        ],
+        "keys with multiple basic strings": [
+            "table_long_basic_string",
+            true,
+            {"a": {"b": {"c": {"d": {"e": {"key": 1}}}}, "b.c": {"d.e": {"key": 2}}}}
+        ],
         "empty inline table": ["key = {}", false, {key: {}}]
     };
 }

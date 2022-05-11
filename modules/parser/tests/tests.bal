@@ -23,6 +23,7 @@ function read(string filePath) returns map<json>|error {
 }
 
 @test:Config {
+    // dataProvider: sandboxDataSet
     dataProvider: validTOMLDataGen
 }
 function testValidTOMLParse(string line, boolean isFile, json expectedOutput) returns error? {
@@ -47,4 +48,24 @@ function testValidODTParse(string line, string timeString) returns error? {
 function testInvalidTOMLParse(string line, boolean isFile) returns error? {
     map<json>|error toml = isFile ? read(ORIGIN_FILE_PATH + line + ".toml") : readString(line);
     test:assertTrue(toml is ParsingError);
+}
+
+function sandboxDataSet() returns map<[string, boolean, json]> {
+    return {
+        "keys with basic string key": [
+            "table_basic_string",
+            true,
+            {"a": {"b": {"c": {"key": 1}}, "b.c": {"key": 2}}}
+        ],
+        "keys with literal string key": [
+            "table_literal_string",
+            true,
+            {"a": {"b": {"c": {"key": 1}}, "b.c": {"key": 2}}}
+        ],
+        "keys with multiple basic strings": [
+            "table_long_basic_string",
+            true,
+            {"a": {"b": {"c": {"d": {"e": {"key": 1}}}}, "b.c": {"d.e": {"key": 2}}}}
+        ]
+    };
 }

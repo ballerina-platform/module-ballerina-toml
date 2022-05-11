@@ -49,6 +49,7 @@ function standardTable(ParserState state, map<json> structure, string keyName = 
 
     // Verifies the current key
     string tomlKey = state.currentToken.value;
+    string tomlKeyRepresent = getTomlKey(state);
     state.keyStack.push(tomlKey);
     check verifyKey(state, structure, tomlKey);
 
@@ -64,7 +65,7 @@ function standardTable(ParserState state, map<json> structure, string keyName = 
 
             // Check if the table key is already defined.
             string tableKeyName = keyName + tomlKey;
-            check verifyTableKey(state, tableKeyName);
+            check verifyTableKey(state, keyName + tomlKeyRepresent);
             state.definedTableKeys.push(tableKeyName);
             state.currentTableKey = tableKeyName;
 
@@ -90,6 +91,7 @@ function arrayTable(ParserState state, map<json> structure, string keyName = "")
 
     // Verifies the current key
     string tomlKey = state.currentToken.value;
+    string tomlKeyRepresent = getTomlKey(state);
     state.keyStack.push(tomlKey);
     check verifyKey(state, structure, tomlKey);
 
@@ -104,7 +106,7 @@ function arrayTable(ParserState state, map<json> structure, string keyName = "")
         lexer:ARRAY_TABLE_CLOSE => { // Initialize the current structure
 
             // Check if there is an static array or a standard table key already defined.
-            check verifyTableKey(state, keyName + tomlKey);
+            check verifyTableKey(state, keyName + tomlKeyRepresent);
 
             // Cannot define an array table for already defined standard table.
             if (structure.hasKey(tomlKey) && !(structure[tomlKey] is json[])) {
@@ -146,3 +148,12 @@ function verifyTableKey(ParserState state, string tableKeyName) returns ParsingE
     }
 }
 
+function getTomlKey(ParserState state) returns string {
+    if state.currentToken.token == lexer:BASIC_STRING {
+        return string `\"${state.currentToken.value}\"`;
+    }
+    if state.currentToken.token == lexer:LITERAL_STRING {
+        return string `'${state.currentToken.value}'`;
+    }
+    return state.currentToken.value;
+}
