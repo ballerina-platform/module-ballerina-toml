@@ -107,6 +107,7 @@ function arrayTable(ParserState state, map<json> structure, string keyName = "")
 
             // Check if there is an static array or a standard table key already defined.
             check verifyTableKey(state, keyName + tomlKeyRepresent);
+            state.addTableKey(keyName + tomlKey);
 
             // Cannot define an array table for already defined standard table.
             if (structure.hasKey(tomlKey) && !(structure[tomlKey] is json[])) {
@@ -143,8 +144,9 @@ function verifyKey(ParserState state, map<json>? structure, string key) returns 
 # + tableKeyName - Table key name to be checked
 # + return - An error if the key already exists.  
 function verifyTableKey(ParserState state, string tableKeyName) returns ParsingError? {
-    if (state.definedTableKeys.indexOf(tableKeyName) != ()) {
-        return generateError(state, formateDuplicateErrorMessage(state.bufferedKey, "table key"));
+    if (state.definedTableKeys.indexOf(tableKeyName) != ()
+        || state.tempTableKeys.indexOf(tableKeyName) != ()) {
+        return generateError(state, formateDuplicateErrorMessage(tableKeyName, "table key"));
     }
 }
 

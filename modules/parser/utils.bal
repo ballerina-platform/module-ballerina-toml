@@ -51,18 +51,20 @@ function buildTOMLObject(ParserState state, map<json> structure) returns map<jso
     if (state.keyStack.length() == 1) {
         string key = state.keyStack.pop();
         if (state.isArrayTable) {
-
+            
             // Adds the current structure to the end of the array.
             if (structure[key] is json[]) {
                 (<json[]>structure[key]).push(state.currentStructure.clone());
-
-                // If the array does not exist, initialize and add it.
-            } else {
-                structure[key] = [state.currentStructure.clone()];
             }
 
-            // If a standard table, assign the structure directly under the key
-        } else {
+            // If the array does not exist, initialize and add it.
+            else {
+                structure[key] = [state.currentStructure.clone()];
+            }
+        }
+
+        // If a standard table, assign the structure directly under the key
+        else {
             structure[key] = state.currentStructure;
         }
         return structure;
@@ -78,14 +80,14 @@ function buildTOMLObject(ParserState state, map<json> structure) returns map<jso
         structure[key] = value;
     }
 
-        // If there is a standard table under an array table, obtain the latest object.
-        else if (structure[key] is json[]) {
+    // If there is a standard table under an array table, obtain the latest object.
+    else if (structure[key] is json[]) {
         value = check buildTOMLObject(state, <map<json>>(<json[]>structure[key]).pop());
         (<json[]>structure[key]).push(value);
     }
 
-        // Creates a new structure if not exists.
-        else {
+    // Creates a new structure if not exists.
+    else {
         value = check buildTOMLObject(state, {});
         structure[key] = value;
     }

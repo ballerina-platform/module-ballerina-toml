@@ -54,6 +54,11 @@ function validTOMLDataGen() returns map<[string, boolean, json]> {
         "array with different values": ["arr = [1, 's', true, [1, 2], 1.0]", false, {arr: [1, "s", true, [1, 2], <decimal>1.0]}],
         "array for multiple lines": ["array_multi", true, {arr: [1, "s", true, [1, 2], <decimal>1.0]}],
         "array of inline tables": ["array_inline_tables", true, {points: [{x: 1, y: 2}, {x: 3, y: 4}]}],
+        "same standard table repeated in different array table": [
+            "array_table_same_standard_table",
+            true,
+            {"a": {"b": [{"c": {"d": 1}}, {"c": {"d": 2}}]}}
+        ],
         "escape new liens in basic multiline string": ["multi_escape", true, {"str1": "escapewhitespace"}],
         "basic multiline basic string": ["str = \"\"\"somevalue\"\"\"", false, {"str": "somevalue"}],
         "basic multiline escape": [string `str = """\u0041"""`, false, {"str": "A"}],
@@ -255,6 +260,7 @@ function invalidTOMLDataGen() returns map<[string, boolean]> {
         "separator before }": ["key = {a=1,}", false],
         "separator before empty }": ["key = {,}", false],
         "duplicate table keys": ["table_duplicate", true],
+        "same standard table repeated in one array table": ["array_table_repeated_standard_table", true],
         "redefining dotted keys": ["table_redefined_dotted", true],
         "redefining inline tables": ["inline_redefine_table", true],
         "redefining super table using inline table": ["inline_redefine_super_table", true],

@@ -33,6 +33,7 @@ public function parse(string[] inputLines, boolean parseOffsetDateTime) returns 
                 // Add the previous structure to the array in the TOML object.
                 state.tomlObject = check buildTOMLObject(state, state.tomlObject.clone());
                 state.isArrayTable = true;
+                state.tempTableKeys = [];
 
                 check checkToken(state, [lexer:UNQUOTED_KEY, lexer:BASIC_STRING, lexer:LITERAL_STRING]);
                 check arrayTable(state, state.tomlObject.clone());
