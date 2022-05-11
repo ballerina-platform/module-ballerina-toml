@@ -7,6 +7,7 @@ import toml.lexer;
 function multiBasicString(ParserState state) returns lexer:LexicalError|ParsingError|string {
     state.updateLexerContext(lexer:MULTILINE_BASIC_STRING);
     string lexemeBuffer = "";
+    boolean isFirstLine = true;
 
     // Predict the next tokens
     check checkToken(state, [
@@ -20,8 +21,7 @@ function multiBasicString(ParserState state) returns lexer:LexicalError|ParsingE
     while (state.currentToken.token != lexer:MULTILINE_BASIC_STRING_DELIMITER) {
         match state.currentToken.token {
             lexer:MULTILINE_BASIC_STRING_LINE => { // Regular basic string
-                lexemeBuffer += state.currentToken.value
-;
+                lexemeBuffer += state.currentToken.value;
             }
             lexer:MULTILINE_BASIC_STRING_ESCAPE => { // Escape token
                 state.updateLexerContext(lexer:MULTILINE_ESCAPE);
@@ -30,9 +30,11 @@ function multiBasicString(ParserState state) returns lexer:LexicalError|ParsingE
                 check state.initLexer("Expected to end the multi-line basic string");
 
                 // Ignore new lines after the escape symbol
-                if !(state.lexerState.context == lexer:MULTILINE_ESCAPE) {
+                if !(state.lexerState.context == lexer:MULTILINE_ESCAPE
+                    || (isFirstLine && lexemeBuffer.length() == 0)) {
                     lexemeBuffer += "\\n";
                 }
+                isFirstLine = false;
             }
         }
         check checkToken(state, [
@@ -54,6 +56,7 @@ function multiBasicString(ParserState state) returns lexer:LexicalError|ParsingE
 function multiLiteralString(ParserState state) returns lexer:LexicalError|ParsingError|string {
     state.updateLexerContext(lexer:MULTILINE_LITERAL_STRING);
     string lexemeBuffer = "";
+    boolean isFirstLine = true;
 
     // Predict the next tokens
     check checkToken(state, [
@@ -70,7 +73,11 @@ function multiLiteralString(ParserState state) returns lexer:LexicalError|Parsin
             }
             lexer:EOL => { // Processing new lines    
                 check state.initLexer(formatExpectErrorMessage(state.currentToken.token, lexer:MULTILINE_LITERAL_STRING_DELIMITER, lexer:MULTILINE_BASIC_STRING_DELIMITER));
-                lexemeBuffer += "\\n";
+
+                if !(isFirstLine && lexemeBuffer.length() == 0) {
+                    lexemeBuffer += "\\n";
+                }
+                isFirstLine = false;
             }
         }
         check checkToken(state, [
