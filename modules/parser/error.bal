@@ -35,7 +35,7 @@ function formatExpectErrorMessage(lexer:TOMLToken currentToken, lexer:TOMLToken|
     } else { // If a single token
         expectedTokensMessage = " '" + expectedTokens + "'";
     }
-    return string `Expected '${expectedTokensMessage}'  after '${beforeToken}', but found '${currentToken}'`;
+    return string `Expected${expectedTokensMessage} after '${beforeToken}', but found '${currentToken}'`;
 }
 
 # Generate a standard error message of "Duplicate key exists for ${value}"

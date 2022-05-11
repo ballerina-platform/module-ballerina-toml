@@ -10,7 +10,7 @@ const ORIGIN_FILE_PATH = "modules/parser/tests/resources/";
 # + return - TOML map object is success. Else, returns an error
 function readString(string tomlString) returns map<json>|error {
     string[] lines = [tomlString];
-    return check parse(lines);
+    return check parse(lines, true);
 }
 
 # Parses a TOML file into a Ballerina map object.
@@ -19,11 +19,10 @@ function readString(string tomlString) returns map<json>|error {
 # + return - TOML map object is success. Else, returns an error
 function read(string filePath) returns map<json>|error {
     string[] lines = check io:fileReadLines(filePath);
-    return check parse(lines);
+    return check parse(lines, true);
 }
 
 @test:Config {
-    // dataProvider: sandboxDataSet
     dataProvider: validTOMLDataGen
 }
 function testValidTOMLParse(string line, boolean isFile, json expectedOutput) returns error? {
@@ -50,22 +49,8 @@ function testInvalidTOMLParse(string line, boolean isFile) returns error? {
     test:assertTrue(toml is ParsingError);
 }
 
-function sandboxDataSet() returns map<[string, boolean, json]> {
-    return {
-        "keys with basic string key": [
-            "table_basic_string",
-            true,
-            {"a": {"b": {"c": {"key": 1}}, "b.c": {"key": 2}}}
-        ],
-        "keys with literal string key": [
-            "table_literal_string",
-            true,
-            {"a": {"b": {"c": {"key": 1}}, "b.c": {"key": 2}}}
-        ],
-        "keys with multiple basic strings": [
-            "table_long_basic_string",
-            true,
-            {"a": {"b": {"c": {"d": {"e": {"key": 1}}}}, "b.c": {"d.e": {"key": 2}}}}
-        ]
-    };
+@test:Config {}
+function testAvoidParsingODT() returns error? {
+    map<json> output = check parse(["odt = 1979-05-27T07:32:00Z"], false);
+    test:assertEquals(output.odt, "1979-05-27T07:32:00Z");
 }

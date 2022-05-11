@@ -3,17 +3,17 @@ import toml.lexer;
 # Generates a map object for the TOML document.
 # Considers the predictions for the 'expression', 'table', and 'array table'.
 #
-# + inputLines - TOML lines to be parsed.
+# + inputLines - TOML lines to be parsed.  
+# + parseOffsetDateTime - Converts ODT to Ballerina time:Utc
 # + return - If success, map object for the TOML document.
 # Else, a lexical or a parsing error.
-public function parse(string[] inputLines) returns map<json>|lexer:LexicalError|ParsingError {
+public function parse(string[] inputLines, boolean parseOffsetDateTime) returns map<json>|lexer:LexicalError|ParsingError {
     // Initialize the state 
-    ParserState state = new (inputLines);
+    ParserState state = new (inputLines, parseOffsetDateTime);
 
     // Iterating each line of the document.
     while state.lineIndex < state.numLines - 1 {
         check state.initLexer("Cannot open the TOML document");
-        state.updateLexerContext(lexer:EXPRESSION_KEY);
         check checkToken(state);
 
         match state.currentToken.token {
@@ -38,6 +38,7 @@ public function parse(string[] inputLines) returns map<json>|lexer:LexicalError|
                 check arrayTable(state, state.tomlObject.clone());
             }
         }
+        state.updateLexerContext(lexer:EXPRESSION_KEY);
 
         // Comments and new lines are ignored.
         // Other expressions cannot have additional tokens in their line.

@@ -23,7 +23,7 @@ function number(ParserState state, string prevValue, boolean fractional = false)
         }
         lexer:EXPONENTIAL => { // Handles exponential numbers
             check checkToken(state, lexer:DECIMAL);
-            return <decimal>(check processTypeCastingError(state, 
+            return <decimal>(check processTypeCastingError(state,
                 'decimal:fromString(string `${valueBuffer}E${state.currentToken.value}`)));
             // Evaluating the exponential part
             // float exponent = <float>(check processTypeCastingError(state, 'float:fromString(state.currentToken.value)));
@@ -162,7 +162,7 @@ function timeOffset(ParserState state, string prevValue, boolean datePrefixed) r
 
     match state.currentToken.token {
         lexer:ZULU => {
-            return datePrefixed ? check processTypeCastingError(state, time:utcFromString(valueBuffer + "Z"))
+            return datePrefixed ? check getODT(state, valueBuffer + "Z")
                     : generateError(state, "Cannot crate a UTC time for a local time");
         }
         lexer:PLUS|lexer:MINUS => {
@@ -180,7 +180,7 @@ function timeOffset(ParserState state, string prevValue, boolean datePrefixed) r
                 check checkTime(state, state.currentToken.value, 0, 60, "minutes");
                 valueBuffer += ":" + state.currentToken.value;
 
-                return processTypeCastingError(state, time:utcFromString(valueBuffer));
+                return getODT(state, valueBuffer);
             }
             return generateError(state, "Cannot crate a UTC time for a local time");
         }
@@ -219,4 +219,11 @@ function checkDate(ParserState state, string value, int numDigits, string valueN
         return generateError(state, string `Expected number of digits in ${valueName} to be ${numDigits.toString()}`);
     }
     return <int>check processTypeCastingError(state, 'int:fromString(value));
+}
+
+function getODT(ParserState state, string inputTime) returns json|ParsingError {
+    if state.parseOffsetDateTime {
+        return check processTypeCastingError(state, time:utcFromString(inputTime));   
+    }
+    return inputTime;
 }

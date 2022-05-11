@@ -33,11 +33,14 @@ class ParserState {
     # The current table key name. If empty, then current table is the root.
     string currentTableKey = "";
 
+    readonly & boolean parseOffsetDateTime;
+
     lexer:LexerState lexerState = new ();
 
-    function init(string[] inputLines) {
+    function init(string[] inputLines, boolean parseOffsetDateTime) {
         self.lines = inputLines;
         self.numLines = inputLines.length();
+        self.parseOffsetDateTime = parseOffsetDateTime;
     }
 
     function updateLexerContext(lexer:Context context) {

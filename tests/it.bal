@@ -4,7 +4,7 @@ import ballerina/test;
     dataProvider: validTomlDataGen
 }
 function testValidTOML(string inputPath, json expectedOutput) returns error? {
-    map<json> output = check read(inputPath);
+    map<json> output = check read(inputPath, {parseOffsetDateTime: false});
     test:assertEquals(output, expectedOutput);
 }
 
