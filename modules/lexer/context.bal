@@ -49,6 +49,12 @@ function contextExpressionKey(LexerState state) returns LexerState|LexicalError 
             }
             return state.tokenize(CLOSE_BRACKET);
         }
+        "}" => { // Close inline table
+            return state.tokenize(INLINE_TABLE_CLOSE);
+        }
+        "," => { // Separator
+            return state.tokenize(SEPARATOR);
+        }
     }
 
     return generateInvalidCharacterError(state, EXPRESSION_KEY);
@@ -105,6 +111,10 @@ function contextMultilineLiteralString(LexerState state) returns LexerState|Lexi
 # + return - Tokenize date time token
 function contextDateTime(LexerState state) returns LexerState|LexicalError {
     match state.peek() {
+        "#" => { // Ignore comments
+            state.forward(-1);
+            return state.tokenize(EOL);
+        }
         ":" => { // Time separator
             return state.tokenize(COLON);
         }
@@ -114,6 +124,9 @@ function contextDateTime(LexerState state) returns LexerState|LexicalError {
         "t"|"T"|" " => { // Time delimiter
             state.appendToLexeme(<string>state.peek());
             return state.tokenize(TIME_DELIMITER);
+        }
+        "." => { // Time fraction
+            return state.tokenize(DOT);
         }
         "+" => { // Positive offset
             return state.tokenize(PLUS);
