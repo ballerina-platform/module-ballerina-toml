@@ -226,32 +226,27 @@ function contextExpressionValue(LexerState state) returns LexerState|LexicalErro
             }
         }
         "+"|"-" => { // Decimal numbers
-            match state.peek(1) {
+            state.appendToLexeme(<string>state.peek());
+            state.forward();
+            match state.peek() {
                 "0" => { // There cannot be leading zero.
-                    state.appendToLexeme(<string>state.peek() + "0");
-                    state.forward();
+                    state.appendToLexeme("0");
                     return state.tokenize(DECIMAL);
                 }
                 () => { // Only '+' and '-' are invalid.
                     return generateLexicalError(state, "There must me DIGITs after '+'");
                 }
                 "n" => { // NAN token
-                    state.appendToLexeme(<string>state.peek());
-                    state.forward();
                     return check tokensInSequence(state, "nan", NAN);
                 }
                 "i" => { // Infinity tokens
-                    state.appendToLexeme(<string>state.peek());
-                    state.forward();
                     return check tokensInSequence(state, "inf", INFINITY);
                 }
                 _ => { // Remaining digits of the decimal numbers
                     if regex:matches(<string>state.peek(), DECIMAL_DIGIT_PATTERN) {
-                        state.appendToLexeme(<string>state.peek());
-                        state.forward();
                         return check iterate(state, scanDigit(DECIMAL_DIGIT_PATTERN), DECIMAL);
                     }
-                    return generateLexicalError(state, 
+                    return generateLexicalError(state,
                         string `Invalid character '${state.peek(1) ?: "<end-of-line>"} after '${<string>state.peek()}'`);
                 }
             }
