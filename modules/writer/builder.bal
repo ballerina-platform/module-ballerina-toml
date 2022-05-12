@@ -87,11 +87,11 @@ function processPrimitiveValue(json value) returns string|error {
         return "nan";
     }
 
-    if (value is int || value is float || value is boolean || value is map<json>) {
+    if value is json && value != () {
         return value.toString();
     }
 
-    return generateError("Unknown data type to process");
+    return generateError(string `Unknown data type '${(typeof value).toString()}:${value.toString()}' to process`);
 }
 
 # Creates an inline array if there is at least one primitive value.
