@@ -12,8 +12,8 @@ function testFullLineComment() returns error? {
     groups: ["lexer"]
 }
 function testEOLComment() returns error? {
-    LexerState state = setLexerString("someKey = \"someValue\" # someComment");
-    check assertToken(state, EOL, 4);
+    LexerState state = setLexerString("\"someValue\" # someComment", EXPRESSION_VALUE);
+    check assertToken(state, EOL, 2);
 }
 
 @test:Config {

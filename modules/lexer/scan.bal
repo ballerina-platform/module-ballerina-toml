@@ -172,18 +172,18 @@ function scanUnicodeEscapedCharacter(LexerState state, string escapedChar, int l
         return generateLexicalError(state, string `Expected ${length.toString()} characters for the '\\${escapedChar}' unicode escape`);
     }
 
-    string unicodescanDigits = "";
+    string unicodeDigits = "";
 
     // Check if the scanDigits adhere to the hexadecimal code pattern.
     foreach int i in 0 ... length - 1 {
         state.forward();
         if regex:matches(<string>state.peek(), HEXADECIMAL_DIGIT_PATTERN) {
-            unicodescanDigits += <string>state.peek();
+            unicodeDigits += <string>state.peek();
             continue;
         }
         return generateInvalidCharacterError(state, HEXADECIMAL);
     }
-    int|error hexResult = 'int:fromHexString(unicodescanDigits);
+    int|error hexResult = 'int:fromHexString(unicodeDigits);
     if hexResult is error {
         return generateLexicalError(state, 'error:message(hexResult));
     }

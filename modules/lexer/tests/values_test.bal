@@ -2,19 +2,19 @@ import ballerina/test;
 
 // String tokens
 @test:Config {
-   groups: ["lexer"]
+    groups: ["lexer"]
 }
-function testscanBasicString() returns error? {
-    LexerState state = setLexerString("someKey = \"someValue\"");
-    check assertToken(state, BASIC_STRING, 3, "someValue");
+function testBasicString() returns error? {
+    LexerState state = setLexerString("\"someValue\"", EXPRESSION_VALUE);
+    check assertToken(state, BASIC_STRING, lexeme = "someValue");
 }
 
 @test:Config {
-   groups: ["lexer"]
+    groups: ["lexer"]
 }
-function testscanLiteralString() returns error? {
-    LexerState state = setLexerString("somekey = 'somevalue'");
-    check assertToken(state, LITERAL_STRING, 3, "somevalue");
+function testLiteralString() returns error? {
+    LexerState state = setLexerString("'somevalue'", EXPRESSION_VALUE);
+    check assertToken(state, LITERAL_STRING, lexeme = "somevalue");
 }
 
 @test:Config {
@@ -50,7 +50,7 @@ function simpleDataValueDataGen() returns map<[string, TOMLToken, string]> {
 }
 
 @test:Config {
-   groups: ["lexer"]
+    groups: ["lexer"]
 }
 function testExponentialTokenWithDECIMAL() returns error? {
     LexerState state = setLexerString("123e2", EXPRESSION_VALUE);
@@ -58,7 +58,7 @@ function testExponentialTokenWithDECIMAL() returns error? {
 }
 
 @test:Config {
-   groups: ["lexer"]
+    groups: ["lexer"]
 }
 function testDecimalToken() returns error? {
     LexerState state = setLexerString("123.123", EXPRESSION_VALUE);
@@ -66,7 +66,7 @@ function testDecimalToken() returns error? {
 }
 
 @test:Config {
-   groups: ["lexer"]
+    groups: ["lexer"]
 }
 function testUnclosedString() {
     assertLexicalError("'hello");
@@ -76,7 +76,7 @@ function testUnclosedString() {
     dataProvider: excapedCharacterDataGen,
     groups: ["lexer"]
 }
-function testscanEscapedCharacterToken(string lexeme, string value) returns error? {
+function testEscapedCharacterToken(string lexeme, string value) returns error? {
     LexerState state = setLexerString("\"\\" + lexeme + "\"");
     check assertToken(state, BASIC_STRING, lexeme = value);
 }

@@ -2,7 +2,7 @@
 # Represent an error caused by the lexical analyzer
 public type LexicalError distinct error<ReadErrorDetails>;
 
-# Represents the error details when reading a YAML document.
+# Represents the error details when reading a TOML document.
 #
 # + line - Line at which the error occurred  
 # + column - Column at which the error occurred  
