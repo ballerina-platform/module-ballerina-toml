@@ -1,4 +1,4 @@
-# Represent an error caused by the lexical analyzer
+# Represents an error caused by the lexical analyzer.
 public type LexicalError distinct error<ReadErrorDetails>;
 
 # Represents the error details when reading a TOML document.

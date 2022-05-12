@@ -1,5 +1,5 @@
-# Represents an error caused by parser
-type WritingError distinct error;
+# Represents an error caused when writing a TOML file.
+public type WritingError distinct error;
 
 # Generates a Writing error
 #

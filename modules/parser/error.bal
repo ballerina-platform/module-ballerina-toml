@@ -1,6 +1,6 @@
 import toml.lexer;
 
-# Represents an error caused by parser
+# Represents an error caused during the parsing.
 public type ParsingError distinct GrammarError|ConversionError|lexer:LexicalError;
 
 # Represents an error caused for an invalid grammar production.
