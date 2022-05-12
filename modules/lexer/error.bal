@@ -7,7 +7,7 @@ public type LexicalError distinct error;
 # + character - The character which the error occurred  
 # + tokenName - Expected token name
 # + return - Generated error message
-function formatErrorMessage(string character, TOMLToken tokenName) returns string =>
+function formatErrorMessage(string character, TOMLToken|Context tokenName) returns string =>
     string `Invalid character '${character} for a '${tokenName}'`;
 
 # Generates a Lexical Error.

@@ -1,7 +1,8 @@
 import ballerina/test;
 
 @test:Config {
-    dataProvider: multilineTextDataGen
+    dataProvider: multilineTextDataGen,
+    groups: ["lexer"]
 }
 function testMutltilineString(string testLine, Context testingState, TOMLToken expectedToken, int number, string expectedLexeme) returns error? {
     LexerState state = setLexerString(testLine, testingState);

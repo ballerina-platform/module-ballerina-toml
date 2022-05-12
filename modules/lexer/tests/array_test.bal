@@ -1,7 +1,8 @@
 import ballerina/test;
 
 @test:Config {
-    dataProvider: arrayValueDataGen
+    dataProvider: arrayValueDataGen,
+    groups: ["lexer"]
 }
 function testArrayValue(string testingLine, TOMLToken expectedToken, int number, string expectedLexeme) returns error? {
     LexerState state = setLexerString(testingLine, EXPRESSION_VALUE);

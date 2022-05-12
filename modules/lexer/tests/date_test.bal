@@ -1,7 +1,8 @@
 import ballerina/test;
 
 @test:Config {
-    dataProvider: dateTimeDataGen
+    dataProvider: dateTimeDataGen,
+    groups: ["lexer"]
 }
 function testDateTimeToken(string testingLine, TOMLToken expectedToken) returns error? {
     LexerState state = setLexerString(testingLine, DATE_TIME);
@@ -21,7 +22,9 @@ function dateTimeDataGen() returns map<[string, TOMLToken]> {
     };
 }
 
-@test:Config {}
+@test:Config {
+    groups: ["lexer"]
+}
 function testDateTimeSimilarSyntax() returns error? {
     LexerState state = setLexerString("[1, \"-\"]", EXPRESSION_VALUE);
     check assertToken(state, DECIMAL, 2);

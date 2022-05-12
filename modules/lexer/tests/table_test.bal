@@ -1,7 +1,8 @@
 import ballerina/test;
 
 @test:Config {
-    dataProvider: tableDelimiterDataGen
+    dataProvider: tableDelimiterDataGen,
+    groups: ["lexer"]
 }
 function testTableDelimiterToken(string testingLine, TOMLToken expectedToken) returns error? {
     LexerState state = setLexerString(testingLine);

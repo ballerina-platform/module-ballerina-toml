@@ -43,7 +43,7 @@ public function scan(LexerState state) returns LexerState|LexicalError {
 
     // Check for bare keys at the start of a line.
     if (state.context == EXPRESSION_KEY && regex:matches(<string>state.peek(), UNQUOTED_STRING_PATTERN)) {
-        return check iterate(state, unquotedKey, UNQUOTED_KEY);
+        return check iterate(state, scanUnquotedKey, UNQUOTED_KEY);
     }
 
     // Generate tokens related to multi line basic strings
@@ -63,7 +63,7 @@ public function scan(LexerState state) returns LexerState|LexicalError {
             || state.peek() == "\\"
             || state.peek() == "'"
             || state.peek() == "\"" {
-            return check iterate(state, multilineBasicString, MULTILINE_BASIC_STRING_LINE);
+            return check iterate(state, scanMultilineBasicString, MULTILINE_BASIC_STRING_LINE);
         }
     }
 
@@ -76,7 +76,7 @@ public function scan(LexerState state) returns LexerState|LexicalError {
         if regex:matches(<string>state.peek(), LITERAL_STRING_PATTERN)
             || state.peek() == "'"
             || state.peek() == "\"" {
-            return iterate(state, multilineLiteralString, MULTILINE_LITERAL_STRING_LINE);
+            return iterate(state, scanMultilineLiteralString, MULTILINE_LITERAL_STRING_LINE);
         }
     }
 
@@ -101,9 +101,9 @@ public function scan(LexerState state) returns LexerState|LexicalError {
             }
         }
 
-        // Digits for date time
+        // DIGITs for date time
         if (regex:matches(<string>state.peek(), DECIMAL_DIGIT_PATTERN)) {
-            return check iterate(state, digit(DECIMAL_DIGIT_PATTERN), DECIMAL);
+            return check iterate(state, scanDigit(DECIMAL_DIGIT_PATTERN), DECIMAL);
         }
     }
 
@@ -145,7 +145,7 @@ public function scan(LexerState state) returns LexerState|LexicalError {
             }
 
             state.forward();
-            return check iterate(state, basicString, BASIC_STRING, "Expected '\"' at the end of the basic string");
+            return check iterate(state, scanBasicString, BASIC_STRING, "Expected '\"' at the end of the basic string");
         }
         "'" => { // Literal strings
 
@@ -156,7 +156,7 @@ public function scan(LexerState state) returns LexerState|LexicalError {
             }
 
             state.forward();
-            return check iterate(state, literalString, LITERAL_STRING, "Expected ''' at the end of the literal string");
+            return check iterate(state, scanLiteralString, LITERAL_STRING, "Expected ''' at the end of the literal string");
         }
         "." => { // Dotted keys
             return state.tokenize(DOT);
@@ -169,21 +169,21 @@ public function scan(LexerState state) returns LexerState|LexicalError {
             }
 
             if (regex:matches(<string>peekValue, DECIMAL_DIGIT_PATTERN)) || <string>peekValue == "e" {
-                return check iterate(state, digit(DECIMAL_DIGIT_PATTERN), DECIMAL);
+                return check iterate(state, scanDigit(DECIMAL_DIGIT_PATTERN), DECIMAL);
             }
 
             match peekValue {
                 "x" => { // Hexadecimal numbers
                     state.forward(2);
-                    return check iterate(state, digit(HEXADECIMAL_DIGIT_PATTERN), HEXADECIMAL);
+                    return check iterate(state, scanDigit(HEXADECIMAL_DIGIT_PATTERN), HEXADECIMAL);
                 }
                 "o" => { // Octal numbers
                     state.forward(2);
-                    return check iterate(state, digit(OCTAL_DIGIT_PATTERN), OCTAL);
+                    return check iterate(state, scanDigit(OCTAL_DIGIT_PATTERN), OCTAL);
                 }
                 "b" => { // Binary numbers
                     state.forward(2);
-                    return check iterate(state, digit(BINARY_DIGIT_PATTERN), BINARY);
+                    return check iterate(state, scanDigit(BINARY_DIGIT_PATTERN), BINARY);
                 }
                 " "|"#"|"."|","|"]" => { // Decimal numbers
                     state.appendToLexeme("0");
@@ -202,7 +202,7 @@ public function scan(LexerState state) returns LexerState|LexicalError {
                     return state.tokenize(DECIMAL);
                 }
                 () => { // Only '+' and '-' are invalid.
-                    return generateError(state, "There must me digits after '+'");
+                    return generateError(state, "There must me DIGITs after '+'");
                 }
                 "n" => { // NAN token
                     state.appendToLexeme(<string>state.peek());
@@ -214,10 +214,10 @@ public function scan(LexerState state) returns LexerState|LexicalError {
                     state.forward();
                     return check tokensInSequence(state, "inf", INFINITY);
                 }
-                _ => { // Remaining digits of the decimal numbers
+                _ => { // Remaining DIGITs of the decimal numbers
                     state.appendToLexeme(<string>state.peek());
                     state.forward();
-                    return check iterate(state, digit(DECIMAL_DIGIT_PATTERN), DECIMAL);
+                    return check iterate(state, scanDigit(DECIMAL_DIGIT_PATTERN), DECIMAL);
                 }
             }
         }
@@ -247,7 +247,7 @@ public function scan(LexerState state) returns LexerState|LexicalError {
 
     // Check for values starting with an integer.
     if ((state.context == EXPRESSION_VALUE) && regex:matches(<string>state.peek(), DECIMAL_DIGIT_PATTERN)) {
-        return check iterate(state, digit(DECIMAL_DIGIT_PATTERN), DECIMAL);
+        return check iterate(state, scanDigit(DECIMAL_DIGIT_PATTERN), DECIMAL);
     }
 
     return generateError(state, string `Invalid character '${<string>state.peek()}'`);
