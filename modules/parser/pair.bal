@@ -77,12 +77,15 @@ function dataValue(ParserState state) returns json|lexer:LexicalError|ParsingErr
             returnData = check number(state, "");
         }
         lexer:HEXADECIMAL => {
+            check checkEmptyInteger(state);
             returnData = check processTypeCastingError(state, 'int:fromHexString(state.currentToken.value));
         }
         lexer:BINARY => {
+            check checkEmptyInteger(state);
             returnData = check processInteger(state, 2);
         }
         lexer:OCTAL => {
+            check checkEmptyInteger(state);
             returnData = check processInteger(state, 8);
         }
         lexer:INFINITY => {
@@ -117,4 +120,14 @@ function dataValue(ParserState state) returns json|lexer:LexicalError|ParsingErr
         }
     }
     return returnData;
+}
+
+# Check if the digits are empty.
+#
+# + state - Current parser state
+# + return - An error on empty digits
+function checkEmptyInteger(ParserState state) returns GrammarError? {
+    if state.currentToken.value.length() == 0 {
+        return generateGrammarError(state, "Digits cannot be empty");
+    }
 }
