@@ -190,7 +190,7 @@ public function scan(LexerState state) returns LexerState|LexicalError {
                     return state.tokenize(DECIMAL);
                 }
                 _ => {
-                    return generateError(state, string `Invalid character '${peekValue}' after '0'`);
+                    return generateLexicalError(state, string `Invalid character '${peekValue}' after '0'`);
                 }
             }
         }
@@ -202,7 +202,7 @@ public function scan(LexerState state) returns LexerState|LexicalError {
                     return state.tokenize(DECIMAL);
                 }
                 () => { // Only '+' and '-' are invalid.
-                    return generateError(state, "There must me DIGITs after '+'");
+                    return generateLexicalError(state, "There must me DIGITs after '+'");
                 }
                 "n" => { // NAN token
                     state.appendToLexeme(<string>state.peek());
@@ -250,5 +250,5 @@ public function scan(LexerState state) returns LexerState|LexicalError {
         return check iterate(state, scanDigit(DECIMAL_DIGIT_PATTERN), DECIMAL);
     }
 
-    return generateError(state, string `Invalid character '${<string>state.peek()}'`);
+    return generateLexicalError(state, string `Invalid character '${<string>state.peek()}'`);
 }

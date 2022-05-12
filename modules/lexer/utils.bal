@@ -20,7 +20,7 @@ function iterate(LexerState state, function (LexerState state) returns boolean|L
     state.index = state.line.length() - 1;
 
     // If the lexer does not expect an end delimiter at EOL, returns the token. Else it an error.
-    return message.length() == 0 ? state.tokenize(successToken) : generateError(state, message);
+    return message.length() == 0 ? state.tokenize(successToken) : generateLexicalError(state, message);
 }
 
 # Check if the tokens adhere to the given string.
@@ -32,7 +32,7 @@ function iterate(LexerState state, function (LexerState state) returns boolean|L
 function tokensInSequence(LexerState state, string chars, TOMLToken successToken) returns LexerState|LexicalError {
     foreach string char in chars {
         if (!checkCharacter(state, char)) {
-            return generateError(state, formatErrorMessage(state.peek() ?: "", successToken));
+            return generateInvalidCharacterError(state, successToken);
         }
         state.forward();
     }

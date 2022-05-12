@@ -12,7 +12,7 @@ function scanLiteralString(LexerState state) returns boolean|LexicalError {
     if (checkCharacter(state, "'")) {
         return true;
     }
-    return generateError(state, formatErrorMessage(<string>state.peek(), LITERAL_STRING));
+    return generateInvalidCharacterError(state, LITERAL_STRING);
 }
 
 # Check for the lexemes to create a basic string for a line in multiline strings.
@@ -41,7 +41,7 @@ function scanMultilineLiteralString(LexerState state) returns boolean|LexicalErr
                 return true;
             }
         } else {
-            return generateError(state, formatErrorMessage(<string>state.peek(), MULTILINE_BASIC_STRING_LINE));
+            return generateInvalidCharacterError(state, MULTILINE_BASIC_STRING_LINE);
         }
     }
 
@@ -70,7 +70,7 @@ function scanBasicString(LexerState state) returns LexicalError|boolean {
         return true;
     }
 
-    return generateError(state, formatErrorMessage(<string>state.peek(), BASIC_STRING));
+    return generateInvalidCharacterError(state, BASIC_STRING);
 }
 
 # Check for the lexemes to create a basic string for a line in multiline strings.
@@ -110,7 +110,7 @@ function scanMultilineBasicString(LexerState state) returns boolean|LexicalError
                 return true;
             }
         } else {
-            return generateError(state, formatErrorMessage(<string>state.peek(), MULTILINE_BASIC_STRING_LINE));
+            return generateInvalidCharacterError(state, MULTILINE_BASIC_STRING_LINE);
         }
     }
 
@@ -134,7 +134,7 @@ function scanEscapedCharacter(LexerState state) returns LexicalError? {
 
     // Check if the character is empty
     if (state.peek() == ()) {
-        return generateError(state, "Escaped character cannot be empty");
+        return generateLexicalError(state, "Escaped character cannot be empty");
     } else {
         currentChar = <string>state.peek();
     }
@@ -156,7 +156,7 @@ function scanEscapedCharacter(LexerState state) returns LexicalError? {
             return;
         }
     }
-    return generateError(state, formatErrorMessage(<string>state.peek(), BASIC_STRING));
+    return generateInvalidCharacterError(state, BASIC_STRING);
 }
 
 # Process the hex codes under the unicode escaped character.
@@ -169,7 +169,7 @@ function scanUnicodeEscapedCharacter(LexerState state, string escapedChar, int l
 
     // Check if the required scanDigits do not overflow the current line.
     if state.line.length() < length + state.index {
-        return generateError(state, string `Expected ${length.toString()} characters for the '\\${escapedChar}' unicode escape`);
+        return generateLexicalError(state, string `Expected ${length.toString()} characters for the '\\${escapedChar}' unicode escape`);
     }
 
     string unicodescanDigits = "";
@@ -181,16 +181,16 @@ function scanUnicodeEscapedCharacter(LexerState state, string escapedChar, int l
             unicodescanDigits += <string>state.peek();
             continue;
         }
-        return generateError(state, formatErrorMessage(<string>state.peek(), HEXADECIMAL));
+        return generateInvalidCharacterError(state, HEXADECIMAL);
     }
     int|error hexResult = 'int:fromHexString(unicodescanDigits);
     if hexResult is error {
-        return generateError(state, 'error:message(hexResult));
+        return generateLexicalError(state, 'error:message(hexResult));
     }
 
     string|error unicodeResult = 'string:fromCodePointInt(hexResult);
     if unicodeResult is error {
-        return generateError(state, 'error:message(unicodeResult));
+        return generateLexicalError(state, 'error:message(unicodeResult));
     }
 
     state.appendToLexeme(unicodeResult);
@@ -211,7 +211,7 @@ function scanUnquotedKey(LexerState state) returns boolean|LexicalError {
         return true;
     }
 
-    return generateError(state, formatErrorMessage(<string>state.peek(), UNQUOTED_KEY));
+    return generateInvalidCharacterError(state, UNQUOTED_KEY);
 
 }
 
@@ -239,16 +239,16 @@ function scanDigit(string scanDigitPattern) returns function (LexerState state) 
                 // '_' should be before a scanDigit
                 if (nextChr == ()) {
                     state.forward();
-                    return generateError(state, "A scanDigit must appear after the '_'");
+                    return generateLexicalError(state, "A scanDigit must appear after the '_'");
                 }
                 // check if the next character is a scanDigit
                 if (regex:matches(<string>nextChr, scanDigitPattern)) {
                     return false;
                 }
 
-                return generateError(state, string `Invalid character '${<string>state.peek()}' after '_'`);
+                return generateLexicalError(state, string `Invalid character '${<string>state.peek()}' after '_'`);
             }
-            return generateError(state, string `Invalid character '${<string>state.peek()}' after '='`);
+            return generateLexicalError(state, string `Invalid character '${<string>state.peek()}' after '='`);
         }
 
         // Float number allows only a decimal number a prefix.
@@ -267,7 +267,7 @@ function scanDigit(string scanDigitPattern) returns function (LexerState state) 
             }
             return true;
         }
-        return generateError(state, formatErrorMessage(<string>state.peek(), DECIMAL));
+        return generateInvalidCharacterError(state, DECIMAL);
     }
 ;
 }
