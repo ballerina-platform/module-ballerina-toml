@@ -246,9 +246,13 @@ function contextExpressionValue(LexerState state) returns LexerState|LexicalErro
                     return check tokensInSequence(state, "inf", INFINITY);
                 }
                 _ => { // Remaining digits of the decimal numbers
-                    state.appendToLexeme(<string>state.peek());
-                    state.forward();
-                    return check iterate(state, scanDigit(DECIMAL_DIGIT_PATTERN), DECIMAL);
+                    if regex:matches(<string>state.peek(), DECIMAL_DIGIT_PATTERN) {
+                        state.appendToLexeme(<string>state.peek());
+                        state.forward();
+                        return check iterate(state, scanDigit(DECIMAL_DIGIT_PATTERN), DECIMAL);
+                    }
+                    return generateLexicalError(state, 
+                        string `Invalid character '${state.peek(1) ?: "<end-of-line>"} after '${<string>state.peek()}'`);
                 }
             }
         }
