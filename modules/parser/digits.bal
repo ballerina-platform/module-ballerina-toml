@@ -19,7 +19,7 @@ function number(ParserState state, string prevValue, boolean fractional = false)
             }
 
             if (valueBuffer.length() > 1 && valueBuffer[0] == "0") && !fractional {
-                return generateGrammarError(state, "Cannot have leading 0's in integers or floats");
+                return generateGrammarError(state, "Cannot have leading 0's in integers");
             }
             return fractional ? check processTypeCastingError(state, 'decimal:fromString(valueBuffer))
                                         : check processTypeCastingError(state, 'int:fromString(valueBuffer));
@@ -37,6 +37,9 @@ function number(ParserState state, string prevValue, boolean fractional = false)
         lexer:DOT => { // Handles fractional numbers
             if (fractional) {
                 return generateGrammarError(state, "Cannot have a decimal point in the fraction part");
+            }
+            if (valueBuffer.length() > 1 && valueBuffer[0] == "0") {
+                return generateGrammarError(state, "Cannot have leading 0's in integers");
             }
             check checkToken(state, lexer:DECIMAL);
             valueBuffer += ".";
