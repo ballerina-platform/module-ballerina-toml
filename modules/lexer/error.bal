@@ -23,8 +23,8 @@ public type ReadErrorDetails record {|
 # + context - Context of the lexeme being scanned
 # + return - Generated error message
 function generateInvalidCharacterError(LexerState state, string context) returns LexicalError {
-    string:Char currentChar = <string:Char>state.peek();
-    string message = string `Invalid character '${currentChar}' for a '${context}'`;
+    string? currentChar = state.peek();
+    string message = string `Invalid character '${currentChar ?: "<end-of-line>"}' for a '${context}'`;
     return error(
         message,
         line = state.lineNumber + 1,
