@@ -61,7 +61,7 @@ function validTOMLDataGen() returns map<[string, boolean, json]> {
             true,
             {"a": {"b": [{"c": {"d": 1}}, {"c": {"d": 2}}]}}
         ],
-        "escape new liens in basic multiline string": ["multi_escape", true, {"str1": "escapewhitespace"}],
+        "escape new lines in basic multiline string": ["multi_escape", true, {"str1": "escapewhitespace"}],
         "empty multiline basic string": ["str = \"\"\"\"\"\"", false, {"str": ""}],
         "empty multiline literal string": ["str = ''''''", false, {"str": ""}],
         "basic multiline basic string": ["str = \"\"\"somevalue\"\"\"", false, {"str": "somevalue"}],
@@ -70,11 +70,6 @@ function validTOMLDataGen() returns map<[string, boolean, json]> {
         "ignore first line of multiline": ["multi_ignore_first", true, {"str": "ignore first line"}],
         "apostrophe in multiline literal string": ["str = '''single'double'''''", false, {"str": "single'double''"}],
         "new lines in multiline literal string": ["multi_literal", true, {"str1": "single' \ndouble''\n"}],
-        "escape whitespace in basic multiline string": [
-            "str1 = \"\"\"escape\\  whitespace\"\"\"",
-            false,
-            {"str1": "escapewhitespace"}
-        ],
         "valid quotes in basic multiline string": [
             "multi_quotes",
             true,
@@ -247,6 +242,7 @@ function invalidTOMLDataGen() returns map<[string, boolean]> {
         "no minutes": ["ldt = 07::01", false],
         "no seconds": ["ldt = 07:02:", false],
         "no fraction indicator": ["ldt = 07:32:0099", false],
+        "date time with ending t": ["d = 2000-02-02T", false],
         "bare keys as value": ["somekey = somevalue", false],
         "comment as value": ["somekey = #somecomment", false],
         "no equal sign": ["somekey somevalue", false],
@@ -259,6 +255,7 @@ function invalidTOMLDataGen() returns map<[string, boolean]> {
         "redefining static arrays by array tables": ["array_table_static", true],
         "array table redefines table": ["array_table_redefine_table", true],
         "unclosed array": ["arr = [1, 2", false],
+        "multiline cannot escape whitespace": [string `str = """\  """`, false],
         "delimiter inside multiline basic string": ["str1 = \"\"\"\"\"\"\"\"\"", false],
         "delimiter inside multiline literal string": ["str1 = '''''''''", false],
         "separator before }": ["key = {a=1,}", false],

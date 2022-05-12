@@ -8,6 +8,8 @@ function multiBasicString(ParserState state) returns lexer:LexicalError|ParsingE
     state.updateLexerContext(lexer:MULTILINE_BASIC_STRING);
     string lexemeBuffer = "";
     boolean isFirstLine = true;
+    boolean isEscaped = false;
+    boolean newLineInEscape = false;
 
     // Predict the next tokens
     check checkToken(state, [
@@ -21,13 +23,24 @@ function multiBasicString(ParserState state) returns lexer:LexicalError|ParsingE
     while (state.currentToken.token != lexer:MULTILINE_BASIC_STRING_DELIMITER) {
         match state.currentToken.token {
             lexer:MULTILINE_BASIC_STRING_LINE => { // Regular basic string
-                lexemeBuffer += state.currentToken.value;
+                // When escaped, spaces are ignored and returns an empty string.
+                if state.currentToken.value.length() != 0 {
+                    isEscaped = false;
+                    newLineInEscape = false;
+                    lexemeBuffer += state.currentToken.value;
+                }
             }
             lexer:MULTILINE_BASIC_STRING_ESCAPE => { // Escape token
                 state.updateLexerContext(lexer:MULTILINE_ESCAPE);
+                isEscaped = true;
             }
             lexer:EOL => { // Processing new lines
                 check state.initLexer("Expected to end the multi-line basic string");
+
+                // New lines are detected by the escaped
+                if isEscaped {
+                    newLineInEscape = true;
+                }
 
                 // Ignore new lines after the escape symbol
                 if !(state.lexerState.context == lexer:MULTILINE_ESCAPE
@@ -43,6 +56,11 @@ function multiBasicString(ParserState state) returns lexer:LexicalError|ParsingE
             lexer:MULTILINE_BASIC_STRING_DELIMITER,
             lexer:EOL
         ]);
+    }
+
+    // The escape does not work on whitespace without new lines.
+    if isEscaped && !newLineInEscape {
+        return generateError(state, "Cannot escape whitespace in multiline basic string");
     }
 
     state.updateLexerContext(lexer:EXPRESSION_KEY);
