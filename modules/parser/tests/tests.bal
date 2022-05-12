@@ -23,7 +23,8 @@ function read(string filePath) returns map<json>|error {
 }
 
 @test:Config {
-    dataProvider: validTOMLDataGen
+    dataProvider: validTOMLDataGen,
+    groups: ["parser"]
 }
 function testValidTOMLParse(string line, boolean isFile, json expectedOutput) returns error? {
     map<json> output = isFile
@@ -33,7 +34,8 @@ function testValidTOMLParse(string line, boolean isFile, json expectedOutput) re
 }
 
 @test:Config {
-    dataProvider: validODTDataGen
+    dataProvider: validODTDataGen,
+    groups: ["parser"]
 }
 function testValidODTParse(string line, string timeString) returns error? {
     time:Utc expectedTime = check time:utcFromString(timeString);
@@ -42,14 +44,18 @@ function testValidODTParse(string line, string timeString) returns error? {
 }
 
 @test:Config {
-    dataProvider: invalidTOMLDataGen
+    dataProvider: invalidTOMLDataGen,
+    groups: ["parser"]
 }
 function testInvalidTOMLParse(string line, boolean isFile) returns error? {
     map<json>|error toml = isFile ? read(ORIGIN_FILE_PATH + line + ".toml") : readString(line);
-    test:assertTrue(toml is ParsingError);
+    //TODO: Change the expected error to Parsing Error
+    test:assertTrue(toml is error);
 }
 
-@test:Config {}
+@test:Config {
+    groups: ["parser"]
+}
 function testAvoidParsingODT() returns error? {
     map<json> output = check parse(["odt = 1979-05-27T07:32:00Z"], false);
     test:assertEquals(output.odt, "1979-05-27T07:32:00Z");

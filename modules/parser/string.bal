@@ -24,11 +24,18 @@ function multiBasicString(ParserState state) returns lexer:LexicalError|ParsingE
         match state.currentToken.token {
             lexer:MULTILINE_BASIC_STRING_LINE => { // Regular basic string
                 // When escaped, spaces are ignored and returns an empty string.
-                if state.currentToken.value.length() != 0 {
-                    isEscaped = false;
-                    newLineInEscape = false;
-                    lexemeBuffer += state.currentToken.value;
+                if isEscaped {
+                    // New lines has been detected while the escaped flag is on. Hence, a successful escape.
+                    if newLineInEscape {
+                        isEscaped = false;
+                        newLineInEscape = false;
+                    }
+                    // Spaces are reduced to an empty string. If not, then a character is detected.
+                    else if state.currentToken.value.length() != 0 {
+                        return generateError(state, "Cannot escape whitespace in multiline basic string");
+                    }
                 }
+                lexemeBuffer += state.currentToken.value;
             }
             lexer:MULTILINE_BASIC_STRING_ESCAPE => { // Escape token
                 state.updateLexerContext(lexer:MULTILINE_ESCAPE);

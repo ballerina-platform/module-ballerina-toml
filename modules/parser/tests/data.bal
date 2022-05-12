@@ -50,7 +50,7 @@ function validTOMLDataGen() returns map<[string, boolean, json]> {
                 }
             }
         ],
-        "nested array": ["arr = [['first', 'second'], [1,2]]", false, {arr: [["first", "second"], [1,2]]}],
+        "nested array": ["arr = [['first', 'second'], [1,2]]", false, {arr: [["first", "second"], [1, 2]]}],
         "array ending with separator": ["arr = [1,2,]", false, {arr: [1, 2]}],
         "empty array": ["arr = []", false, {arr: []}],
         "array with different values": ["arr = [1, 's', true, [1, 2], 1.0]", false, {arr: [1, "s", true, [1, 2], <decimal>1.0]}],
@@ -256,6 +256,7 @@ function invalidTOMLDataGen() returns map<[string, boolean]> {
         "array table redefines table": ["array_table_redefine_table", true],
         "unclosed array": ["arr = [1, 2", false],
         "multiline cannot escape whitespace": [string `str = """\  """`, false],
+        "multiline cannot escape whitespace in middle": [string `str = """start\ end"""`, false],
         "delimiter inside multiline basic string": ["str1 = \"\"\"\"\"\"\"\"\"", false],
         "delimiter inside multiline literal string": ["str1 = '''''''''", false],
         "separator before }": ["key = {a=1,}", false],

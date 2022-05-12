@@ -28,16 +28,17 @@ function generateInvalidCharacterError(LexerState state, string context) returns
     string message = string `Invalid character '${currentChar}' for a '${context}'`;
     return error(
         message,
-        line = state.lineNumber,
+        line = state.lineNumber + 1,
         column = state.index,
-        actual = currentChar
+        actual = currentChar,
+        context = context
     );
 }
 
 function generateLexicalError(LexerState state, string message) returns LexicalError =>
     error(
         message + ".",
-        line = state.lineNumber,
+        line = state.lineNumber + 1,
         column = state.index,
         actual = state.peek()
     );
