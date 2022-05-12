@@ -53,7 +53,7 @@ function standardTable(ParserState state, map<json> structure, string keyName = 
     state.keyStack.push(tomlKey);
     check verifyKey(state, structure, tomlKey);
 
-    check checkToken(state);
+    check checkToken(state, [lexer:DOT, lexer:CLOSE_BRACKET]);
 
     match state.currentToken.token {
         lexer:DOT => { // Build the dotted key
@@ -96,7 +96,7 @@ function arrayTable(ParserState state, map<json> structure, string keyName = "")
     state.keyStack.push(tomlKey);
     check verifyKey(state, structure, tomlKey);
 
-    check checkToken(state);
+    check checkToken(state, [lexer:DOT, lexer:ARRAY_TABLE_CLOSE]);
 
     match state.currentToken.token {
         lexer:DOT => { // Build the dotted key
@@ -147,7 +147,8 @@ function verifyKey(ParserState state, map<json>? structure, string key) returns 
 # + return - An error if the key already exists.  
 function verifyTableKey(ParserState state, string tableKeyName) returns ParsingError? {
     if (state.definedTableKeys.indexOf(tableKeyName) != ()
-        || state.tempTableKeys.indexOf(tableKeyName) != ()) {
+        || state.tempTableKeys.indexOf(tableKeyName) != ()
+        || (!state.isArrayTable && state.definedArrayTableKeys.indexOf(tableKeyName) != ())) {
         return generateDuplicateError(state, tableKeyName, "table key");
     }
 }
@@ -164,6 +165,7 @@ function getTomlKey(ParserState state) returns string {
 
 # Check if the standard table key is an extension of array table since it is immutable.
 #
+# + state - Current parser state
 # + tableKey - Table to check if it is valid
 # + return - True if is an extension
 function checkExtensionOfInlineTable(ParserState state, string tableKey) returns GrammarError? {

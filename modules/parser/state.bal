@@ -88,7 +88,8 @@ class ParserState {
         // Check if the standard table key is an extension of array table.
         // If it is, then added to a temp array that is only valid for that array table.
         foreach string arrayTableKey in self.definedArrayTableKeys {
-            if assertParentKey(arrayTableKey, tableKey) {
+            if arrayTableKey == tableKey
+                || tableKey.startsWith(arrayTableKey) && tableKey[arrayTableKey.length()] == "." {
                 self.tempTableKeys.push(tableKey);
                 return;
             }
@@ -99,12 +100,4 @@ class ParserState {
             self.definedTableKeys.push(tableKey);
         }
     }
-}
-
-
-function assertParentKey(string parentKey, string currentKey) returns boolean {
-    if currentKey == parentKey {
-        return true;
-    }
-    return currentKey.startsWith(parentKey) && currentKey[parentKey.length()] == ".";
 }
