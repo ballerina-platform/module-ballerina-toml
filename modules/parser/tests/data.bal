@@ -62,6 +62,8 @@ function validTOMLDataGen() returns map<[string, boolean, json]> {
             {"a": {"b": [{"c": {"d": 1}}, {"c": {"d": 2}}]}}
         ],
         "escape new liens in basic multiline string": ["multi_escape", true, {"str1": "escapewhitespace"}],
+        "empty multiline basic string": ["str = \"\"\"\"\"\"", false, {"str": ""}],
+        "empty multiline literal string": ["str = ''''''", false, {"str": ""}],
         "basic multiline basic string": ["str = \"\"\"somevalue\"\"\"", false, {"str": "somevalue"}],
         "basic multiline escape": [string `str = """\u0041"""`, false, {"str": "A"}],
         "basic multiline literal string": ["str = '''somevalue'''", false, {"str": "somevalue"}],

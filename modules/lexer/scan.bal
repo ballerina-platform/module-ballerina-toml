@@ -1,5 +1,54 @@
 import ballerina/regex;
 
+# Check for the lexemes to create an literal string.
+#
+# + state - Current lexer state
+# + return - True if the end of the string, An error message for an invalid character.
+function literalString(LexerState state) returns boolean|LexicalError {
+    if regex:matches(<string>state.peek(), LITERAL_STRING_PATTERN) {
+        state.appendToLexeme(<string>state.peek());
+        return false;
+    }
+    if (checkCharacter(state, "'")) {
+        return true;
+    }
+    return generateError(state, formatErrorMessage(<string>state.peek(), LITERAL_STRING));
+}
+
+# Check for the lexemes to create a basic string for a line in multiline strings.
+#
+# + state - Current lexer state
+# + return - True if the end of the string, An error message for an invalid character.
+function multilineLiteralString(LexerState state) returns boolean|LexicalError {
+    if (!regex:matches(<string>state.peek(), LITERAL_STRING_PATTERN)) {
+        if (checkCharacter(state, "'")) {
+            if (state.peek(1) == "'" && state.peek(2) == "'") {
+
+                // Check if the double quotes are at the end of the line
+                if (state.peek(3) == "'" && state.peek(4) == "'") {
+                    state.appendToLexeme("''");
+                    state.forward();
+                    return true;
+                }
+
+                // Check if the single quotes are at the end of the line
+                if state.peek(3) == "'" {
+                    state.appendToLexeme("'");
+                    return true;
+                }
+
+                state.forward(-1);
+                return true;
+            }
+        } else {
+            return generateError(state, formatErrorMessage(<string>state.peek(), MULTILINE_BASIC_STRING_LINE));
+        }
+    }
+
+    state.appendToLexeme(<string>state.peek());
+    return false;
+}
+
 # Check for the lexemes to create an basic string.
 #
 # + state - Current lexer state
@@ -48,6 +97,12 @@ function multilineBasicString(LexerState state) returns boolean|LexicalError {
                 if (state.peek(3) == "\"" && state.peek(4) == "\"") {
                     state.appendToLexeme("\"\"");
                     state.forward();
+                    return true;
+                }
+
+                // Check if the single quotes are at the end of the line
+                if state.peek(3) == "\"" {
+                    state.appendToLexeme("\"");
                     return true;
                 }
 
@@ -139,49 +194,6 @@ function unicodeEscapedCharacters(LexerState state, string escapedChar, int leng
     }
 
     state.appendToLexeme(unicodeResult);
-}
-
-# Check for the lexemes to create an literal string.
-#
-# + state - Current lexer state
-# + return - True if the end of the string, An error message for an invalid character.
-function literalString(LexerState state) returns boolean|LexicalError {
-    if regex:matches(<string>state.peek(), LITERAL_STRING_PATTERN) {
-        state.appendToLexeme(<string>state.peek());
-        return false;
-    }
-    if (checkCharacter(state, "'")) {
-        return true;
-    }
-    return generateError(state, formatErrorMessage(<string>state.peek(), LITERAL_STRING));
-}
-
-# Check for the lexemes to create a basic string for a line in multiline strings.
-#
-# + state - Current lexer state
-# + return - True if the end of the string, An error message for an invalid character.
-function multilineLiteralString(LexerState state) returns boolean|LexicalError {
-    if (!regex:matches(<string>state.peek(), LITERAL_STRING_PATTERN)) {
-        if (checkCharacter(state, "'")) {
-            if (state.peek(1) == "'" && state.peek(2) == "'") {
-
-                // Check if the double quotes are at the end of the line
-                if (state.peek(3) == "'" && state.peek(4) == "'") {
-                    state.appendToLexeme("''");
-                    state.forward();
-                    return true;
-                }
-
-                state.forward(-1);
-                return true;
-            }
-        } else {
-            return generateError(state, formatErrorMessage(<string>state.peek(), MULTILINE_BASIC_STRING_LINE));
-        }
-    }
-
-    state.appendToLexeme(<string>state.peek());
-    return false;
 }
 
 # Check for the lexemes to create an unquoted key token.

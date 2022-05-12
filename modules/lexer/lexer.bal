@@ -48,20 +48,36 @@ public function scan(LexerState state) returns LexerState|LexicalError {
 
     // Generate tokens related to multi line basic strings
     if (state.context == MULTILINE_BASIC_STRING || state.context == MULTILINE_ESCAPE) {
+        if state.peek() == "\"" && state.peek(1) == "\"" && state.peek(2) == "\"" {
+            state.forward(2);
+            return state.tokenize(MULTILINE_BASIC_STRING_DELIMITER);
+        }
+
         // Process the escape symbol
         if (state.peek() == "\\" && (state.peek(1) == () || state.peek(1) == " ")) {
             return state.tokenize(MULTILINE_BASIC_STRING_ESCAPE);
         }
 
         // Process multiline string regular characters
-        if (regex:matches(<string>state.peek(), BASIC_STRING_PATTERN) || state.peek() == "\\") {
+        if regex:matches(<string>state.peek(), BASIC_STRING_PATTERN)
+            || state.peek() == "\\"
+            || state.peek() == "'"
+            || state.peek() == "\"" {
             return check iterate(state, multilineBasicString, MULTILINE_BASIC_STRING_LINE);
         }
     }
 
     // Generate tokens related to multi-line literal string
-    if (state.context == MULTILINE_LITERAL_STRING && regex:matches(<string>state.peek(), LITERAL_STRING_PATTERN)) {
-        return iterate(state, multilineLiteralString, MULTILINE_LITERAL_STRING_LINE);
+    if state.context == MULTILINE_LITERAL_STRING {
+        if state.peek() == "'" && state.peek(1) == "'" && state.peek(2) == "'" {
+            state.forward(2);
+            return state.tokenize(MULTILINE_LITERAL_STRING_DELIMITER);
+        }
+        if regex:matches(<string>state.peek(), LITERAL_STRING_PATTERN)
+            || state.peek() == "'"
+            || state.peek() == "\"" {
+            return iterate(state, multilineLiteralString, MULTILINE_LITERAL_STRING_LINE);
+        }
     }
 
     // Process tokens related to date time
