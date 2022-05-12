@@ -32,7 +32,7 @@ function multiBasicString(ParserState state) returns lexer:LexicalError|ParsingE
                     }
                     // Spaces are reduced to an empty string. If not, then a character is detected.
                     else if state.currentToken.value.length() != 0 {
-                        return generateError(state, "Cannot escape whitespace in multiline basic string");
+                        return generateGrammarError(state, "Cannot escape whitespace in multiline basic string");
                     }
                 }
                 lexemeBuffer += state.currentToken.value;
@@ -42,7 +42,7 @@ function multiBasicString(ParserState state) returns lexer:LexicalError|ParsingE
                 isEscaped = true;
             }
             lexer:EOL => { // Processing new lines
-                check state.initLexer("Expected to end the multi-line basic string");
+                check state.initLexer(generateGrammarError(state, "Expected to end the multi-line basic string"));
 
                 // New lines are detected by the escaped
                 if isEscaped {
@@ -67,7 +67,7 @@ function multiBasicString(ParserState state) returns lexer:LexicalError|ParsingE
 
     // The escape does not work on whitespace without new lines.
     if isEscaped && !newLineInEscape {
-        return generateError(state, "Cannot escape whitespace in multiline basic string");
+        return generateGrammarError(state, "Cannot escape whitespace in multiline basic string");
     }
 
     state.updateLexerContext(lexer:EXPRESSION_KEY);
@@ -97,7 +97,7 @@ function multiLiteralString(ParserState state) returns lexer:LexicalError|Parsin
                 lexemeBuffer += state.currentToken.value;
             }
             lexer:EOL => { // Processing new lines    
-                check state.initLexer(formatExpectErrorMessage(state.currentToken.token, lexer:MULTILINE_LITERAL_STRING_DELIMITER, lexer:MULTILINE_BASIC_STRING_DELIMITER));
+                check state.initLexer(generateExpectError(state, lexer:MULTILINE_LITERAL_STRING_DELIMITER, lexer:MULTILINE_BASIC_STRING_DELIMITER));
 
                 if !(isFirstLine && lexemeBuffer.length() == 0) {
                     lexemeBuffer += "\n";

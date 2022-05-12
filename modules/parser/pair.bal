@@ -48,14 +48,14 @@ function keyValue(ParserState state, map<json> structure) returns map<json>|Pars
 
             // Existing tables cannot be overwritten by inline tables
             if (state.currentToken.token == lexer:INLINE_TABLE_OPEN && structure[tomlKey] is map<json>) {
-                return generateError(state, formateDuplicateErrorMessage(state.bufferedKey));
+                return generateDuplicateError(state, state.bufferedKey);
             }
 
             structure[tomlKey] = check dataValue(state);
             return structure;
         }
         _ => {
-            return generateError(state, formatExpectErrorMessage(state.currentToken.token, [lexer:DOT, lexer:KEY_VALUE_SEPARATOR], lexer:UNQUOTED_KEY));
+            return generateExpectError(state, [lexer:DOT, lexer:KEY_VALUE_SEPARATOR], lexer:UNQUOTED_KEY);
         }
     }
 }

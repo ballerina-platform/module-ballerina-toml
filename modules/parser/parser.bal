@@ -13,7 +13,7 @@ public function parse(string[] inputLines, boolean parseOffsetDateTime) returns 
 
     // Iterating each line of the document.
     while state.lineIndex < state.numLines - 1 {
-        check state.initLexer("Cannot open the TOML document");
+        check state.initLexer(generateGrammarError(state, "Cannot open the TOML document"));
         check checkToken(state);
 
         match state.currentToken.token {

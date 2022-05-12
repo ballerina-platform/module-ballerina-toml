@@ -55,15 +55,15 @@ class ParserState {
 
     # Initialize the lexer with the attributes of a new line.
     #
-    # + message - Error message to display when if the initialization fails 
+    # + err - Error to be returned on failure
     # + incrementLine - Sets the next line to the lexer
     # + return - An error if it fails to initialize  
-    function initLexer(string message, boolean incrementLine = true) returns ParsingError? {
+    function initLexer(GrammarError err, boolean incrementLine = true) returns ParsingError? {
         if (incrementLine) {
             self.lineIndex += 1;
         }
         if (self.lineIndex >= self.numLines) {
-            return generateError(self, message);
+            return err;
         }
         self.lexerState.line = self.lines[self.lineIndex];
         self.lexerState.index = 0;

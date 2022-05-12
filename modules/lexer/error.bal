@@ -1,4 +1,3 @@
-
 # Represent an error caused by the lexical analyzer
 public type LexicalError distinct error<ReadErrorDetails>;
 

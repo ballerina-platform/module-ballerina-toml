@@ -71,7 +71,7 @@ function standardTable(ParserState state, map<json> structure, string keyName = 
 
             // Cannot define a standard table for an already defined array table.
             if (structure.hasKey(tomlKey) && !(structure[tomlKey] is map<json>)) {
-                return generateError(state, formateDuplicateErrorMessage(tableKeyName));
+                return generateDuplicateError(state, tableKeyName);
             }
 
             state.currentStructure = structure[tomlKey] is map<json> ? <map<json>>structure[tomlKey] : {};
@@ -111,7 +111,7 @@ function arrayTable(ParserState state, map<json> structure, string keyName = "")
 
             // Cannot define an array table for already defined standard table.
             if (structure.hasKey(tomlKey) && !(structure[tomlKey] is json[])) {
-                return generateError(state, formateDuplicateErrorMessage(keyName + tomlKey));
+                return generateDuplicateError(state, keyName + tomlKey);
             }
 
             // An array table always create a new object.
@@ -132,7 +132,7 @@ function verifyKey(ParserState state, map<json>? structure, string key) returns 
     if (structure is map<json>) {
         map<json> castedStructure = <map<json>>structure;
         if (castedStructure.hasKey(key) && !(castedStructure[key] is json[] || castedStructure[key] is map<json>)) {
-            return generateError(state, formateDuplicateErrorMessage(state.bufferedKey, "values"));
+            return generateDuplicateError(state, state.bufferedKey, "values");
         }
     }
 }
@@ -146,7 +146,7 @@ function verifyKey(ParserState state, map<json>? structure, string key) returns 
 function verifyTableKey(ParserState state, string tableKeyName) returns ParsingError? {
     if (state.definedTableKeys.indexOf(tableKeyName) != ()
         || state.tempTableKeys.indexOf(tableKeyName) != ()) {
-        return generateError(state, formateDuplicateErrorMessage(tableKeyName, "table key"));
+        return generateDuplicateError(state, tableKeyName, "table key");
     }
 }
 
