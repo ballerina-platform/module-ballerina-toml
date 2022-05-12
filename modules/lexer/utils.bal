@@ -32,7 +32,7 @@ function iterate(LexerState state, function (LexerState state) returns boolean|L
 function tokensInSequence(LexerState state, string chars, TOMLToken successToken) returns LexerState|LexicalError {
     foreach string char in chars {
         if (!checkCharacter(state, char)) {
-            return generateError(state, formatErrorMessage(<string>state.peek(), successToken));
+            return generateError(state, formatErrorMessage(state.peek() ?: "", successToken));
         }
         state.forward();
     }

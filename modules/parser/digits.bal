@@ -90,11 +90,14 @@ function date(ParserState state, string prevValue) returns json|lexer:LexicalErr
             return valueBuffer;
         }
         lexer:TIME_DELIMITER => { // Adding a time component to the date
+            string delimiter = state.currentToken.value;
             check checkToken(state, [lexer:DECIMAL, lexer:EOL]);
 
             // Check if the whitespace is at trailing
             if state.currentToken.token == lexer:EOL {
-                return valueBuffer;
+                return delimiter == " "
+                    ? valueBuffer
+                    : generateError(state, string `Date time cannot end with '${delimiter}'`);
             }
 
             // Obtain the hours

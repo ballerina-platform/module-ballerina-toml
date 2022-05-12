@@ -90,6 +90,7 @@ public function scan(LexerState state) returns LexerState|LexicalError {
                 return state.tokenize(MINUS);
             }
             "t"|"T"|" " => { // Time delimiter
+                state.appendToLexeme(<string>state.peek());
                 return state.tokenize(TIME_DELIMITER);
             }
             "+" => { // Positive offset
