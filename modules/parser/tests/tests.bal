@@ -49,8 +49,7 @@ function testValidODTParse(string line, string timeString) returns error? {
 }
 function testInvalidTOMLParse(string line, boolean isFile) returns error? {
     map<json>|error toml = isFile ? read(ORIGIN_FILE_PATH + line + ".toml") : readString(line);
-    //TODO: Change the expected error to Parsing Error
-    test:assertTrue(toml is error);
+    test:assertTrue(toml is ParsingError);
 }
 
 @test:Config {

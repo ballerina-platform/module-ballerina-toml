@@ -24,6 +24,9 @@ class ParserState {
     # Already defined array table keys
     string[] definedArrayTableKeys = [];
 
+    # Already defined inline table keys
+    string[] definedInlineTables = [];
+
     # Keys defined specific for the current array table.
     string[] tempTableKeys = [];
 
@@ -85,7 +88,7 @@ class ParserState {
         // Check if the standard table key is an extension of array table.
         // If it is, then added to a temp array that is only valid for that array table.
         foreach string arrayTableKey in self.definedArrayTableKeys {
-            if tableKey.startsWith(arrayTableKey) {
+            if assertParentKey(arrayTableKey, tableKey) {
                 self.tempTableKeys.push(tableKey);
                 return;
             }
@@ -96,4 +99,12 @@ class ParserState {
             self.definedTableKeys.push(tableKey);
         }
     }
+}
+
+
+function assertParentKey(string parentKey, string currentKey) returns boolean {
+    if currentKey == parentKey {
+        return true;
+    }
+    return currentKey.startsWith(parentKey) && currentKey[parentKey.length()] == ".";
 }

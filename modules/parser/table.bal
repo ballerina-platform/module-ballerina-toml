@@ -66,6 +66,7 @@ function standardTable(ParserState state, map<json> structure, string keyName = 
             // Check if the table key is already defined.
             string tableKeyName = keyName + tomlKey;
             check verifyTableKey(state, keyName + tomlKeyRepresent);
+            check checkExtensionOfInlineTable(state, keyName + tomlKeyRepresent);
             state.addTableKey(tableKeyName);
             state.currentTableKey = tableKeyName;
 
@@ -107,6 +108,7 @@ function arrayTable(ParserState state, map<json> structure, string keyName = "")
 
             // Check if there is an static array or a standard table key already defined.
             check verifyTableKey(state, keyName + tomlKeyRepresent);
+            check checkExtensionOfInlineTable(state, keyName + tomlKeyRepresent);
             state.addTableKey(keyName + tomlKey);
 
             // Cannot define an array table for already defined standard table.
@@ -158,4 +160,16 @@ function getTomlKey(ParserState state) returns string {
         return string `'${state.currentToken.value}'`;
     }
     return state.currentToken.value;
+}
+
+# Check if the standard table key is an extension of array table since it is immutable.
+#
+# + tableKey - Table to check if it is valid
+# + return - True if is an extension
+function checkExtensionOfInlineTable(ParserState state, string tableKey) returns GrammarError? {
+    foreach string inlineTableKey in state.definedInlineTables {
+        if tableKey.startsWith(inlineTableKey) && tableKey[inlineTableKey.length()] == "." {
+            return generateGrammarError(state, "Inline tables are immutable");
+        }
+    }
 }
