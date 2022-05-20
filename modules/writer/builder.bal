@@ -11,12 +11,12 @@ function processStructure(State state, map<json> structure, string tableKey, str
     string[] keys = structure.keys();
 
     // List of array tables to be created
-    [string, json[]][] arrayTables = [];
+    map<json[]> arrayTables = {};
 
     // List of standard tables to be created
-    [string, map<json>][] standardTables = [];
+    map<map<json>> standardTables = {};
 
-    // Traverse all the keys .
+    // Traverse all the keys
     foreach string key in keys {
         json value = structure[key];
 
@@ -46,11 +46,13 @@ function processStructure(State state, map<json> structure, string tableKey, str
     // Construct the array tables
     if (arrayTables.length() > 0) {
         string newWhitespace = tableKey.length() == 0 ? whitespace : whitespace + state.indent;
-        foreach [string, json[]] arrayTable in arrayTables {
-            foreach json arrayObject in arrayTable[1] {
+        string[] arrayTableKeys = arrayTables.keys();
+        foreach string arrayTableKey in arrayTableKeys {
+            json[] arrayTable = <json[]>arrayTables[arrayTableKey];
+            foreach json arrayObject in arrayTable {
                 state.output.push("");
-                state.output.push(newWhitespace + "[[" + arrayTable[0] + "]]");
-                check processStructure(state, <map<json>>arrayObject, arrayTable[0], newWhitespace);
+                state.output.push(newWhitespace + "[[" + arrayTableKey + "]]");
+                check processStructure(state, <map<json>>arrayObject, arrayTableKey, newWhitespace);
             }
         }
     }
@@ -58,10 +60,12 @@ function processStructure(State state, map<json> structure, string tableKey, str
     // Construct the standard tables
     if (standardTables.length() > 0) {
         string newWhitespace = tableKey.length() == 0 ? whitespace : whitespace + state.indent;
-        foreach [string, map<json>] standardTable in standardTables {
+        string[] standardTableKeys = standardTables.keys();
+        foreach string standardTableKey in standardTableKeys {
             state.output.push("");
-            state.output.push(newWhitespace + "[" + standardTable[0] + "]");
-            check processStructure(state, standardTable[1], standardTable[0], newWhitespace);
+            state.output.push(newWhitespace + "[" + standardTableKey + "]");
+            check processStructure(state, <map<json>>standardTables[standardTableKey], 
+                standardTableKey, newWhitespace);
         }
     }
 }
@@ -104,7 +108,7 @@ function processPrimitiveValue(json value) returns string|error {
 # + arrayTables - List of array tables under the current table  
 # + whitespace - Indentation of the current table
 # + return - An error on failure
-function processArray(State state, string key, json[] value, string tableKey, [string, json[]][] arrayTables, string whitespace) returns error? {
+function processArray(State state, string key, json[] value, string tableKey, map<json[]> arrayTables, string whitespace) returns error? {
     // Check if all the array values are object
     boolean isAllObject = value.reduce(function(boolean assertion, json arrayValue) returns boolean {
         return assertion && arrayValue is map<json>;
@@ -112,13 +116,14 @@ function processArray(State state, string key, json[] value, string tableKey, [s
 
     // Construct an array table
     if (isAllObject) {
-        arrayTables.push([constructTableKey(tableKey, key), value]);
+        arrayTables[constructTableKey(tableKey, key)] = value;
         return;
     }
 
     // Construct an inline array
     state.output.push(key + " = [");
-    value.forEach(arrayValue => state.output.push(whitespace + state.indent + check processPrimitiveValue(arrayValue) + ","));
+    value.forEach(arrayValue => 
+        state.output.push(whitespace + state.indent + check processPrimitiveValue(arrayValue) + ","));
     state.output.push("]");
 }
 
@@ -131,7 +136,7 @@ function processArray(State state, string key, json[] value, string tableKey, [s
 # + standardTables - List of standard tables under the current table  
 # + whitespace - Indentation of the current table
 # + return - An error on failure
-function processTable(State state, map<json> structure, string tableKey, [string, map<json>][] standardTables, string whitespace) returns error? {
+function processTable(State state, map<json> structure, string tableKey, map<map<json>> standardTables, string whitespace) returns error? {
     // Check if there are more than one value nested to it.
     if (structure.length() == 1) {
         string firstKey = structure.keys()[0];
@@ -141,15 +146,15 @@ function processTable(State state, map<json> structure, string tableKey, [string
             if (state.allowDottedKeys) {
                 state.output.push(whitespace + constructTableKey(tableKey, firstKey) + " = " + check processPrimitiveValue(structure[firstKey]));
             }
-                else {
-                standardTables.push([tableKey, structure]);
+            else {
+                standardTables[tableKey] = structure;
             }
         }
         return;
     }
 
     // If there are more than two values, construct a standard table.
-    standardTables.push([tableKey, structure]);
+    standardTables[tableKey] = structure;
 }
 
 # Creates the dotted key for the new table.
