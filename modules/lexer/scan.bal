@@ -9,7 +9,7 @@ function scanLiteralString(LexerState state) returns boolean|LexicalError {
         state.appendToLexeme(<string>state.peek());
         return false;
     }
-    if (checkCharacter(state, "'")) {
+    if checkCharacter(state, "'") {
         return true;
     }
     return generateInvalidCharacterError(state, LITERAL_STRING);
@@ -20,12 +20,12 @@ function scanLiteralString(LexerState state) returns boolean|LexicalError {
 # + state - Current lexer state
 # + return - True if the end of the string, An error message for an invalid character.
 function scanMultilineLiteralString(LexerState state) returns boolean|LexicalError {
-    if (!regex:matches(<string>state.peek(), LITERAL_STRING_PATTERN)) {
-        if (checkCharacter(state, "'")) {
-            if (state.peek(1) == "'" && state.peek(2) == "'") {
+    if !regex:matches(<string>state.peek(), LITERAL_STRING_PATTERN) {
+        if checkCharacter(state, "'") {
+            if state.peek(1) == "'" && state.peek(2) == "'" {
 
                 // Check if the double quotes are at the end of the line
-                if (state.peek(3) == "'" && state.peek(4) == "'") {
+                if state.peek(3) == "'" && state.peek(4) == "'" {
                     state.appendToLexeme("''");
                     state.forward();
                     return true;
@@ -60,7 +60,7 @@ function scanBasicString(LexerState state) returns LexicalError|boolean {
     }
 
     // Process escaped characters
-    if (state.peek() == "\\") {
+    if state.peek() == "\\" {
         state.forward();
         check scanEscapedCharacter(state);
         return false;
@@ -78,9 +78,9 @@ function scanBasicString(LexerState state) returns LexicalError|boolean {
 # + state - Current lexer state
 # + return - True if the end of the string, An error message for an invalid character.
 function scanMultilineBasicString(LexerState state) returns boolean|LexicalError {
-    if (!regex:matches(<string>state.peek(), BASIC_STRING_PATTERN)) {
+    if !regex:matches(<string>state.peek(), BASIC_STRING_PATTERN) {
         // Process the escape symbol
-        if (checkCharacter(state, "\\")) {
+        if checkCharacter(state, "\\") {
             if state.peek(1) == () || state.peek(1) == " " || state.peek(1) == "\t" {
                 state.forward(-1);
                 return true;
@@ -90,11 +90,11 @@ function scanMultilineBasicString(LexerState state) returns boolean|LexicalError
             return false;
         }
 
-        if (checkCharacter(state, "\"")) {
-            if (state.peek(1) == "\"" && state.peek(2) == "\"") {
+        if checkCharacter(state, "\"") {
+            if state.peek(1) == "\"" && state.peek(2) == "\"" {
 
                 // Check if the double quotes are at the end of the line
-                if (state.peek(3) == "\"" && state.peek(4) == "\"") {
+                if state.peek(3) == "\"" && state.peek(4) == "\"" {
                     state.appendToLexeme("\"\"");
                     state.forward();
                     return true;
@@ -115,7 +115,7 @@ function scanMultilineBasicString(LexerState state) returns boolean|LexicalError
     }
 
     // Ignore whitespace if the multiline escape symbol is detected
-    if (state.context == MULTILINE_ESCAPE && checkCharacter(state, " ")) {
+    if state.context == MULTILINE_ESCAPE && checkCharacter(state, " ") {
         return false;
     }
 
@@ -133,14 +133,14 @@ function scanEscapedCharacter(LexerState state) returns LexicalError? {
     string currentChar;
 
     // Check if the character is empty
-    if (state.peek() == ()) {
+    if state.peek() == () {
         return generateLexicalError(state, "Escaped character cannot be empty");
     } else {
         currentChar = <string>state.peek();
     }
 
     // Check for predefined escape characters
-    if (escapedCharMap.hasKey(currentChar)) {
+    if escapedCharMap.hasKey(currentChar) {
         state.appendToLexeme(<string>escapedCharMap[currentChar]);
         return;
     }
@@ -206,7 +206,7 @@ function scanUnquotedKey(LexerState state) returns boolean|LexicalError {
         return false;
     }
 
-    if (checkCharacter(state, [" ", ".", "]", "="])) {
+    if checkCharacter(state, [" ", ".", "]", "="]) {
         state.forward(-1);
         return true;
     }
@@ -226,23 +226,23 @@ function scanDigit(string scanDigitPattern) returns function (LexerState state) 
             return false;
         }
 
-        if (checkCharacter(state, [" ", "#", "\t"])) {
+        if checkCharacter(state, [" ", "#", "\t"]) {
             state.forward(-1);
             return true;
         }
 
         // Both preceding and succeeding chars of the '_' should be scanDigits
-        if (checkCharacter(state, "_")) {
+        if checkCharacter(state, "_") {
             // '_' should be after a scanDigit
-            if (state.lexeme.length() > 0) {
+            if state.lexeme.length() > 0 {
                 string? nextChr = state.peek(1);
                 // '_' should be before a scanDigit
-                if (nextChr == ()) {
+                if nextChr == () {
                     state.forward();
                     return generateLexicalError(state, "A scanDigit must appear after the '_'");
                 }
                 // check if the next character is a scanDigit
-                if (regex:matches(<string>nextChr, scanDigitPattern)) {
+                if regex:matches(<string>nextChr, scanDigitPattern) {
                     return false;
                 }
 
@@ -254,15 +254,15 @@ function scanDigit(string scanDigitPattern) returns function (LexerState state) 
         // Float number allows only a decimal number a prefix.
         // Check for decimal points and exponential in decimal numbers.
         // Check for separators and end symbols.
-        if (scanDigitPattern == DECIMAL_DIGIT_PATTERN) {
-            if (checkCharacter(state, [".", "e", "E", ",", "]", "}"])) {
+        if scanDigitPattern == DECIMAL_DIGIT_PATTERN {
+            if checkCharacter(state, [".", "e", "E", ",", "]", "}"]) {
                 state.forward(-1);
             }
-            if (checkCharacter(state, ["-", ":"])) {
+            if checkCharacter(state, ["-", ":"]) {
                 state.forward(-1);
                 state.context = DATE_TIME;
             }
-            if (state.context == DATE_TIME && checkCharacter(state, ["-", ":", "t", "T", "+", "-", "Z"])) {
+            if state.context == DATE_TIME && checkCharacter(state, ["-", ":", "t", "T", "+", "-", "Z"]) {
                 state.forward(-1);
             }
             return true;

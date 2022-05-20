@@ -34,7 +34,7 @@ public function write(map<json> structure, int indentationPolicy, boolean allowD
     check processStructure(state, structure, "", "");
 
     // Remove the start of document whitespace if exists.
-    if (state.output[0].length() == 0) {
+    if state.output[0].length() == 0 {
         _ = state.output.remove(0);
     }
 
@@ -47,12 +47,12 @@ public function write(map<json> structure, int indentationPolicy, boolean allowD
 # + return - An error on failure
 public function openFile(string fileName) returns error? {
     // Check if the given fileName is not directory
-    if (check file:test(fileName, file:IS_DIR)) {
+    if check file:test(fileName, file:IS_DIR) {
         return generateError("Cannot write to a directory");
     }
 
     // Create the file if the file does not exists
-    if (!check file:test(fileName, file:EXISTS)) {
+    if !check file:test(fileName, file:EXISTS) {
         check file:create(fileName);
     }
 }

@@ -17,21 +17,21 @@ function inlineTable(ParserState state, map<json> tempTable = {}, boolean isStar
 
     // This is unreachable after a separator.
     // This condition is only available to create an empty table.
-    if (state.currentToken.token == lexer:INLINE_TABLE_CLOSE) {
+    if state.currentToken.token == lexer:INLINE_TABLE_CLOSE {
         return tempTable;
     }
 
     // Add the key value to the inline table.
     map<json> newTable = check keyValue(state, tempTable.clone());
 
-    if (state.tokenConsumed) {
+    if state.tokenConsumed {
         state.tokenConsumed = false;
     } else {
         check checkToken(state, [lexer:SEPARATOR, lexer:INLINE_TABLE_CLOSE]);
     }
 
     // Calls the method recursively to add new key values.
-    if (state.currentToken.token == lexer:SEPARATOR) {
+    if state.currentToken.token == lexer:SEPARATOR {
         return check inlineTable(state, newTable, false);
     }
 
@@ -71,7 +71,7 @@ function standardTable(ParserState state, map<json> structure, string keyName = 
             state.currentTableKey = tableKeyName;
 
             // Cannot define a standard table for an already defined array table.
-            if (structure.hasKey(tomlKey) && !(structure[tomlKey] is map<json>)) {
+            if structure.hasKey(tomlKey) && !(structure[tomlKey] is map<json>) {
                 return generateDuplicateError(state, tableKeyName);
             }
 
@@ -112,7 +112,7 @@ function arrayTable(ParserState state, map<json> structure, string keyName = "")
             state.addTableKey(keyName + tomlKey);
 
             // Cannot define an array table for already defined standard table.
-            if (structure.hasKey(tomlKey) && !(structure[tomlKey] is json[])) {
+            if structure.hasKey(tomlKey) && !(structure[tomlKey] is json[]) {
                 return generateDuplicateError(state, keyName + tomlKey);
             }
 
@@ -131,9 +131,9 @@ function arrayTable(ParserState state, map<json> structure, string keyName = "")
 # + key - Key to be verified in the structure  
 # + return - Error, if there already exists a primitive value.
 function verifyKey(ParserState state, map<json>? structure, string key) returns ParsingError? {
-    if (structure is map<json>) {
+    if structure is map<json> {
         map<json> castedStructure = <map<json>>structure;
-        if (castedStructure.hasKey(key) && !(castedStructure[key] is json[] || castedStructure[key] is map<json>)) {
+        if castedStructure.hasKey(key) && !(castedStructure[key] is json[] || castedStructure[key] is map<json>) {
             return generateDuplicateError(state, state.bufferedKey, "values");
         }
     }
@@ -146,9 +146,9 @@ function verifyKey(ParserState state, map<json>? structure, string key) returns 
 # + tableKeyName - Table key name to be checked
 # + return - An error if the key already exists.  
 function verifyTableKey(ParserState state, string tableKeyName) returns ParsingError? {
-    if (state.definedTableKeys.indexOf(tableKeyName) != ()
+    if state.definedTableKeys.indexOf(tableKeyName) != ()
         || state.tempTableKeys.indexOf(tableKeyName) != ()
-        || (!state.isArrayTable && state.definedArrayTableKeys.indexOf(tableKeyName) != ())) {
+        || (!state.isArrayTable && state.definedArrayTableKeys.indexOf(tableKeyName) != ()) {
         return generateDuplicateError(state, tableKeyName, "table key");
     }
 }

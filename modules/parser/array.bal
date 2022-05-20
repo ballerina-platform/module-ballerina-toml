@@ -49,7 +49,7 @@ function arrayValue(ParserState state, json[] tempArray = []) returns json[]|lex
     lexer:TOMLToken prevToken;
     state.updateLexerContext(lexer:EXPRESSION_VALUE);
 
-    if (state.tokenConsumed) {
+    if state.tokenConsumed {
         prevToken = lexer:DECIMAL;
         state.tokenConsumed = false;
     } else {

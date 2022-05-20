@@ -14,20 +14,20 @@ function checkToken(ParserState state, lexer:TOMLToken|lexer:TOMLToken[] expecte
     state.currentToken = state.lexerState.getToken();
 
     // Bypass error handling.
-    if (expectedTokens == lexer:DUMMY) {
+    if expectedTokens == lexer:DUMMY {
         return;
     }
 
     // Automatically generates a template error message if there is no custom message.
     // Generate an error if the expected token differ from the actual token.
-    if (expectedTokens is lexer:TOMLToken) {
-        if (state.currentToken.token != expectedTokens) {
+    if expectedTokens is lexer:TOMLToken {
+        if state.currentToken.token != expectedTokens {
             return customMessage.length() == 0
                 ? generateExpectError(state, expectedTokens, prevToken)
                 : generateGrammarError(state, customMessage);
         }
     } else {
-        if (expectedTokens.indexOf(state.currentToken.token) == ()) {
+        if expectedTokens.indexOf(state.currentToken.token) == () {
             return customMessage.length() == 0
                 ? generateExpectError(state, expectedTokens, prevToken)
                 : generateGrammarError(state, customMessage);
@@ -43,17 +43,17 @@ function checkToken(ParserState state, lexer:TOMLToken|lexer:TOMLToken[] expecte
 # + return - Constructed final toml object on success. Else, a parsing error.
 function buildTOMLObject(ParserState state, map<json> structure) returns map<json>|ParsingError {
     // Under the root table
-    if (state.keyStack.length() == 0) {
+    if state.keyStack.length() == 0 {
         return state.currentStructure;
     }
 
     // Under the key tables at the depth of 1
-    if (state.keyStack.length() == 1) {
+    if state.keyStack.length() == 1 {
         string key = state.keyStack.pop();
-        if (state.isArrayTable) {
+        if state.isArrayTable {
 
             // Adds the current structure to the end of the array.
-            if (structure[key] is json[]) {
+            if structure[key] is json[] {
                 (<json[]>structure[key]).push(state.currentStructure.clone());
             }
 
@@ -75,13 +75,13 @@ function buildTOMLObject(ParserState state, map<json> structure) returns map<jso
     map<json> value;
 
     // If the key is a table
-    if (structure[key] is map<json>) {
+    if structure[key] is map<json> {
         value = check buildTOMLObject(state, <map<json>>structure[key]);
         structure[key] = value;
     }
 
     // If there is a standard table under an array table, obtain the latest object.
-    else if (structure[key] is json[]) {
+    else if structure[key] is json[] {
         value = check buildTOMLObject(state, <map<json>>(<json[]>structure[key]).pop());
         (<json[]>structure[key]).push(value);
     }

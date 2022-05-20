@@ -62,10 +62,10 @@ class ParserState {
     # + incrementLine - Sets the next line to the lexer
     # + return - An error if it fails to initialize  
     function initLexer(GrammarError err, boolean incrementLine = true) returns ParsingError? {
-        if (incrementLine) {
+        if incrementLine {
             self.lineIndex += 1;
         }
-        if (self.lineIndex >= self.numLines) {
+        if self.lineIndex >= self.numLines {
             return err;
         }
         self.lexerState.line = self.lines[self.lineIndex];

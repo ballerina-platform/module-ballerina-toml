@@ -46,7 +46,7 @@ map<json> toml = {
         }
     };
 error? result = write("path/to/file.toml", toml);
-if (result is error) {
+if result is error {
     log:printError("Failed to write the TOML document.", 'error = result);
 }
 ```

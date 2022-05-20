@@ -23,7 +23,7 @@ public class LexerState {
     #
     # + k - Number of indexes to forward. Default = 1
     function forward(int k = 1) {
-        if (self.index + k <= self.line.length()) {
+        if self.index + k <= self.line.length() {
             self.index += k;
         }
     }

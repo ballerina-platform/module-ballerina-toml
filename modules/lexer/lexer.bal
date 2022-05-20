@@ -19,7 +19,7 @@ public enum Context {
     MULTILINE_ESCAPE
 }
 
-const map<string> escapedCharMap = {
+final readonly & map<string> escapedCharMap = {
     "b": "\u{08}",
     "t": "\t",
     "n": "\n",
@@ -36,7 +36,7 @@ const map<string> escapedCharMap = {
 public function scan(LexerState state) returns LexerState|LexicalError {
 
     // Generate EOL token 
-    if (state.index >= state.line.length()) {
+    if state.index >= state.line.length() {
         return state.tokenize(EOL);
     }
 

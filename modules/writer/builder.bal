@@ -22,20 +22,20 @@ function processStructure(State state, map<json> structure, string tableKey, str
 
         // This structure should be processed at the end of this depth level.
         // Builds both dotted keys or standard tables.
-        if (value is map<json>) {
+        if value is map<json> {
             check processTable(state, value, constructTableKey(tableKey, key), standardTables, whitespace);
             continue;
         }
 
         // Process UTC time
-        if (value is time:Utc) {
+        if value is time:Utc {
             state.output.push(whitespace + key + " = " + time:utcToString(<time:Utc>value));
             continue;
         }
 
         // This structure should be processed at the end of this depth level.
         // Builds both inline arrays or array tables.
-        if (value is json[]) {
+        if value is json[] {
             check processArray(state, key, value, tableKey, arrayTables, whitespace);
             continue;
         }
@@ -44,7 +44,7 @@ function processStructure(State state, map<json> structure, string tableKey, str
     }
 
     // Construct the array tables
-    if (arrayTables.length() > 0) {
+    if arrayTables.length() > 0 {
         string newWhitespace = tableKey.length() == 0 ? whitespace : whitespace + state.indent;
         string[] arrayTableKeys = arrayTables.keys();
         foreach string arrayTableKey in arrayTableKeys {
@@ -58,13 +58,13 @@ function processStructure(State state, map<json> structure, string tableKey, str
     }
 
     // Construct the standard tables
-    if (standardTables.length() > 0) {
+    if standardTables.length() > 0 {
         string newWhitespace = tableKey.length() == 0 ? whitespace : whitespace + state.indent;
         string[] standardTableKeys = standardTables.keys();
         foreach string standardTableKey in standardTableKeys {
             state.output.push("");
             state.output.push(newWhitespace + "[" + standardTableKey + "]");
-            check processStructure(state, <map<json>>standardTables[standardTableKey], 
+            check processStructure(state, <map<json>>standardTables[standardTableKey],
                 standardTableKey, newWhitespace);
         }
     }
@@ -75,19 +75,19 @@ function processStructure(State state, map<json> structure, string tableKey, str
 # + value - Value to converted
 # + return - Converted string on success. Else, an error.
 function processPrimitiveValue(json value) returns string|error {
-    if (value is string) {
+    if value is string {
         return "\"" + value + "\"";
     }
 
-    if (value == 'float:Infinity) {
+    if value == 'float:Infinity {
         return "+inf";
     }
 
-    if (value == -'float:Infinity) {
+    if value == -'float:Infinity {
         return "-inf";
     }
 
-    if (value == 'float:NaN) {
+    if value == 'float:NaN {
         return "nan";
     }
 
@@ -115,14 +115,14 @@ function processArray(State state, string key, json[] value, string tableKey, ma
     }, true);
 
     // Construct an array table
-    if (isAllObject) {
+    if isAllObject {
         arrayTables[constructTableKey(tableKey, key)] = value;
         return;
     }
 
     // Construct an inline array
     state.output.push(key + " = [");
-    value.forEach(arrayValue => 
+    value.forEach(arrayValue =>
         state.output.push(whitespace + state.indent + check processPrimitiveValue(arrayValue) + ","));
     state.output.push("]");
 }
@@ -138,15 +138,14 @@ function processArray(State state, string key, json[] value, string tableKey, ma
 # + return - An error on failure
 function processTable(State state, map<json> structure, string tableKey, map<map<json>> standardTables, string whitespace) returns error? {
     // Check if there are more than one value nested to it.
-    if (structure.length() == 1) {
+    if structure.length() == 1 {
         string firstKey = structure.keys()[0];
-        if (structure[firstKey] is map<json>) {
+        if structure[firstKey] is map<json> {
             check processTable(state, <map<json>>structure[firstKey], constructTableKey(tableKey, firstKey), standardTables, whitespace);
         } else {
-            if (state.allowDottedKeys) {
+            if state.allowDottedKeys {
                 state.output.push(whitespace + constructTableKey(tableKey, firstKey) + " = " + check processPrimitiveValue(structure[firstKey]));
-            }
-            else {
+            } else {
                 standardTables[tableKey] = structure;
             }
         }

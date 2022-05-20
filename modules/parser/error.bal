@@ -20,7 +20,7 @@ function generateExpectError(ParserState state,
     lexer:TOMLToken|lexer:TOMLToken[]|string expectedTokens, lexer:TOMLToken beforeToken) returns GrammarError {
 
     string expectedTokensMessage;
-    if (expectedTokens is lexer:TOMLToken[]) { // If multiple tokens
+    if expectedTokens is lexer:TOMLToken[] { // If multiple tokens
         string tempMessage = expectedTokens.reduce(function(string message, lexer:TOMLToken token) returns string {
             return message + " '" + token + "' or";
         }, "");

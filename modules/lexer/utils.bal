@@ -12,7 +12,7 @@ function iterate(LexerState state, function (LexerState state) returns boolean|L
 
     // Iterate the given line to check the DFA
     while state.index < state.line.length() {
-        if (check process(state)) {
+        if check process(state) {
             return state.tokenize(successToken);
         }
         state.forward();
@@ -31,7 +31,7 @@ function iterate(LexerState state, function (LexerState state) returns boolean|L
 # + return - If success, returns the token. Else, returns the parsing error.
 function tokensInSequence(LexerState state, string chars, TOMLToken successToken) returns LexerState|LexicalError {
     foreach string char in chars {
-        if (!checkCharacter(state, char)) {
+        if !checkCharacter(state, char) {
             return generateInvalidCharacterError(state, successToken);
         }
         state.forward();
@@ -47,9 +47,9 @@ function tokensInSequence(LexerState state, string chars, TOMLToken successToken
 # + expectedCharacters - Expected characters at the current index
 # + return - True if the assertion is true. Else, an lexical error
 function checkCharacter(LexerState state, string|string[] expectedCharacters) returns boolean {
-    if (expectedCharacters is string) {
+    if expectedCharacters is string {
         return expectedCharacters == state.peek();
-    } else if (expectedCharacters.indexOf(<string>state.peek()) == ()) {
+    } else if expectedCharacters.indexOf(<string>state.peek()) == () {
         return false;
     }
     return true;

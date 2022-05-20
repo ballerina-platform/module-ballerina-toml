@@ -18,7 +18,7 @@ function number(ParserState state, string prevValue, boolean fractional = false)
                 state.tokenConsumed = true;
             }
 
-            if (valueBuffer.length() > 1 && valueBuffer[0] == "0") && !fractional {
+            if valueBuffer.length() > 1 && valueBuffer[0] == "0" && !fractional {
                 return generateGrammarError(state, "Cannot have leading 0's in integers");
             }
             return fractional ? check processTypeCastingError(state, 'decimal:fromString(valueBuffer))
@@ -35,10 +35,10 @@ function number(ParserState state, string prevValue, boolean fractional = false)
             // return <decimal>finalValue;
         }
         lexer:DOT => { // Handles fractional numbers
-            if (fractional) {
+            if fractional {
                 return generateGrammarError(state, "Cannot have a decimal point in the fraction part");
             }
-            if (valueBuffer.length() > 1 && valueBuffer[0] == "0") {
+            if valueBuffer.length() > 1 && valueBuffer[0] == "0" {
                 return generateGrammarError(state, "Cannot have leading 0's in integers");
             }
             check checkToken(state, lexer:DECIMAL);
@@ -83,7 +83,7 @@ function date(ParserState state, string prevValue) returns json|lexer:LexicalErr
 
     // Validate the complete date
     error? validateDate = 'time:dateValidate({year, month, day});
-    if (validateDate is error) {
+    if validateDate is error {
         return generateGrammarError(state, validateDate.toString().substring(18));
     }
 
@@ -181,7 +181,7 @@ function timeOffset(ParserState state, string prevValue, boolean datePrefixed) r
                     : generateGrammarError(state, "Cannot crate a UTC time for a local time");
         }
         lexer:PLUS|lexer:MINUS => {
-            if (datePrefixed) {
+            if datePrefixed {
                 valueBuffer += state.currentToken.token == lexer:PLUS ? "+" : "-";
 
                 // Validate hours
@@ -212,11 +212,11 @@ function timeOffset(ParserState state, string prevValue, boolean datePrefixed) r
 # + return - Returns an error if the requirements are not met.
 function checkTime(ParserState state, string value, int lowerBound, int upperBound, string valueName) returns ParsingError? {
     // Expected the time digits to be 2.
-    if (value.length() != 2) {
+    if value.length() != 2 {
         return generateGrammarError(state, string `Expected number of digits in '${valueName}' to be 2`);
     }
     int intValue = <int>check processTypeCastingError(state, 'int:fromString(value));
-    if (intValue < lowerBound || intValue > upperBound) {
+    if intValue < lowerBound || intValue > upperBound {
 
         return generateGrammarError(state, string `Expected ${valueName} to be between ${lowerBound.toString()}-${upperBound.toString()}`);
     }
@@ -230,7 +230,7 @@ function checkTime(ParserState state, string value, int lowerBound, int upperBou
 # + valueName - Name of the date component.
 # + return - Returns the value in integer. Else, an parsing error.
 function checkDate(ParserState state, string value, int numDigits, string valueName) returns int|ParsingError {
-    if (value.length() != numDigits) {
+    if value.length() != numDigits {
         return generateGrammarError(state, string `Expected number of digits in ${valueName} to be ${numDigits.toString()}`);
     }
     return <int>check processTypeCastingError(state, 'int:fromString(value));

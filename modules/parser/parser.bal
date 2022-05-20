@@ -43,7 +43,7 @@ public function parse(string[] inputLines, boolean parseOffsetDateTime) returns 
 
         // Comments and new lines are ignored.
         // Other expressions cannot have additional tokens in their line.
-        if (state.currentToken.token != lexer:EOL) {
+        if state.currentToken.token != lexer:EOL {
             check checkToken(state, lexer:EOL);
         }
     }

@@ -90,7 +90,7 @@ function testWriteStandardTableUnderArrayTable() returns error? {
 function assertStringArray(map<json> structure, string|string[] content) returns error? {
     string[] output = check write(structure, 2, true);
 
-    if (content is string) {
+    if content is string {
         test:assertTrue(output.indexOf(content) != ());
     } else {
         test:assertTrue(content.reduce(function(boolean assertion, string word) returns boolean {

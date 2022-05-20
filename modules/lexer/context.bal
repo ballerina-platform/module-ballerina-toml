@@ -36,14 +36,14 @@ function contextExpressionKey(LexerState state) returns LexerState|LexicalError 
             return state.tokenize(KEY_VALUE_SEPARATOR);
         }
         "[" => { // Array values and standard tables
-            if (state.peek(1) == "[" && state.context == EXPRESSION_KEY) { // Array tables
+            if state.peek(1) == "[" && state.context == EXPRESSION_KEY { // Array tables
                 state.forward();
                 return state.tokenize(ARRAY_TABLE_OPEN);
             }
             return state.tokenize(OPEN_BRACKET);
         }
         "]" => { // Array values and standard tables
-            if (state.peek(1) == "]" && state.context == EXPRESSION_KEY) { // Array tables
+            if state.peek(1) == "]" && state.context == EXPRESSION_KEY { // Array tables
                 state.forward();
                 return state.tokenize(ARRAY_TABLE_CLOSE);
             }
@@ -137,7 +137,7 @@ function contextDateTime(LexerState state) returns LexerState|LexicalError {
     }
 
     // Scan digits for date time
-    if (regex:matches(<string>state.peek(), DECIMAL_DIGIT_PATTERN)) {
+    if regex:matches(<string>state.peek(), DECIMAL_DIGIT_PATTERN) {
         return check iterate(state, scanDigit(DECIMAL_DIGIT_PATTERN), DECIMAL);
     }
 
@@ -169,7 +169,7 @@ function contextExpressionValue(LexerState state) returns LexerState|LexicalErro
         }
         "\"" => { // Basic strings
             // Multi-line basic strings
-            if (state.peek(1) == "\"" && state.peek(2) == "\"") {
+            if state.peek(1) == "\"" && state.peek(2) == "\"" {
                 state.forward(2);
                 return state.tokenize(MULTILINE_BASIC_STRING_DELIMITER);
             }
@@ -180,7 +180,7 @@ function contextExpressionValue(LexerState state) returns LexerState|LexicalErro
         }
         "'" => { // Literal strings
             // Multi-line literal string
-            if (state.peek(1) == "'" && state.peek(2) == "'") {
+            if state.peek(1) == "'" && state.peek(2) == "'" {
                 state.forward(2);
                 return state.tokenize(MULTILINE_LITERAL_STRING_DELIMITER);
             }
@@ -194,12 +194,12 @@ function contextExpressionValue(LexerState state) returns LexerState|LexicalErro
         }
         "0" => {
             string? peekValue = state.peek(1);
-            if (peekValue == ()) {
+            if peekValue == () {
                 state.appendToLexeme("0");
                 return state.tokenize(DECIMAL);
             }
 
-            if (regex:matches(<string>peekValue, DECIMAL_DIGIT_PATTERN)) || <string>peekValue == "e" {
+            if regex:matches(<string>peekValue, DECIMAL_DIGIT_PATTERN) || <string>peekValue == "e" {
                 return check iterate(state, scanDigit(DECIMAL_DIGIT_PATTERN), DECIMAL);
             }
 

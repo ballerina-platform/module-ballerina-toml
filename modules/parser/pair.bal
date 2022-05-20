@@ -101,7 +101,7 @@ function dataValue(ParserState state) returns json|lexer:LexicalError|ParsingErr
             returnData = check array(state);
 
             // Static arrays cannot be redefined by the array tables.
-            if (!state.isArrayTable) {
+            if !state.isArrayTable {
                 state.addTableKey(state.currentTableKey.length() == 0 ? state.bufferedKey : state.currentTableKey + "." + state.bufferedKey);
                 state.bufferedKey = "";
             }
@@ -110,7 +110,7 @@ function dataValue(ParserState state) returns json|lexer:LexicalError|ParsingErr
             returnData = check inlineTable(state);
 
             // Inline tables cannot be redefined by the standard tables.
-            if (!state.isArrayTable) {
+            if !state.isArrayTable {
                 state.addTableKey(state.currentTableKey.length() == 0 ? state.bufferedKey : state.currentTableKey + "." + state.bufferedKey);
                 state.bufferedKey = "";
             }
