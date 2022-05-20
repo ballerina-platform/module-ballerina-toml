@@ -183,14 +183,14 @@ function scanUnicodeEscapedCharacter(LexerState state, string escapedChar, int l
         }
         return generateInvalidCharacterError(state, HEXADECIMAL);
     }
-    int|error hexResult = 'int:fromHexString(unicodeDigits);
+    int|error hexResult = int:fromHexString(unicodeDigits);
     if hexResult is error {
-        return generateLexicalError(state, 'error:message(hexResult));
+        return generateLexicalError(state, error:message(hexResult));
     }
 
-    string|error unicodeResult = 'string:fromCodePointInt(hexResult);
+    string|error unicodeResult = string:fromCodePointInt(hexResult);
     if unicodeResult is error {
-        return generateLexicalError(state, 'error:message(unicodeResult));
+        return generateLexicalError(state, error:message(unicodeResult));
     }
 
     state.appendToLexeme(unicodeResult);

@@ -1,7 +1,4 @@
 import toml.lexer;
-import ballerina/lang.'boolean;
-import ballerina/lang.'float;
-import ballerina/lang.'int;
 
 # Handles the rule: key -> simple-key | dotted-key
 # key_value -> key '=' value.
@@ -22,8 +19,7 @@ function keyValue(ParserState state, map<json> structure) returns map<json>|Pars
         lexer:DOT => { // Process dotted keys
             check checkToken(state, [lexer:UNQUOTED_KEY, lexer:BASIC_STRING, lexer:LITERAL_STRING]);
             state.bufferedKey += "." + state.currentToken.value;
-            map<json> value = check keyValue(state, structure[tomlKey] is map<json> ? <map<json>>structure[tomlKey] : {});
-            structure[tomlKey] = value;
+            structure[tomlKey] = check keyValue(state, structure[tomlKey] is map<json> ? <map<json>>structure[tomlKey] : {});
             return structure;
         }
 
@@ -46,7 +42,7 @@ function keyValue(ParserState state, map<json> structure) returns map<json>|Pars
                 lexer:INLINE_TABLE_OPEN
             ]);
 
-            if (state.currentToken.token == lexer:INLINE_TABLE_OPEN) {
+            if state.currentToken.token == lexer:INLINE_TABLE_OPEN {
                 state.definedInlineTables.push(state.bufferedKey);
 
                 // Existing tables cannot be overwritten by inline tables
@@ -82,7 +78,7 @@ function dataValue(ParserState state) returns json|lexer:LexicalError|ParsingErr
         }
         lexer:HEXADECIMAL => {
             check checkEmptyInteger(state);
-            returnData = check processTypeCastingError(state, 'int:fromHexString(state.currentToken.value));
+            returnData = check processTypeCastingError(state, int:fromHexString(state.currentToken.value));
         }
         lexer:BINARY => {
             check checkEmptyInteger(state);
@@ -93,13 +89,13 @@ function dataValue(ParserState state) returns json|lexer:LexicalError|ParsingErr
             returnData = check processInteger(state, 8);
         }
         lexer:INFINITY => {
-            returnData = state.currentToken.value[0] == "+" ? 'float:Infinity : -'float:Infinity;
+            returnData = state.currentToken.value[0] == "+" ? float:Infinity : -float:Infinity;
         }
         lexer:NAN => {
-            returnData = 'float:NaN;
+            returnData = float:NaN;
         }
         lexer:BOOLEAN => {
-            returnData = check processTypeCastingError(state, 'boolean:fromString(state.currentToken.value));
+            returnData = check processTypeCastingError(state, boolean:fromString(state.currentToken.value));
         }
         lexer:OPEN_BRACKET => {
             returnData = check array(state);

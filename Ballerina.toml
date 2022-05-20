@@ -5,7 +5,7 @@ org="nipunayf"
 name="toml"
 icon = "icon.png"
 distribution = "2201.0.0"
-repository="https://github.com/nipunayf/module-ballerina-toml"
+repository="https://github.com/nipunayf/ballerina-toml"
 authors=["Nipuna Fernando"]
 
 [build-options]

@@ -19,7 +19,7 @@ public enum Context {
     MULTILINE_ESCAPE
 }
 
-final readonly & map<string> escapedCharMap = {
+const map<string> escapedCharMap = {
     "b": "\u{08}",
     "t": "\t",
     "n": "\n",

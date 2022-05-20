@@ -3,7 +3,7 @@ import toml.lexer;
 import toml.parser;
 
 # Represents the generic error type for the TOML package.
-public type Error distinct error;
+public type Error ParsingError|WritingError;
 
 // Level 1
 # Represents an error caused during the parsing.

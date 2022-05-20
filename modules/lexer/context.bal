@@ -22,12 +22,12 @@ function contextExpressionKey(LexerState state) returns LexerState|LexicalError 
         "\"" => { // Check for basic string keys
             state.forward();
             return check iterate(state, scanBasicString,
-            BASIC_STRING, "Expected '\"' at the end of the basic string");
+                BASIC_STRING, "Expected '\"' at the end of the basic string");
         }
         "'" => { // Check for literal string keys
             state.forward();
             return check iterate(state, scanLiteralString,
-            LITERAL_STRING, "Expected ''' at the end of the literal string");
+                LITERAL_STRING, "Expected ''' at the end of the literal string");
         }
         "." => { // Check for dotted keys
             return state.tokenize(DOT);
@@ -71,7 +71,7 @@ function contextMultilineBasicString(LexerState state) returns LexerState|Lexica
     }
 
     // Process the escape symbol
-    if (state.peek() == "\\" && (state.peek(1) == () || state.peek(1) == " ")) {
+    if state.peek() == "\\" && (state.peek(1) == () || state.peek(1) == " ") {
         return state.tokenize(MULTILINE_BASIC_STRING_ESCAPE);
     }
 
