@@ -51,7 +51,7 @@ function standardTable(ParserState state, map<json> structure, string keyName = 
     string tomlKey = state.currentToken.value;
     string tomlKeyRepresent = getTomlKey(state);
     state.keyStack.push(tomlKey);
-    check verifyKey(state, structure, tomlKey);
+    check verifyKey(state, structure);
 
     check checkToken(state, [lexer:DOT, lexer:CLOSE_BRACKET]);
 
@@ -94,7 +94,7 @@ function arrayTable(ParserState state, map<json> structure, string keyName = "")
     string tomlKey = state.currentToken.value;
     string tomlKeyRepresent = getTomlKey(state);
     state.keyStack.push(tomlKey);
-    check verifyKey(state, structure, tomlKey);
+    check verifyKey(state, structure);
 
     check checkToken(state, [lexer:DOT, lexer:ARRAY_TABLE_CLOSE]);
 
@@ -128,15 +128,16 @@ function arrayTable(ParserState state, map<json> structure, string keyName = "")
 #
 # + state - Current parser state
 # + structure - Parent key of the provided one 
-# + key - Key to be verified in the structure  
 # + return - Error, if there already exists a primitive value.
-function verifyKey(ParserState state, map<json>? structure, string key) returns ParsingError? {
+function verifyKey(ParserState state, map<json>? structure) returns ParsingError? {
+    string tomlKey = state.currentToken.value;
     if structure is map<json> {
         map<json> castedStructure = <map<json>>structure;
-        if castedStructure.hasKey(key) && !(castedStructure[key] is json[] || castedStructure[key] is map<json>) {
+        if castedStructure.hasKey(tomlKey) && !(castedStructure[tomlKey] is json[] || castedStructure[tomlKey] is map<json>) {
             return generateDuplicateError(state, state.bufferedKey, "values");
         }
     }
+    check verifyTableKey(state, state.currentTableKey == "" ? state.bufferedKey : state.currentTableKey + "." + state.bufferedKey);
 }
 
 # TOML allows only once to define a standard key table.

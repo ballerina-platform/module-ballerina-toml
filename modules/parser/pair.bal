@@ -10,23 +10,39 @@ import toml.lexer;
 # + structure - The structure for the previous key. Null if there is no value.
 # + return - Returns the structure after assigning the value.
 function keyValue(ParserState state, map<json> structure) returns map<json>|ParsingError|lexer:LexicalError {
-    string tomlKey = state.currentToken.value;
-    check verifyKey(state, structure, tomlKey);
-    check verifyTableKey(state, state.currentTableKey == "" ? state.bufferedKey : state.currentTableKey + "." + state.bufferedKey);
+    // Validate the first key
+    check verifyKey(state, structure);
+    [string, map<json>][] dottedTableStack = [[state.currentToken.value, structure]];
     check checkToken(state);
 
-    match state.currentToken.token {
-        lexer:DOT => { // Process dotted keys
-            check checkToken(state, [lexer:UNQUOTED_KEY, lexer:BASIC_STRING, lexer:LITERAL_STRING]);
-            state.bufferedKey += "." + state.currentToken.value;
-            structure[tomlKey] = check keyValue(state, structure[tomlKey] is map<json> ? <map<json>>structure[tomlKey] : {});
-            return structure;
-        }
+    // Check and validate the dotted key 
+    map<json> parentStructure;
+    string parentKey;
+    while state.currentToken.token == lexer:DOT {
+        // Expects another key after the dot
+        check checkToken(state, [lexer:UNQUOTED_KEY, lexer:BASIC_STRING, lexer:LITERAL_STRING]);
 
-        lexer:KEY_VALUE_SEPARATOR => { // Process value assignment
-            state.updateLexerContext(lexer:EXPRESSION_VALUE);
+        // Update the buffered key
+        state.bufferedKey += "." + state.currentToken.value;
 
-            check checkToken(state, [
+        // Obtain the parent structure of the current key
+        [parentKey, parentStructure] = dottedTableStack[dottedTableStack.length() - 1];
+
+        // Obtain the structure which the current key exists and push it to the stack
+        map<json> newStructure = parentStructure[parentKey] is map<json> ? <map<json>>parentStructure[parentKey] : {};
+        check verifyKey(state, newStructure);
+        dottedTableStack.push([state.currentToken.value, newStructure]);
+
+        check checkToken(state);
+    }
+
+    // There should be '=' after the key
+    if state.currentToken.token != lexer:KEY_VALUE_SEPARATOR {
+        return generateExpectError(state, [lexer:DOT, lexer:KEY_VALUE_SEPARATOR], lexer:UNQUOTED_KEY);
+    }
+
+    state.updateLexerContext(lexer:EXPRESSION_VALUE);
+    check checkToken(state, [
                 lexer:BASIC_STRING,
                 lexer:LITERAL_STRING,
                 lexer:MULTILINE_BASIC_STRING_DELIMITER,
@@ -42,22 +58,32 @@ function keyValue(ParserState state, map<json> structure) returns map<json>|Pars
                 lexer:INLINE_TABLE_OPEN
             ]);
 
-            if state.currentToken.token == lexer:INLINE_TABLE_OPEN {
-                state.definedInlineTables.push(state.bufferedKey);
+    // Obtain the current structure 
+    string currentKey;
+    map<json> currentStructure;
+    [currentKey, currentStructure] = dottedTableStack.pop();
 
-                // Existing tables cannot be overwritten by inline tables
-                if structure[tomlKey] is map<json> {
-                    return generateDuplicateError(state, state.bufferedKey);
-                }
-            }
+    if state.currentToken.token == lexer:INLINE_TABLE_OPEN {
+        state.definedInlineTables.push(state.bufferedKey);
 
-            structure[tomlKey] = check dataValue(state);
-            return structure;
-        }
-        _ => {
-            return generateExpectError(state, [lexer:DOT, lexer:KEY_VALUE_SEPARATOR], lexer:UNQUOTED_KEY);
+        // Existing tables cannot be overwritten by inline tables
+        if currentStructure[currentKey] is map<json> {
+            return generateDuplicateError(state, state.bufferedKey);
         }
     }
+
+    // Assign the value to key
+    currentStructure[currentKey] = check dataValue(state);
+    map<json> prevStructure;
+
+    // Construct the dotted key structure if exists
+    while dottedTableStack.length() > 0 {
+        prevStructure = currentStructure;
+        [currentKey, currentStructure] = dottedTableStack.pop();
+        currentStructure[currentKey] = prevStructure;
+    }
+
+    return currentStructure;
 }
 
 # Generate any TOML data value.
