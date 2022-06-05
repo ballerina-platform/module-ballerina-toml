@@ -1,11 +1,9 @@
-import ballerina/regex;
-
 # Check for the lexemes to create an literal string.
 #
 # + state - Current lexer state
 # + return - True if the end of the string, An error message for an invalid character.
 function scanLiteralString(LexerState state) returns boolean|LexicalError {
-    if regex:matches(<string>state.peek(), LITERAL_STRING_PATTERN) {
+    if patternLiteralString(<string:Char>state.peek()) {
         state.appendToLexeme(<string>state.peek());
         return false;
     }
@@ -20,7 +18,7 @@ function scanLiteralString(LexerState state) returns boolean|LexicalError {
 # + state - Current lexer state
 # + return - True if the end of the string, An error message for an invalid character.
 function scanMultilineLiteralString(LexerState state) returns boolean|LexicalError {
-    if !regex:matches(<string>state.peek(), LITERAL_STRING_PATTERN) {
+    if !patternLiteralString(<string:Char>state.peek()) {
         if checkCharacter(state, "'") {
             if state.peek(1) == "'" && state.peek(2) == "'" {
 
@@ -54,7 +52,7 @@ function scanMultilineLiteralString(LexerState state) returns boolean|LexicalErr
 # + state - Current lexer state
 # + return - True if the end of the string, An error message for an invalid character.
 function scanBasicString(LexerState state) returns LexicalError|boolean {
-    if regex:matches(<string>state.peek(), BASIC_STRING_PATTERN) {
+    if patternBasicString(<string:Char>state.peek()) {
         state.appendToLexeme(<string>state.peek());
         return false;
     }
@@ -78,7 +76,7 @@ function scanBasicString(LexerState state) returns LexicalError|boolean {
 # + state - Current lexer state
 # + return - True if the end of the string, An error message for an invalid character.
 function scanMultilineBasicString(LexerState state) returns boolean|LexicalError {
-    if !regex:matches(<string>state.peek(), BASIC_STRING_PATTERN) {
+    if !patternBasicString(<string:Char>state.peek()) {
         // Process the escape symbol
         if checkCharacter(state, "\\") {
             if state.peek(1) == () || state.peek(1) == " " || state.peek(1) == "\t" {
@@ -177,7 +175,7 @@ function scanUnicodeEscapedCharacter(LexerState state, string escapedChar, int l
     // Check if the scanDigits adhere to the hexadecimal code pattern.
     foreach int i in 0 ... length - 1 {
         state.forward();
-        if regex:matches(<string>state.peek(), HEXADECIMAL_DIGIT_PATTERN) {
+        if patternHexadecimal(<string:Char>state.peek()) {
             unicodeDigits += <string>state.peek();
             continue;
         }
@@ -201,7 +199,7 @@ function scanUnicodeEscapedCharacter(LexerState state, string escapedChar, int l
 # + state - Current lexer state
 # + return - True if the end of the key, An error message for an invalid character.
 function scanUnquotedKey(LexerState state) returns boolean|LexicalError {
-    if regex:matches(<string>state.peek(), UNQUOTED_STRING_PATTERN) {
+    if patternUnquotedString(<string:Char>state.peek()) {
         state.appendToLexeme(<string>state.peek());
         return false;
     }
@@ -217,11 +215,14 @@ function scanUnquotedKey(LexerState state) returns boolean|LexicalError {
 
 # Check for the lexemes to crete an DECIMAL token.
 #
-# + scanDigitPattern - Regex pattern of the number system
-# + return - Generates a function which checks the lexemes for the given number system.  
-function scanDigit(string scanDigitPattern) returns function (LexerState state) returns boolean|LexicalError {
+# + pattern - Pattern of the number system  
+# + checkDateTime - Allow date time characters to be next to digits
+# + return - Generates a function which checks the lexemes for the given number system.
+function scanDigit(function (string:Char char) returns boolean pattern, 
+    boolean checkDateTime = false) returns function (LexerState state) returns boolean|LexicalError {   
     return function(LexerState state) returns boolean|LexicalError {
-        if regex:matches(<string>state.peek(), scanDigitPattern) {
+
+        if pattern(<string:Char>state.peek()) {
             state.appendToLexeme(<string>state.peek());
             return false;
         }
@@ -239,10 +240,10 @@ function scanDigit(string scanDigitPattern) returns function (LexerState state) 
                 // '_' should be before a scanDigit
                 if nextChr == () {
                     state.forward();
-                    return generateLexicalError(state, "A scanDigit must appear after the '_'");
+                    return generateLexicalError(state, "A digit must appear after the '_'");
                 }
-                // check if the next character is a scanDigit
-                if regex:matches(<string>nextChr, scanDigitPattern) {
+                // Check if the next character is a scanDigit
+                if pattern(<string:Char>nextChr) {
                     return false;
                 }
 
@@ -254,7 +255,7 @@ function scanDigit(string scanDigitPattern) returns function (LexerState state) 
         // Float number allows only a decimal number a prefix.
         // Check for decimal points and exponential in decimal numbers.
         // Check for separators and end symbols.
-        if scanDigitPattern == DECIMAL_DIGIT_PATTERN {
+        if checkDateTime {
             if checkCharacter(state, [".", "e", "E", ",", "]", "}"]) {
                 state.forward(-1);
             }

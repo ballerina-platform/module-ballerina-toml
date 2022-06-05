@@ -1,12 +1,10 @@
-import ballerina/regex;
-
 # Check for array table, standard table, and expression key.
 #
 # + state - Current lexer state
 # + return - Tokenize TOML key token
 function contextExpressionKey(LexerState state) returns LexerState|LexicalError {
     // Check for unquoted keys
-    if regex:matches(<string>state.peek(), UNQUOTED_STRING_PATTERN) {
+    if patternUnquotedString(<string:Char>state.peek()) {
         return check iterate(state, scanUnquotedKey, UNQUOTED_KEY);
     }
 
@@ -76,7 +74,7 @@ function contextMultilineBasicString(LexerState state) returns LexerState|Lexica
     }
 
     // Process multiline string regular characters
-    if regex:matches(<string>state.peek(), BASIC_STRING_PATTERN)
+    if patternBasicString(<string:Char>state.peek())
             || state.peek() == "\\"
             || state.peek() == "'"
             || state.peek() == "\"" {
@@ -96,7 +94,7 @@ function contextMultilineLiteralString(LexerState state) returns LexerState|Lexi
         return state.tokenize(MULTILINE_LITERAL_STRING_DELIMITER);
     }
 
-    if regex:matches(<string>state.peek(), LITERAL_STRING_PATTERN)
+    if patternLiteralString(<string:Char>state.peek())
             || state.peek() == "'"
             || state.peek() == "\"" {
         return iterate(state, scanMultilineLiteralString, MULTILINE_LITERAL_STRING_LINE);
@@ -137,8 +135,8 @@ function contextDateTime(LexerState state) returns LexerState|LexicalError {
     }
 
     // Scan digits for date time
-    if regex:matches(<string>state.peek(), DECIMAL_DIGIT_PATTERN) {
-        return check iterate(state, scanDigit(DECIMAL_DIGIT_PATTERN), DECIMAL);
+    if patternDecimal(<string:Char>state.peek()) {
+        return check iterate(state, scanDigit(patternDecimal, true), DECIMAL);
     }
 
     return generateInvalidCharacterError(state, DATE_TIME);
@@ -199,22 +197,22 @@ function contextExpressionValue(LexerState state) returns LexerState|LexicalErro
                 return state.tokenize(DECIMAL);
             }
 
-            if regex:matches(<string>peekValue, DECIMAL_DIGIT_PATTERN) || <string>peekValue == "e" {
-                return check iterate(state, scanDigit(DECIMAL_DIGIT_PATTERN), DECIMAL);
+            if patternDecimal(<string:Char>peekValue) || <string>peekValue == "e" {
+                return check iterate(state, scanDigit(patternDecimal, true), DECIMAL);
             }
 
             match peekValue {
                 "x" => { // Hexadecimal numbers
                     state.forward(2);
-                    return check iterate(state, scanDigit(HEXADECIMAL_DIGIT_PATTERN), HEXADECIMAL);
+                    return check iterate(state, scanDigit(patternHexadecimal), HEXADECIMAL);
                 }
                 "o" => { // Octal numbers
                     state.forward(2);
-                    return check iterate(state, scanDigit(OCTAL_DIGIT_PATTERN), OCTAL);
+                    return check iterate(state, scanDigit(patternOctal), OCTAL);
                 }
                 "b" => { // Binary numbers
                     state.forward(2);
-                    return check iterate(state, scanDigit(BINARY_DIGIT_PATTERN), BINARY);
+                    return check iterate(state, scanDigit(patternBinary), BINARY);
                 }
                 " "|"#"|"."|","|"]" => { // Decimal numbers
                     state.appendToLexeme("0");
@@ -243,8 +241,8 @@ function contextExpressionValue(LexerState state) returns LexerState|LexicalErro
                     return check tokensInSequence(state, "inf", INFINITY);
                 }
                 _ => { // Remaining digits of the decimal numbers
-                    if regex:matches(<string>state.peek(), DECIMAL_DIGIT_PATTERN) {
-                        return check iterate(state, scanDigit(DECIMAL_DIGIT_PATTERN), DECIMAL);
+                    if patternDecimal(<string:Char>state.peek()) {
+                        return check iterate(state, scanDigit(patternDecimal, true), DECIMAL);
                     }
                     return generateLexicalError(state,
                         string `Invalid character '${state.peek(1) ?: "<end-of-line>"} after '${<string>state.peek()}'`);
@@ -276,8 +274,8 @@ function contextExpressionValue(LexerState state) returns LexerState|LexicalErro
     }
 
     // Check for values starting with an integer.
-    if regex:matches(<string>state.peek(), DECIMAL_DIGIT_PATTERN) {
-        return check iterate(state, scanDigit(DECIMAL_DIGIT_PATTERN), DECIMAL);
+    if patternDecimal(<string:Char>state.peek()) {
+        return check iterate(state, scanDigit(patternDecimal, true), DECIMAL);
     }
 
     return generateInvalidCharacterError(state, EXPRESSION_VALUE);
