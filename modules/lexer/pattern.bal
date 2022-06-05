@@ -35,6 +35,5 @@ function patternLiteralString(string:Char char) returns boolean {
     return (codePoint >= 9 && codePoint <= 38)
         || (codePoint >= 40 && codePoint <= 126)
         || (codePoint >= 128 && codePoint <= 55295)
-        || (codePoint >= 57344 && codePoint <= 1114111)
-        || codePoint == 32;
+        || (codePoint >= 57344 && codePoint <= 1114111);
 }
