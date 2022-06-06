@@ -131,11 +131,7 @@ function scanEscapedCharacter(LexerState state) returns LexicalError? {
     string currentChar;
 
     // Check if the character is empty
-    if state.peek() == () {
-        return generateLexicalError(state, "Escaped character cannot be empty");
-    } else {
-        currentChar = <string>state.peek();
-    }
+    currentChar = <string>state.peek();
 
     // Check for predefined escape characters
     if escapedCharMap.hasKey(currentChar) {
@@ -216,10 +212,9 @@ function scanUnquotedKey(LexerState state) returns boolean|LexicalError {
 # Check for the lexemes to crete an DECIMAL token.
 #
 # + pattern - Pattern of the number system  
-# + checkDateTime - Allow date time characters to be next to digits
 # + return - Generates a function which checks the lexemes for the given number system.
-function scanDigit(function (string:Char char) returns boolean pattern, 
-    boolean checkDateTime = false) returns function (LexerState state) returns boolean|LexicalError {   
+function scanDigit(function (string:Char char) returns boolean pattern)
+    returns function (LexerState state) returns boolean|LexicalError {
     return function(LexerState state) returns boolean|LexicalError {
 
         if pattern(<string:Char>state.peek()) {
@@ -252,23 +247,30 @@ function scanDigit(function (string:Char char) returns boolean pattern,
             return generateLexicalError(state, string `Invalid character '${<string>state.peek()}' after '='`);
         }
 
-        // Float number allows only a decimal number a prefix.
-        // Check for decimal points and exponential in decimal numbers.
-        // Check for separators and end symbols.
-        if checkDateTime {
-            if checkCharacter(state, [".", "e", "E", ",", "]", "}"]) {
-                state.forward(-1);
-            }
-            if checkCharacter(state, ["-", ":"]) {
-                state.forward(-1);
-                state.context = DATE_TIME;
-            }
-            if state.context == DATE_TIME && checkCharacter(state, ["-", ":", "t", "T", "+", "-", "Z"]) {
-                state.forward(-1);
-            }
-            return true;
-        }
+        return generateInvalidCharacterError(state, DECIMAL);
+    };
+}
+
+function scanDecimal(LexerState state) returns boolean|LexicalError {
+    function (LexerState) returns boolean|LexicalError scanDecimalDigit = scanDigit(patternDecimal);
+    boolean|LexicalError digitOutput = scanDecimalDigit(state);
+
+    if digitOutput is boolean {
+        return digitOutput;
+    }
+
+    // Float number allows only a decimal number a prefix.
+    // Check for decimal points and exponential in decimal numbers.
+    // Check for separators and end symbols.
+    if checkCharacter(state, [".", "e", "E", ",", "]", "}"]) {
+        state.forward(-1);
+    } else if checkCharacter(state, ["-", ":"]) {
+        state.forward(-1);
+        state.context = DATE_TIME;
+    } else if state.context == DATE_TIME && checkCharacter(state, ["-", ":", "t", "T", "+", "-", "Z"]) {
+        state.forward(-1);
+    } else {
         return generateInvalidCharacterError(state, DECIMAL);
     }
-;
+    return true;
 }

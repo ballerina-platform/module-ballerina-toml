@@ -66,14 +66,7 @@ function testDecimalToken() returns error? {
 }
 
 @test:Config {
-    groups: ["lexer"]
-}
-function testUnclosedString() {
-    assertLexicalError("'hello");
-}
-
-@test:Config {
-    dataProvider: excapedCharacterDataGen,
+    dataProvider: escapedCharacterDataGen,
     groups: ["lexer"]
 }
 function testEscapedCharacterToken(string lexeme, string value) returns error? {
@@ -81,7 +74,7 @@ function testEscapedCharacterToken(string lexeme, string value) returns error? {
     check assertToken(state, BASIC_STRING, lexeme = value);
 }
 
-function excapedCharacterDataGen() returns map<[string, string]> {
+function escapedCharacterDataGen() returns map<[string, string]> {
     return {
         "backspace": ["b", "\u{08}"],
         "tab": ["t", "\t"],
@@ -99,7 +92,7 @@ function excapedCharacterDataGen() returns map<[string, string]> {
     dataProvider: invalidEscapedCharDataGen,
     groups: ["lexer"]
 }
-function testInvalidExcapedCharacter(string lexeme) {
+function testInvalidEscapedCharacter(string lexeme) {
     assertLexicalError("\\" + lexeme);
 }
 

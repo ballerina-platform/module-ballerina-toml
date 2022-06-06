@@ -49,7 +49,7 @@ function tokensInSequence(LexerState state, string chars, TOMLToken successToken
 function checkCharacter(LexerState state, string|string[] expectedCharacters) returns boolean {
     if expectedCharacters is string {
         return expectedCharacters == state.peek();
-    } else if expectedCharacters.indexOf(<string>state.peek()) == () {
+    } else if expectedCharacters.indexOf(state.peek() ?: "") == () {
         return false;
     }
     return true;

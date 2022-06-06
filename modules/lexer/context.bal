@@ -136,7 +136,7 @@ function contextDateTime(LexerState state) returns LexerState|LexicalError {
 
     // Scan digits for date time
     if patternDecimal(<string:Char>state.peek()) {
-        return check iterate(state, scanDigit(patternDecimal, true), DECIMAL);
+        return check iterate(state, scanDecimal, DECIMAL);
     }
 
     return generateInvalidCharacterError(state, DATE_TIME);
@@ -198,7 +198,7 @@ function contextExpressionValue(LexerState state) returns LexerState|LexicalErro
             }
 
             if patternDecimal(<string:Char>peekValue) || <string>peekValue == "e" {
-                return check iterate(state, scanDigit(patternDecimal, true), DECIMAL);
+                return check iterate(state, scanDecimal, DECIMAL);
             }
 
             match peekValue {
@@ -242,7 +242,7 @@ function contextExpressionValue(LexerState state) returns LexerState|LexicalErro
                 }
                 _ => { // Remaining digits of the decimal numbers
                     if patternDecimal(<string:Char>state.peek()) {
-                        return check iterate(state, scanDigit(patternDecimal, true), DECIMAL);
+                        return check iterate(state, scanDecimal, DECIMAL);
                     }
                     return generateLexicalError(state,
                         string `Invalid character '${state.peek(1) ?: "<end-of-line>"} after '${<string>state.peek()}'`);
@@ -275,7 +275,7 @@ function contextExpressionValue(LexerState state) returns LexerState|LexicalErro
 
     // Check for values starting with an integer.
     if patternDecimal(<string:Char>state.peek()) {
-        return check iterate(state, scanDigit(patternDecimal, true), DECIMAL);
+        return check iterate(state, scanDecimal, DECIMAL);
     }
 
     return generateInvalidCharacterError(state, EXPRESSION_VALUE);

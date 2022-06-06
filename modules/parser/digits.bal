@@ -22,7 +22,7 @@ function number(ParserState state, string prevValue, boolean fractional = false)
                 return generateGrammarError(state, "Cannot have leading 0's in integers");
             }
             return fractional ? check processTypeCastingError(state, 'decimal:fromString(valueBuffer))
-                                        : check processTypeCastingError(state, 'int:fromString(valueBuffer));
+                : check processTypeCastingError(state, 'int:fromString(valueBuffer));
         }
         lexer:EXPONENTIAL => { // Handles exponential numbers
             check checkToken(state, lexer:DECIMAL);
@@ -178,7 +178,7 @@ function timeOffset(ParserState state, string prevValue, boolean datePrefixed) r
     match state.currentToken.token {
         lexer:ZULU => {
             return datePrefixed ? check getODT(state, valueBuffer + "Z")
-                    : generateGrammarError(state, "Cannot crate a UTC time for a local time");
+                : generateGrammarError(state, "Cannot create a UTC time for a local time");
         }
         lexer:PLUS|lexer:MINUS => {
             if datePrefixed {
@@ -197,7 +197,7 @@ function timeOffset(ParserState state, string prevValue, boolean datePrefixed) r
 
                 return getODT(state, valueBuffer);
             }
-            return generateGrammarError(state, "Cannot crate a UTC time for a local time");
+            return generateGrammarError(state, "Cannot create a UTC time for a local time");
         }
     }
 }
