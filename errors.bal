@@ -10,7 +10,7 @@ public type Error ParsingError|WritingError|FileError;
 
 // Level 1
 # Represents an error caused when failed to access the file.
-public type FileError distinct io:Error|distinct file:Error;
+public type FileError distinct (io:Error|file:Error);
 
 # Represents an error caused during the parsing.
 public type ParsingError parser:ParsingError;

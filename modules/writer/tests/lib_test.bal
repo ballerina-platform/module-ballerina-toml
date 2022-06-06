@@ -12,7 +12,7 @@ function testPrimitiveValuesUnderCurrentKey(string key, json value, string expec
 }
 
 function primitiveDataGen() returns map<[string, json, string]>|error {
-    map<[string, json, string]> dataSet = {
+    return {
         "int": ["int", 1, "int = 1"],
         "str": ["str", "s", "str = \"s\""],
         "float": ["float", 1.01, "float = 1.01"],
@@ -22,79 +22,123 @@ function primitiveDataGen() returns map<[string, json, string]>|error {
         "nan": ["NaN", 'float:NaN, "NaN = nan"],
         "utc": ["UTC", check time:utcFromString("1979-02-12T07:30:00Z"), "UTC = 1979-02-12T07:30:00Z"]
     };
-    return dataSet;
 }
 
 @test:Config {
-    groups: ["writer"]
+    dataProvider: validJsonDataGen
 }
-function testWriteDottedKeys() returns error? {
-    map<json> toml = {
-        "a": {
-            "b": 1
-        }
-    };
-    check assertStringArray(toml, "a.b = 1");
+function testValidJsonWrite(map<json> toml, string[] output) returns error? {
+    check assertStringArray(toml, output);
 }
 
-@test:Config {
-    groups: ["writer"]
-}
-function testWriteInlineArrays() returns error? {
-    map<json> toml = {
-        "a": [
-            {"b": 1, "c": 2},
-            3
-        ]
-    };
-    check assertStringArray(toml, ["a = [", "]", "  {\"b\":1,\"c\":2},", "  3,"]);
-}
-
-@test:Config {
-    groups: ["writer"]
-}
-function testWriteArrayTable() returns error? {
-    map<json> toml = {
-        "a": [
-            {"b": 1, "c": 2},
-            {"b": 2, "d": 3}
-        ]
-    };
-    check assertStringArray(toml, ["[[a]]", "b = 1", "b = 2", "c = 2", "d = 3"]);
-}
-
-@test:Config {
-    groups: ["writer"]
-}
-function testWriteStandardTableUnderArrayTable() returns error? {
-    map<json> toml = {
-        "a": [
-            {"b": 1, "c": 2},
+function validJsonDataGen() returns map<[map<json>, string[]]> {
+    return {
+        "simple dotted keys": [
             {
-                "d": {
-                    "e": 3,
-                    "f": 4
-                },
-                "g": 5
-            }
+                "a": {
+                    "b": 1
+                }
+            },
+            ["a.b = 1"]
+        ],
+        "complex dotted keys": [
+            {
+                "a": {
+                    "b": {
+                        "c": {
+                            "d": 1
+                        }
+                    }
+                }
+            },
+            ["a.b.c.d = 1"]
+        ],
+        "inline arrays": [
+            {
+                "a": [
+                    {"b": 1, "c": 2},
+                    3
+                ]
+            },
+            [
+                "a = [",
+                "  {\"b\":1,\"c\":2},",
+                "  3,",
+                "]"
+            ]
+        ],
+        "array tables": [
+            {
+                "a": [
+                    {"b": 1, "c": 2},
+                    {"b": 2, "d": 3}
+                ]
+            },
+            [
+                "[[a]]",
+                "b = 1",
+                "c = 2",
+                "",
+                "[[a]]",
+                "b = 2",
+                "d = 3"
+            ]
+        ],
+        "standard table under array table": [
+            {
+                "a": [
+                    {"b": 1, "c": 2},
+                    {
+                        "d": {
+                            "e": 3,
+                            "f": 4
+                        },
+                        "g": 5
+                    }
+                ]
+            },
+            [
+                "[[a]]",
+                "b = 1",
+                "c = 2",
+                "",
+                "[[a]]",
+                "g = 5",
+                "",
+                "  [a.d]",
+                "  e = 3",
+                "  f = 4"
+            ]
         ]
     };
-    check assertStringArray(toml, ["[[a]]", "b = 1", "c = 2", "  [a.d]", "  e = 3", "  f = 4", "g = 5"]);
+}
+
+@test:Config {}
+function testInvalidNull() returns error? {
+    string[]|WritingError key = write({"key": ()}, 2, true);
+    test:assertTrue(key is WritingError);
 }
 
 # Assert if given word(s) are in the output array
 #
-# + structure - TOML structure to be tested
-# + content - Words to be which should be in the file
+# + structure - TOML structure to be tested  
+# + content - Words to be which should be in the file  
+# + disableOrder - Check if the output contains the lines in content without order
 # + return - An error on fail
-function assertStringArray(map<json> structure, string|string[] content) returns error? {
+function assertStringArray(map<json> structure, string|string[] content,
+    boolean disableOrder = false) returns error? {
+
     string[] output = check write(structure, 2, true);
 
     if content is string {
         test:assertTrue(output.indexOf(content) != ());
     } else {
-        test:assertTrue(content.reduce(function(boolean assertion, string word) returns boolean {
-            return assertion && output.indexOf(word) != ();
-        }, true));
+        if disableOrder {
+            test:assertTrue(content.reduce(function(boolean assertion, string word) returns boolean {
+                return assertion && output.indexOf(word) != ();
+            }, true));
+        } else {
+            test:assertEquals(output, content);
+        }
     }
 }

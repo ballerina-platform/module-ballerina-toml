@@ -82,7 +82,7 @@ function processPrimitiveValue(json value) returns string|WritingError {
         return "nan";
     }
 
-    if value is json && value != () {
+    if value != () {
         return value.toString();
     }
 

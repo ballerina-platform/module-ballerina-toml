@@ -63,6 +63,7 @@ function contextExpressionKey(LexerState state) returns LexerState|LexicalError 
 # + state - Current lexer state
 # + return - Tokenize multiline basic string token
 function contextMultilineBasicString(LexerState state) returns LexerState|LexicalError {
+    // Scan for multiline basic string delimiter
     if state.peek() == "\"" && state.peek(1) == "\"" && state.peek(2) == "\"" {
         state.forward(2);
         return state.tokenize(MULTILINE_BASIC_STRING_DELIMITER);
@@ -73,15 +74,8 @@ function contextMultilineBasicString(LexerState state) returns LexerState|Lexica
         return state.tokenize(MULTILINE_BASIC_STRING_ESCAPE);
     }
 
-    // Process multiline string regular characters
-    if patternBasicString(<string:Char>state.peek())
-            || state.peek() == "\\"
-            || state.peek() == "'"
-            || state.peek() == "\"" {
-        return check iterate(state, scanMultilineBasicString, MULTILINE_BASIC_STRING_LINE);
-    }
-
-    return generateInvalidCharacterError(state, MULTILINE_BASIC_STRING);
+    // Process multiline basic string regular characters
+    return iterate(state, scanMultilineBasicString, MULTILINE_BASIC_STRING_LINE);
 }
 
 # Check for tokens related to multi-line literal string.
@@ -89,18 +83,14 @@ function contextMultilineBasicString(LexerState state) returns LexerState|Lexica
 # + state - Current lexer state
 # + return - Tokenize multiline literal string token
 function contextMultilineLiteralString(LexerState state) returns LexerState|LexicalError {
+    // Scan for multiline literal string delimiter
     if state.peek() == "'" && state.peek(1) == "'" && state.peek(2) == "'" {
         state.forward(2);
         return state.tokenize(MULTILINE_LITERAL_STRING_DELIMITER);
     }
 
-    if patternLiteralString(<string:Char>state.peek())
-            || state.peek() == "'"
-            || state.peek() == "\"" {
-        return iterate(state, scanMultilineLiteralString, MULTILINE_LITERAL_STRING_LINE);
-    }
-
-    return generateInvalidCharacterError(state, MULTILINE_LITERAL_STRING);
+    // Process multiline literal string regular characters
+    return iterate(state, scanMultilineLiteralString, MULTILINE_LITERAL_STRING_LINE);
 }
 
 # Check for tokens related to date time.

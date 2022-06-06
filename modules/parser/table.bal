@@ -70,11 +70,6 @@ function standardTable(ParserState state, map<json> structure, string keyName = 
             state.addTableKey(tableKeyName);
             state.currentTableKey = tableKeyName;
 
-            // Cannot define a standard table for an already defined array table.
-            if structure.hasKey(tomlKey) && !(structure[tomlKey] is map<json>) {
-                return generateDuplicateError(state, tableKeyName);
-            }
-
             state.currentStructure = structure[tomlKey] is map<json> ? <map<json>>structure[tomlKey] : {};
             return;
         }
