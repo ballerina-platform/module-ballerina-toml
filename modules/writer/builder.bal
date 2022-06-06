@@ -7,7 +7,7 @@ import ballerina/time;
 # + parentTableKey - Current table key  
 # + whitespace - Indentation for the current table
 # + return - An error on failure
-function processStructure(State state, map<json> structure, string parentTableKey, string whitespace) returns error? {
+function processStructure(State state, map<json> structure, string parentTableKey, string whitespace) returns WritingError? {
     string[] keys = structure.keys();
 
     // List of both standard and array tables to created at the end.
@@ -65,7 +65,7 @@ function processStructure(State state, map<json> structure, string parentTableKe
 #
 # + value - Value to converted
 # + return - Converted string on success. Else, an error.
-function processPrimitiveValue(json value) returns string|error {
+function processPrimitiveValue(json value) returns string|WritingError {
     if value is string {
         return "\"" + value + "\"";
     }
@@ -99,7 +99,7 @@ function processPrimitiveValue(json value) returns string|error {
 # + tables - List of array tables under the current table  
 # + whitespace - Indentation of the current table
 # + return - An error on failure
-function processArray(State state, string key, json[] value, string tableKey, map<json[]|map<json>> tables, string whitespace) returns error? {
+function processArray(State state, string key, json[] value, string tableKey, map<json[]|map<json>> tables, string whitespace) returns WritingError? {
     // Check if all the array values are object
     boolean isAllObject = value.reduce(function(boolean assertion, json arrayValue) returns boolean {
         return assertion && arrayValue is map<json>;
@@ -127,7 +127,7 @@ function processArray(State state, string key, json[] value, string tableKey, ma
 # + tables - List of standard tables under the current table  
 # + whitespace - Indentation of the current table
 # + return - An error on failure
-function processTable(State state, map<json> structure, string tableKey, map<json[]|map<json>> tables, string whitespace) returns error? {
+function processTable(State state, map<json> structure, string tableKey, map<json[]|map<json>> tables, string whitespace) returns WritingError? {
     // Check if there are more than one value nested to it.
     if structure.length() == 1 {
         string firstKey = structure.keys()[0];

@@ -1,5 +1,3 @@
-import ballerina/file;
-
 # Holds state of the writer package.
 #
 # + output - The output lines to be written to the file
@@ -18,7 +16,7 @@ type State record {|
 # + indentationPolicy - Number of whitespace for an indent  
 # + allowDottedKeys - If flag is set, write dotted keys instead of standard tables.
 # + return - An error on failure
-public function write(map<json> structure, int indentationPolicy, boolean allowDottedKeys) returns string[]|error {
+public function write(map<json> structure, int indentationPolicy, boolean allowDottedKeys) returns string[]|WritingError {
     string indent = "";
     foreach int i in 1 ... indentationPolicy {
         indent += " ";
@@ -39,20 +37,4 @@ public function write(map<json> structure, int indentationPolicy, boolean allowD
     }
 
     return state.output;
-}
-
-# Checks if the file exists. If not, creates a new file.
-#
-# + fileName - Path to the file
-# + return - An error on failure
-public function openFile(string fileName) returns error? {
-    // Check if the given fileName is not directory
-    if check file:test(fileName, file:IS_DIR) {
-        return generateError("Cannot write to a directory");
-    }
-
-    // Create the file if the file does not exists
-    if !check file:test(fileName, file:EXISTS) {
-        check file:create(fileName);
-    }
 }
