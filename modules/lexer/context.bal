@@ -3,6 +3,12 @@
 # + state - Current lexer state
 # + return - Tokenize TOML key token
 function contextExpressionKey(LexerState state) returns LexerState|LexicalError {
+    // Check for line breaks when reading from string
+    if state.peek() == "\n" {
+        state.isNewLine = true;
+        return state.tokenize(EOL);
+    }
+
     // Check for unquoted keys
     if patternUnquotedString(<string:Char>state.peek()) {
         return check iterate(state, scanUnquotedKey, UNQUOTED_KEY);
@@ -103,6 +109,10 @@ function contextDateTime(LexerState state) returns LexerState|LexicalError {
             state.forward(-1);
             return state.tokenize(EOL);
         }
+        "\n" => { // Check for line breaks when reading from string
+            state.isNewLine = true;
+            return state.tokenize(EOL);
+        }
         ":" => { // Time separator
             return state.tokenize(COLON);
         }
@@ -141,6 +151,10 @@ function contextExpressionValue(LexerState state) returns LexerState|LexicalErro
         " "|"\t" => { // Ignore whitespace
             state.forward();
             return check scan(state);
+        }
+        "\n" => { // Check for line breaks when reading from string
+            state.isNewLine = true;
+            return state.tokenize(EOL);
         }
         "#" => { // Ignore comments
             state.forward(-1);

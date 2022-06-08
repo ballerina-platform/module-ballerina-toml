@@ -15,8 +15,17 @@ public class LexerState {
     # Output TOML token
     TOMLToken token = DUMMY;
 
+    public boolean isNewLine = false;
+
     function appendToLexeme(string appendLine) {
         self.lexeme += appendLine;
+    }
+
+    public function setLine(string line, int lineNumber) {
+        self.index = 0;
+        self.line = line;
+        self.lineNumber = lineNumber;
+        self.isNewLine = false;
     }
 
     # Increment the index of the column by k indexes
@@ -33,9 +42,8 @@ public class LexerState {
     #
     # + k - Number of characters to peek. Default = 0
     # + return - Character at the peek if not null  
-    function peek(int k = 0) returns string? {
-        return self.index + k < self.line.length() ? self.line[self.index + k] : ();
-    }
+    function peek(int k = 0) returns string?
+        => self.index + k < self.line.length() ? self.line[self.index + k] : ();
 
     # Add the output TOML token to the current state
     #

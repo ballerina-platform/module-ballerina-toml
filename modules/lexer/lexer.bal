@@ -24,7 +24,7 @@ final readonly & map<string> escapedCharMap = {
 public function scan(LexerState state) returns LexerState|LexicalError {
 
     // Generate EOL token 
-    if state.index >= state.line.length() {
+    if state.peek() == () {
         return state.tokenize(EOL);
     }
 

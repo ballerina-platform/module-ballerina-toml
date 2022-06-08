@@ -59,18 +59,19 @@ class ParserState {
     # Initialize the lexer with the attributes of a new line.
     #
     # + err - Error to be returned on failure
-    # + incrementLine - Sets the next line to the lexer
     # + return - An error if it fails to initialize  
-    function initLexer(GrammarError err, boolean incrementLine = true) returns ParsingError? {
-        if incrementLine {
-            self.lineIndex += 1;
+    function initLexer(GrammarError err) returns ParsingError? {
+        self.lineIndex += 1;
+        string line;
+        if self.lexerState.isNewLine {
+            line = self.lexerState.line.substring(self.lexerState.index);
+        } else {
+            if self.lineIndex >= self.numLines {
+                return err;
+            }
+            line = self.lines[self.lineIndex];
         }
-        if self.lineIndex >= self.numLines {
-            return err;
-        }
-        self.lexerState.line = self.lines[self.lineIndex];
-        self.lexerState.index = 0;
-        self.lexerState.lineNumber = self.lineIndex;
+        self.lexerState.setLine(line, self.lineIndex);
     }
 
     # Add a table key to the respective array if possible.

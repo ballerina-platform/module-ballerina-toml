@@ -222,7 +222,7 @@ function scanDigit(function (string:Char char) returns boolean pattern)
             return false;
         }
 
-        if checkCharacter(state, [" ", "#", "\t"]) {
+        if checkCharacter(state, [" ", "#", "\t", "\n"]) {
             state.forward(-1);
             return true;
         }
