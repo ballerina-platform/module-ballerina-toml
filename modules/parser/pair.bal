@@ -43,20 +43,20 @@ function keyValue(ParserState state, map<json> structure) returns map<json>|Pars
 
     state.updateLexerContext(lexer:EXPRESSION_VALUE);
     check checkToken(state, [
-                lexer:BASIC_STRING,
-                lexer:LITERAL_STRING,
-                lexer:MULTILINE_BASIC_STRING_DELIMITER,
-                lexer:MULTILINE_LITERAL_STRING_DELIMITER,
-                lexer:DECIMAL,
-                lexer:BINARY,
-                lexer:OCTAL,
-                lexer:HEXADECIMAL,
-                lexer:INFINITY,
-                lexer:NAN,
-                lexer:OPEN_BRACKET,
-                lexer:BOOLEAN,
-                lexer:INLINE_TABLE_OPEN
-            ]);
+        lexer:BASIC_STRING,
+        lexer:LITERAL_STRING,
+        lexer:MULTILINE_BASIC_STRING_DELIMITER,
+        lexer:MULTILINE_LITERAL_STRING_DELIMITER,
+        lexer:DECIMAL,
+        lexer:BINARY,
+        lexer:OCTAL,
+        lexer:HEXADECIMAL,
+        lexer:INFINITY,
+        lexer:NAN,
+        lexer:OPEN_BRACKET,
+        lexer:BOOLEAN,
+        lexer:INLINE_TABLE_OPEN
+    ]);
 
     // Obtain the current structure 
     string currentKey;

@@ -1,9 +1,9 @@
 import ballerina/io;
 import ballerina/file;
 
-import toml.writer;
 import toml.lexer;
 import toml.parser;
+import toml.writer;
 
 # Represents the generic error type for the TOML package.
 public type Error ParsingError|WritingError|FileError;

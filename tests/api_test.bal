@@ -47,7 +47,7 @@ function testReadTOMLString() returns error? {
 }
 function testReadTOMLFile() returns error? {
     check io:fileWriteString("input.toml", "bool = true\n int = 1");
-    map<json> output = check read("input.toml");
+    map<json> output = check readFile("input.toml");
     test:assertEquals(output, {"bool": true, "int": 1});
     check file:remove("input.toml");
 }
@@ -64,7 +64,7 @@ function testWriteTOMLString() returns error? {
     groups: ["api"]
 }
 function testWriteTOMLFile() returns error? {
-    check write("output.toml", {"outer": {"inner": "value"}}, allowDottedKeys = false, indentationPolicy = 4);
+    check writeFile("output.toml", {"outer": {"inner": "value"}}, allowDottedKeys = false, indentationPolicy = 4);
     string[] output = check io:fileReadLines("output.toml");
     test:assertEquals(output, ["[outer]", "inner = \"value\""]);
     check file:remove("output.toml");

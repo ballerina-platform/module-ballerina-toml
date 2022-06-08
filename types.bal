@@ -1,7 +1,7 @@
 # Configurations for writing a TOML document.
 #
-# + indentationPolicy - Number of whitespace for an indentation
-# + allowDottedKeys - If set, dotted keys are used instead of standard tables
+# + indentationPolicy - Number of spaces for an indentation
+# + allowDottedKeys - If set, dotted keys are used instead of standard tables where applicable.
 public type WriteConfig record {|
     int indentationPolicy = 2;
     boolean allowDottedKeys = true;
