@@ -1,22 +1,5 @@
 import ballerina/test;
 
-// String tokens
-@test:Config {
-    groups: ["lexer"]
-}
-function testBasicString() returns error? {
-    LexerState state = setLexerString("\"someValue\"", EXPRESSION_VALUE);
-    check assertToken(state, BASIC_STRING, lexeme = "someValue");
-}
-
-@test:Config {
-    groups: ["lexer"]
-}
-function testLiteralString() returns error? {
-    LexerState state = setLexerString("'somevalue'", EXPRESSION_VALUE);
-    check assertToken(state, LITERAL_STRING, lexeme = "somevalue");
-}
-
 @test:Config {
     dataProvider: simpleDataValueDataGen,
     groups: ["lexer"]
@@ -45,24 +28,26 @@ function simpleDataValueDataGen() returns map<[string, TOMLToken, string]> {
         "negative nan": ["-nan", NAN, ""],
         "unsigned nan": ["nan", NAN, ""],
         "simple exponential": ["e", EXPONENTIAL, ""],
-        "capital exponential": ["E", EXPONENTIAL, ""]
+        "capital exponential": ["E", EXPONENTIAL, ""],
+        "basic string": ["\"someValue\"", BASIC_STRING, "someValue"],
+        "literal string": ["'someValue'", LITERAL_STRING, "someValue"]
     };
 }
 
 @test:Config {
+    dataProvider: tokensAfterDecimalDataGen,
     groups: ["lexer"]
 }
-function testExponentialTokenWithDECIMAL() returns error? {
-    LexerState state = setLexerString("123e2", EXPRESSION_VALUE);
-    check assertToken(state, EXPONENTIAL, 2);
+function testTokensAfterDecimal(string line, TOMLToken expectedToken) returns error? {
+    LexerState state = setLexerString(line, EXPRESSION_VALUE);
+    check assertToken(state, expectedToken, 2);
 }
 
-@test:Config {
-    groups: ["lexer"]
-}
-function testDecimalToken() returns error? {
-    LexerState state = setLexerString("123.123", EXPRESSION_VALUE);
-    check assertToken(state, DOT, 2);
+function tokensAfterDecimalDataGen() returns map<[string, TOMLToken]> {
+    return {
+        "exponential": ["123e2", EXPONENTIAL],
+        "decimal": ["123.123", DOT]
+    };
 }
 
 @test:Config {
@@ -104,5 +89,48 @@ function invalidEscapedCharDataGen() returns map<[string]> {
         "U-9": ["u999999999"],
         "no-char": [""],
         "invalid-char": ["z"]
+    };
+}
+
+@test:Config {
+    dataProvider: arrayValueDataGen,
+    groups: ["lexer"]
+}
+function testArrayValue(string testingLine, TOMLToken expectedToken, int number, string expectedLexeme) returns error? {
+    LexerState state = setLexerString(testingLine, EXPRESSION_VALUE);
+    check assertToken(state, expectedToken, number);
+}
+
+function arrayValueDataGen() returns map<[string, TOMLToken, int, string]> {
+    return {
+        "starting array delimiter": ["[", OPEN_BRACKET, 0, ""],
+        "ending array delimiter": ["]", CLOSE_BRACKET, 0, ""],
+        "starting inline table delimiter": ["{", INLINE_TABLE_OPEN, 0, ""],
+        "ending inline table delimiter": ["}", INLINE_TABLE_CLOSE, 0, ""],
+        "same integers": ["[1, 2]", SEPARATOR, 3, ""],
+        "string": ["[\"1\", 2]", SEPARATOR, 3, ""],
+        "boolean": ["[true, 2]", SEPARATOR, 3, ""],
+        "float": ["[1.0, 2]", SEPARATOR, 5, ""],
+        "nested array": ["[[1], 2]", SEPARATOR, 5, ""]
+    };
+}
+
+@test:Config {
+    dataProvider: multilineTextDataGen,
+    groups: ["lexer"]
+}
+function testMutltilineString(string testLine, Context testingState, TOMLToken expectedToken, int number, string expectedLexeme) returns error? {
+    LexerState state = setLexerString(testLine, testingState);
+    check assertToken(state, expectedToken, number, expectedLexeme);
+}
+
+function multilineTextDataGen() returns map<[string, Context, TOMLToken, int, string]> {
+    return {
+        "escape": ["\"\"\"escape\\  whitespace\"\"\"", MULTILINE_BASIC_STRING, MULTILINE_BASIC_STRING_ESCAPE, 3, ""],
+        "valid quotes": ["\"\"\"single-quote\"double-quotes\"\"single-apastrophe'double-appastrophe''\"\"\"", MULTILINE_BASIC_STRING, MULTILINE_BASIC_STRING_LINE, 2, "single-quote\"double-quotes\"\"single-apastrophe'double-appastrophe''"],
+        "literal": ["'''somevalue'''", MULTILINE_LITERAL_STRING, MULTILINE_LITERAL_STRING_LINE, 2, "somevalue"],
+        "literal delimiter": ["'''", EXPRESSION_VALUE, MULTILINE_LITERAL_STRING_DELIMITER, 0, ""],
+        "basic": ["\"\"\"somevalue\"\"\"", MULTILINE_BASIC_STRING, MULTILINE_BASIC_STRING_LINE, 2, "somevalue"],
+        "basic delimiter": ["\"\"\"", EXPRESSION_VALUE, MULTILINE_BASIC_STRING_DELIMITER, 0, ""]
     };
 }

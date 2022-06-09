@@ -1,62 +1,64 @@
-# Check for array table, standard table, and expression key.
+# Check for tokens related to array table, standard table, and expression key.
 #
 # + state - Current lexer state
-# + return - Tokenize TOML key token
+# + return - Tokenized TOML key token. Else, an error on failure.
 function contextExpressionKey(LexerState state) returns LexerState|LexicalError {
-    // Check for line breaks when reading from string
+    // Check for line breaks when reading a string
     if state.peek() == "\n" {
         state.isNewLine = true;
         return state.tokenize(EOL);
     }
 
     // Check for unquoted keys
-    if patternUnquotedString(<string:Char>state.peek()) {
-        return check iterate(state, scanUnquotedKey, UNQUOTED_KEY);
+    if patternUnquotedString(state.currentChar()) {
+        return iterate(state, scanUnquotedKey, UNQUOTED_KEY);
     }
 
     match state.peek() {
         " "|"\t" => { // Ignore whitespace
             state.forward();
-            return check scan(state);
+            return scan(state);
         }
         "#" => { // Ignore comments
             state.forward(-1);
             return state.tokenize(EOL);
         }
-        "\"" => { // Check for basic string keys
+        "\"" => { // Check for basic string key
             state.forward();
-            return check iterate(state, scanBasicString,
+            return iterate(state, scanBasicString,
                 BASIC_STRING, "Expected '\"' at the end of the basic string");
         }
-        "'" => { // Check for literal string keys
+        "'" => { // Check for literal string key
             state.forward();
-            return check iterate(state, scanLiteralString,
+            return iterate(state, scanLiteralString,
                 LITERAL_STRING, "Expected ''' at the end of the literal string");
         }
-        "." => { // Check for dotted keys
+        "." => { // Check for dotted key
             return state.tokenize(DOT);
         }
         "=" => { // Check for key value separator
             return state.tokenize(KEY_VALUE_SEPARATOR);
         }
-        "[" => { // Array values and standard tables
-            if state.peek(1) == "[" && state.context == EXPRESSION_KEY { // Array tables
+        "[" => { // Check for opening array value or standard table
+            if state.peek(1) == "[" { // Array table
                 state.forward();
                 return state.tokenize(ARRAY_TABLE_OPEN);
             }
+            // Standard table
             return state.tokenize(OPEN_BRACKET);
         }
-        "]" => { // Array values and standard tables
-            if state.peek(1) == "]" && state.context == EXPRESSION_KEY { // Array tables
+        "]" => { // Check for closing array value or standard table
+            if state.peek(1) == "]" { // Array table
                 state.forward();
                 return state.tokenize(ARRAY_TABLE_CLOSE);
             }
+            // Standard table
             return state.tokenize(CLOSE_BRACKET);
         }
-        "}" => { // Close inline table
+        "}" => { // Check for closing inline table
             return state.tokenize(INLINE_TABLE_CLOSE);
         }
-        "," => { // Separator
+        "," => { // Check for separator
             return state.tokenize(SEPARATOR);
         }
     }
@@ -67,7 +69,7 @@ function contextExpressionKey(LexerState state) returns LexerState|LexicalError 
 # Check for tokens related to multi-line basic string.
 #
 # + state - Current lexer state
-# + return - Tokenize multiline basic string token
+# + return - Tokenized multiline basic string token. Else, an error on failure.
 function contextMultilineBasicString(LexerState state) returns LexerState|LexicalError {
     // Scan for multiline basic string delimiter
     if state.peek() == "\"" && state.peek(1) == "\"" && state.peek(2) == "\"" {
@@ -87,7 +89,7 @@ function contextMultilineBasicString(LexerState state) returns LexerState|Lexica
 # Check for tokens related to multi-line literal string.
 #
 # + state - Current lexer state
-# + return - Tokenize multiline literal string token
+# + return - Tokenized multiline literal string token. Else, an error on failure.
 function contextMultilineLiteralString(LexerState state) returns LexerState|LexicalError {
     // Scan for multiline literal string delimiter
     if state.peek() == "'" && state.peek(1) == "'" && state.peek(2) == "'" {
@@ -102,7 +104,7 @@ function contextMultilineLiteralString(LexerState state) returns LexerState|Lexi
 # Check for tokens related to date time.
 #
 # + state - Current lexer state
-# + return - Tokenize date time token
+# + return - Tokenized date time token. Else, an error on failure.
 function contextDateTime(LexerState state) returns LexerState|LexicalError {
     match state.peek() {
         "#" => { // Ignore comments
@@ -113,30 +115,30 @@ function contextDateTime(LexerState state) returns LexerState|LexicalError {
             state.isNewLine = true;
             return state.tokenize(EOL);
         }
-        ":" => { // Time separator
+        ":" => { // Check for time separator
             return state.tokenize(COLON);
         }
-        "-" => { // Date separator or negative offset
-            return state.tokenize(MINUS);
-        }
-        "t"|"T"|" " => { // Time delimiter
-            state.appendToLexeme(<string>state.peek());
+        "t"|"T"|" " => { // check for time delimiter
+            state.appendToLexeme(state.currentChar());
             return state.tokenize(TIME_DELIMITER);
         }
-        "." => { // Time fraction
+        "." => { // Check for time fraction
             return state.tokenize(DOT);
         }
-        "+" => { // Positive offset
+        "-" => { // Check for date separator or negative offset
+            return state.tokenize(MINUS);
+        }
+        "+" => { // Check for positive offset
             return state.tokenize(PLUS);
         }
-        "Z" => { // Zulu offset
+        "Z" => { // Check for Zulu offset
             return state.tokenize(ZULU);
         }
     }
 
     // Scan digits for date time
-    if patternDecimal(<string:Char>state.peek()) {
-        return check iterate(state, scanDecimal, DECIMAL);
+    if patternDecimal(state.currentChar()) {
+        return iterate(state, scanDecimal, DECIMAL);
     }
 
     return generateInvalidCharacterError(state, DATE_TIME);
@@ -145,12 +147,12 @@ function contextDateTime(LexerState state) returns LexerState|LexicalError {
 # Check for values of tables and array values.
 #
 # + state - Current lexer state
-# + return - Tokenize TOML value token
+# + return - Tokenized TOML value token. Else, an error on failure.
 function contextExpressionValue(LexerState state) returns LexerState|LexicalError {
     match state.peek() {
         " "|"\t" => { // Ignore whitespace
             state.forward();
-            return check scan(state);
+            return scan(state);
         }
         "\n" => { // Check for line breaks when reading from string
             state.isNewLine = true;
@@ -160,16 +162,16 @@ function contextExpressionValue(LexerState state) returns LexerState|LexicalErro
             state.forward(-1);
             return state.tokenize(EOL);
         }
-        "[" => { // Array values and standard tables
+        "[" => { // Check for opening array value and standard table
             return state.tokenize(OPEN_BRACKET);
         }
-        "]" => { // Array values and standard tables
+        "]" => { // Check for closing array value and standard table
             return state.tokenize(CLOSE_BRACKET);
         }
-        "," => { // Separator
+        "," => { // Check for separator 
             return state.tokenize(SEPARATOR);
         }
-        "\"" => { // Basic strings
+        "\"" => { // Check for basic string delimiter 
             // Multi-line basic strings
             if state.peek(1) == "\"" && state.peek(2) == "\"" {
                 state.forward(2);
@@ -178,9 +180,9 @@ function contextExpressionValue(LexerState state) returns LexerState|LexicalErro
 
             // Basic strings
             state.forward();
-            return check iterate(state, scanBasicString, BASIC_STRING, "Expected '\"' at the end of the basic string");
+            return iterate(state, scanBasicString, BASIC_STRING, "Expected '\"' at the end of the basic string");
         }
-        "'" => { // Literal strings
+        "'" => { // Check for literal string delimiter 
             // Multi-line literal string
             if state.peek(1) == "'" && state.peek(2) == "'" {
                 state.forward(2);
@@ -189,36 +191,38 @@ function contextExpressionValue(LexerState state) returns LexerState|LexicalErro
 
             // Literal strings
             state.forward();
-            return check iterate(state, scanLiteralString, LITERAL_STRING, "Expected ''' at the end of the literal string");
+            return iterate(state, scanLiteralString, LITERAL_STRING, "Expected ''' at the end of the literal string");
         }
-        "." => { // Dotted keys
+        "." => { // Check for decimal point
             return state.tokenize(DOT);
         }
-        "0" => {
+        "0" => { // Check for numbers starting with 0
             string? peekValue = state.peek(1);
+            
+            // A decimal cannot start with 0 unless it is the only digit
             if peekValue == () {
                 state.appendToLexeme("0");
                 return state.tokenize(DECIMAL);
             }
 
             if patternDecimal(<string:Char>peekValue) || <string>peekValue == "e" {
-                return check iterate(state, scanDecimal, DECIMAL);
+                return iterate(state, scanDecimal, DECIMAL);
             }
 
             match peekValue {
-                "x" => { // Hexadecimal numbers
+                "x" => { // Check for hexadecimal numbers
                     state.forward(2);
-                    return check iterate(state, scanDigit(patternHexadecimal), HEXADECIMAL);
+                    return iterate(state, scanDigit(patternHexadecimal), HEXADECIMAL);
                 }
-                "o" => { // Octal numbers
+                "o" => { // Check for octal numbers
                     state.forward(2);
-                    return check iterate(state, scanDigit(patternOctal), OCTAL);
+                    return iterate(state, scanDigit(patternOctal), OCTAL);
                 }
-                "b" => { // Binary numbers
+                "b" => { // Check for binary numbers
                     state.forward(2);
-                    return check iterate(state, scanDigit(patternBinary), BINARY);
+                    return iterate(state, scanDigit(patternBinary), BINARY);
                 }
-                " "|"#"|"."|","|"]" => { // Decimal numbers
+                " "|"#"|"."|","|"]" => { // A decimal cannot start with 0 unless it is the only digit
                     state.appendToLexeme("0");
                     return state.tokenize(DECIMAL);
                 }
@@ -227,8 +231,8 @@ function contextExpressionValue(LexerState state) returns LexerState|LexicalErro
                 }
             }
         }
-        "+"|"-" => { // Decimal numbers
-            state.appendToLexeme(<string>state.peek());
+        "+"|"-" => { // Check for positive and negative decimal number
+            state.appendToLexeme(state.currentChar());
             state.forward();
             match state.peek() {
                 "0" => { // There cannot be leading zero.
@@ -236,50 +240,50 @@ function contextExpressionValue(LexerState state) returns LexerState|LexicalErro
                     return state.tokenize(DECIMAL);
                 }
                 () => { // Only '+' and '-' are invalid.
-                    return generateLexicalError(state, "There must me DIGITs after '+'");
+                    return generateLexicalError(state, string `Expected digits after '${<string>state.peek(-1)}'`);
                 }
-                "n" => { // NAN token
-                    return check tokensInSequence(state, "nan", NAN);
+                "n" => { // Check for NaN token
+                    return tokensInSequence(state, "nan", NAN);
                 }
-                "i" => { // Infinity tokens
-                    return check tokensInSequence(state, "inf", INFINITY);
+                "i" => { // Check for infinity tokens
+                    return tokensInSequence(state, "inf", INFINITY);
                 }
-                _ => { // Remaining digits of the decimal numbers
-                    if patternDecimal(<string:Char>state.peek()) {
-                        return check iterate(state, scanDecimal, DECIMAL);
+                _ => { // Check for remaining digits of the decimal numbers
+                    if patternDecimal(state.currentChar()) {
+                        return iterate(state, scanDecimal, DECIMAL);
                     }
                     return generateLexicalError(state,
-                        string `Invalid character '${state.peek(1) ?: "<end-of-line>"} after '${<string>state.peek()}'`);
+                        string `Invalid character '${state.peek(1) ?: "<end-of-line>"} after '${state.currentChar()}'`);
                 }
             }
         }
-        "t" => { // Boolean true token
-            return check tokensInSequence(state, "true", BOOLEAN);
+        "t" => { // Check for boolean true token
+            return tokensInSequence(state, "true", BOOLEAN);
         }
-        "f" => { // Boolean false token
-            return check tokensInSequence(state, "false", BOOLEAN);
+        "f" => { // Check for boolean false token
+            return tokensInSequence(state, "false", BOOLEAN);
         }
-        "n" => { // NAN token
-            return check tokensInSequence(state, "nan", NAN);
+        "n" => { // Check for NaN token
+            return tokensInSequence(state, "nan", NAN);
         }
-        "i" => { // Positive infinity
+        "i" => { // Check for positive infinity
             state.appendToLexeme("+");
-            return check tokensInSequence(state, "inf", INFINITY);
+            return tokensInSequence(state, "inf", INFINITY);
         }
-        "e"|"E" => { // Exponential tokens
+        "e"|"E" => { // Check for exponential token
             return state.tokenize(EXPONENTIAL);
         }
-        "{" => { // Open inline table
+        "{" => { // Check for opening inline table
             return state.tokenize(INLINE_TABLE_OPEN);
         }
-        "}" => { // Close inline table
+        "}" => { // Check for closing inline table
             return state.tokenize(INLINE_TABLE_CLOSE);
         }
     }
 
-    // Check for values starting with an integer.
-    if patternDecimal(<string:Char>state.peek()) {
-        return check iterate(state, scanDecimal, DECIMAL);
+    // Check for values starting with an integer
+    if patternDecimal(state.currentChar()) {
+        return iterate(state, scanDecimal, DECIMAL);
     }
 
     return generateInvalidCharacterError(state, EXPRESSION_VALUE);

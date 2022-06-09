@@ -56,3 +56,22 @@ function testDot() returns error? {
     check assertToken(state, DOT);
     check assertToken(state, LITERAL_STRING, lexeme = "inner");
 }
+
+@test:Config {
+    dataProvider: tableDelimiterDataGen,
+    groups: ["lexer"]
+}
+function testTableDelimiterToken(string testingLine, TOMLToken expectedToken) returns error? {
+    LexerState state = setLexerString(testingLine);
+    check assertToken(state, expectedToken);
+}
+
+function tableDelimiterDataGen() returns map<[string, TOMLToken]> {
+    return {
+        "starting array table token": ["[[", ARRAY_TABLE_OPEN],
+        "closing array table token": ["]]", ARRAY_TABLE_CLOSE],
+        "starting table token": ["[", OPEN_BRACKET],
+        "closing table token": ["]", CLOSE_BRACKET]
+    };
+}
+

@@ -28,7 +28,7 @@ function generateInvalidCharacterError(LexerState state, string context) returns
     return error(
         message,
         line = state.lineNumber + 1,
-        column = state.index,
+        column = state.index + 1,
         actual = currentChar,
         context = context
     );
@@ -38,6 +38,6 @@ function generateLexicalError(LexerState state, string message) returns LexicalE
     error(
         message + ".",
         line = state.lineNumber + 1,
-        column = state.index,
+        column = state.index + 1,
         actual = state.peek()
     );

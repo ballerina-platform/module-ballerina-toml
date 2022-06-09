@@ -21,6 +21,8 @@ public class LexerState {
         self.lexeme += appendLine;
     }
 
+    function currentChar() returns string:Char => self.line[self.index];
+
     public function setLine(string line, int lineNumber) {
         self.index = 0;
         self.line = line;
