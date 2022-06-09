@@ -17,6 +17,10 @@ public class LexerState {
 
     public boolean isNewLine = false;
 
+    public function row() returns int => self.lineNumber + 1;
+
+    public function column() returns int => self.index + 1;
+
     function appendToLexeme(string appendLine) {
         self.lexeme += appendLine;
     }

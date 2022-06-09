@@ -2,13 +2,15 @@ import toml.lexer;
 
 # Assert the next lexer token with the predicted token.
 # If no token is provided, then the next token is retrieved without an error checking.
-# Hence, the error checking must be done explicitly.
+# In this case, the error checking must be done explicitly.
 #
 # + state - Current parser state
 # + expectedTokens - Predicted token or tokens
 # + customMessage - Error message to be displayed if the expected token not found  
-# + return - Parsing error if not found
-function checkToken(ParserState state, lexer:TOMLToken|lexer:TOMLToken[] expectedTokens = lexer:DUMMY, string customMessage = "") returns ParsingError|lexer:LexicalError|() {
+# + return - Parsing error on failure
+function checkToken(ParserState state, lexer:TOMLToken|lexer:TOMLToken[] expectedTokens = lexer:DUMMY, 
+    string customMessage = "") returns ParsingError? {
+
     lexer:TOMLToken prevToken = state.currentToken.token;
     state.lexerState = check lexer:scan(state.lexerState);
     state.currentToken = state.lexerState.getToken();
@@ -93,22 +95,6 @@ function buildTOMLObject(ParserState state, map<json> structure) returns map<jso
     }
 
     return structure;
-}
-
-# Evaluates an integer of a different base
-#
-# + state - Current parser state
-# + numberSystem - Number system of the value
-# + return - Processed integer. Error if there is a string.
-function processInteger(ParserState state, int numberSystem) returns int|ParsingError {
-    int value = 0;
-    int power = 1;
-    int length = state.currentToken.value.length() - 1;
-    foreach int i in 0 ... length {
-        value += <int>(check processTypeCastingError(state, 'int:fromString(state.currentToken.value[length - i]))) * power;
-        power *= numberSystem;
-    }
-    return value;
 }
 
 # Check errors during type casting to Ballerina types.

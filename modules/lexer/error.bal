@@ -27,8 +27,8 @@ function generateInvalidCharacterError(LexerState state, string context) returns
     string message = string `Invalid character '${currentChar ?: "<end-of-line>"}' for a '${context}'`;
     return error(
         message,
-        line = state.lineNumber + 1,
-        column = state.index + 1,
+        line = state.row(),
+        column = state.column(),
         actual = currentChar,
         context = context
     );
@@ -37,7 +37,7 @@ function generateInvalidCharacterError(LexerState state, string context) returns
 function generateLexicalError(LexerState state, string message) returns LexicalError =>
     error(
         message + ".",
-        line = state.lineNumber + 1,
-        column = state.index + 1,
+        line = state.row(),
+        column = state.column(),
         actual = state.peek()
     );

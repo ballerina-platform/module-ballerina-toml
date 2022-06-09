@@ -5,13 +5,13 @@ import toml.lexer;
 #
 # + inputLines - TOML lines to be parsed.  
 # + parseOffsetDateTime - Converts ODT to Ballerina time:Utc
-# + return - If success, map object for the TOML document.
-# Else, a lexical or a parsing error.
-public function parse(string[] inputLines, boolean parseOffsetDateTime) returns map<json>|lexer:LexicalError|ParsingError {
+# + return - Map object of the TOML document on success. Else, an parsing error.
+public function parse(string[] inputLines, boolean parseOffsetDateTime) returns map<json>|ParsingError {
+    
     // Initialize the state 
     ParserState state = new (inputLines, parseOffsetDateTime);
 
-    // Iterating each line of the document.
+    // Iterating each line of the document
     while state.lineIndex < state.numLines - 1 || state.lexerState.isNewLine {
         check state.initLexer(generateGrammarError(state, "Cannot open the TOML document"));
         check checkToken(state);
@@ -21,7 +21,7 @@ public function parse(string[] inputLines, boolean parseOffsetDateTime) returns 
                 state.bufferedKey = state.currentToken.value;
                 state.currentStructure = check keyValue(state, state.currentStructure.clone());
             }
-            lexer:OPEN_BRACKET => { // Process a standard tale.
+            lexer:OPEN_BRACKET => { // Process a standard table
                 // Add the previous table to the TOML object
                 state.tomlObject = check buildTOMLObject(state, state.tomlObject.clone());
                 state.isArrayTable = false;

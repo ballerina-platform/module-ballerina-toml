@@ -7,7 +7,7 @@ const ORIGIN_FILE_PATH = "modules/parser/tests/resources/";
 # Parses a single line of a TOML string into a Ballerina map object.
 #
 # + tomlString - Single line of a TOML string
-# + return - TOML map object is success. Else, returns an error
+# + return - TOML map object on success. Else, returns an error
 function readString(string tomlString) returns map<json>|error {
     string[] lines = [tomlString];
     return check parse(lines, true);
@@ -16,7 +16,7 @@ function readString(string tomlString) returns map<json>|error {
 # Parses a TOML file into a Ballerina map object.
 #
 # + filePath - Path to the toml file
-# + return - TOML map object is success. Else, returns an error
+# + return - TOML map object on success. Else, returns an error
 function read(string filePath) returns map<json>|error {
     string[] lines = check io:fileReadLines(filePath);
     return check parse(lines, true);

@@ -6,7 +6,9 @@ import toml.lexer;
 # + tempTable - Recursively constructing inline table
 # + isStart - True if the function is being called for the first time.
 # + return - Map structure representing the table on success. Else, an error if the grammar rules are not met.
-function inlineTable(ParserState state, map<json> tempTable = {}, boolean isStart = true) returns map<json>|lexer:LexicalError|ParsingError {
+function inlineTable(ParserState state, map<json> tempTable = {}, boolean isStart = true)
+    returns map<json>|ParsingError {
+
     state.updateLexerContext(lexer:EXPRESSION_KEY);
     check checkToken(state, [
         lexer:UNQUOTED_KEY,
@@ -39,13 +41,13 @@ function inlineTable(ParserState state, map<json> tempTable = {}, boolean isStar
 }
 
 # Process the grammar rules for initializing the standard table.
-# Sets a new current structure, so the succeeding key values are added to it.
+# Sets a new current structure, so the succeeding key value pairs are added to it.
 #
 # + state - Current parser state
 # + structure - Mapping of the parent key
 # + keyName - Recursively constructing the table key name
 # + return - An error if the grammar rules are not met or any duplicate values.
-function standardTable(ParserState state, map<json> structure, string keyName = "") returns lexer:LexicalError|ParsingError|() {
+function standardTable(ParserState state, map<json> structure, string keyName = "") returns ParsingError|() {
 
     // Verifies the current key
     string tomlKey = state.currentToken.value;
@@ -83,7 +85,7 @@ function standardTable(ParserState state, map<json> structure, string keyName = 
 # + structure - Mapping of the parent key
 # + keyName - Recursively constructing the table key name
 # + return - An error if the grammar rules are not met or any duplicate values. 
-function arrayTable(ParserState state, map<json> structure, string keyName = "") returns lexer:LexicalError|ParsingError|() {
+function arrayTable(ParserState state, map<json> structure, string keyName = "") returns ParsingError|() {
 
     // Verifies the current key
     string tomlKey = state.currentToken.value;
@@ -149,6 +151,10 @@ function verifyTableKey(ParserState state, string tableKeyName) returns ParsingE
     }
 }
 
+# Obtain the key with proper quotations if exists.
+#
+# + state - Current lexer state
+# + return - TOML key with proper quotations
 function getTomlKey(ParserState state) returns string {
     if state.currentToken.token == lexer:BASIC_STRING {
         return string `\"${state.currentToken.value}\"`;

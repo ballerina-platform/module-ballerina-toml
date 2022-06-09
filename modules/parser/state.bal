@@ -1,5 +1,6 @@
 import toml.lexer;
 
+# Represents the current state of the parser
 class ParserState {
     # Properties for the TOML lines
     string[] lines;
@@ -99,6 +100,14 @@ class ParserState {
         // A regular standard key is persistent throughout the document.
         if tableKey.length() != 0 {
             self.definedTableKeys.push(tableKey);
+        }
+    }
+
+    # The current key is added to the table keys, so it cannot be redefined.
+    function reserveKey() {
+        if !self.isArrayTable {
+            self.addTableKey(self.currentTableKey.length() == 0 ? self.bufferedKey : self.currentTableKey + "." + self.bufferedKey);
+            self.bufferedKey = "";
         }
     }
 }

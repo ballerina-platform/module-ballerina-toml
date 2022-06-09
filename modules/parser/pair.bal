@@ -1,15 +1,13 @@
 import toml.lexer;
 
-# Handles the rule: key -> simple-key | dotted-key
-# key_value -> key '=' value.
-# The 'dotted-key' is being called recursively. 
-# At the terminal, a value is assigned to the last key, 
-# and nested under the previous key's map if exists.
+# Handles the grammar production of creating or retrieving an object 
+# for the key and assign the value to the latest key.
+# The latest key is nested under the previous key's map if exists.
 #
 # + state - Current parser state
 # + structure - The structure for the previous key. Null if there is no value.
 # + return - Returns the structure after assigning the value.
-function keyValue(ParserState state, map<json> structure) returns map<json>|ParsingError|lexer:LexicalError {
+function keyValue(ParserState state, map<json> structure) returns map<json>|ParsingError {
     // Validate the first key
     check verifyKey(state, structure);
     [string, map<json>][] dottedTableStack = [[state.currentToken.value, structure]];
@@ -90,7 +88,7 @@ function keyValue(ParserState state, map<json> structure) returns map<json>|Pars
 #
 # + state - Current parser state
 # + return - If success, returns the formatted data value. Else, an error.
-function dataValue(ParserState state) returns json|lexer:LexicalError|ParsingError {
+function dataValue(ParserState state) returns json|ParsingError {
     json returnData;
     match state.currentToken.token {
         lexer:MULTILINE_BASIC_STRING_DELIMITER => {
@@ -127,25 +125,35 @@ function dataValue(ParserState state) returns json|lexer:LexicalError|ParsingErr
             returnData = check array(state);
 
             // Static arrays cannot be redefined by the array tables.
-            if !state.isArrayTable {
-                state.addTableKey(state.currentTableKey.length() == 0 ? state.bufferedKey : state.currentTableKey + "." + state.bufferedKey);
-                state.bufferedKey = "";
-            }
+            state.reserveKey();
         }
         lexer:INLINE_TABLE_OPEN => {
             returnData = check inlineTable(state);
 
             // Inline tables cannot be redefined by the standard tables.
-            if !state.isArrayTable {
-                state.addTableKey(state.currentTableKey.length() == 0 ? state.bufferedKey : state.currentTableKey + "." + state.bufferedKey);
-                state.bufferedKey = "";
-            }
+            state.reserveKey();
         }
         _ => { // Latter primitive data types
             returnData = state.currentToken.value;
         }
     }
     return returnData;
+}
+
+# Evaluates an integer of a different base
+#
+# + state - Current parser state
+# + numberSystem - Number system of the value
+# + return - Processed integer. Error if there is a string.
+function processInteger(ParserState state, int numberSystem) returns int|ParsingError {
+    int value = 0;
+    int power = 1;
+    int length = state.currentToken.value.length() - 1;
+    foreach int i in 0 ... length {
+        value += <int>(check processTypeCastingError(state, 'int:fromString(state.currentToken.value[length - i]))) * power;
+        power *= numberSystem;
+    }
+    return value;
 }
 
 # Check if the digits are empty.

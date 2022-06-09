@@ -29,7 +29,7 @@ function generateExpectError(ParserState state,
         expectedTokensMessage = " '" + <string>expectedTokens + "'";
     }
     string message =
-        string `Expected '${expectedTokensMessage}' after '${beforeToken}', but found '${state.currentToken.token}'`;
+        string `Expected${expectedTokensMessage} after '${beforeToken}', but found '${state.currentToken.token}'`;
 
     return generateGrammarError(state, message, expectedTokens);
 }
@@ -48,8 +48,8 @@ function generateGrammarError(ParserState state, string message,
     json? expected = (), json? context = ()) returns GrammarError
         => error(
             message + ".",
-            line = state.lexerState.lineNumber + 1,
-            column = state.lexerState.index,
+            line = state.lexerState.row(),
+            column = state.lexerState.column(),
             actual = state.currentToken.token,
             expected = expected
         );

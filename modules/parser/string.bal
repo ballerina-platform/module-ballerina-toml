@@ -4,7 +4,7 @@ import toml.lexer;
 #
 # + state - Current parser state
 # + return - An error if the grammar rule is not made  
-function multiBasicString(ParserState state) returns lexer:LexicalError|ParsingError|string {
+function multiBasicString(ParserState state) returns ParsingError|string {
     state.updateLexerContext(lexer:MULTILINE_BASIC_STRING);
     string lexemeBuffer = "";
     boolean isFirstLine = true;
@@ -78,7 +78,7 @@ function multiBasicString(ParserState state) returns lexer:LexicalError|ParsingE
 #
 # + state - Current parser state
 # + return - An error if the grammar production is not made.  
-function multiLiteralString(ParserState state) returns lexer:LexicalError|ParsingError|string {
+function multiLiteralString(ParserState state) returns ParsingError|string {
     state.updateLexerContext(lexer:MULTILINE_LITERAL_STRING);
     string lexemeBuffer = "";
     boolean isFirstLine = true;

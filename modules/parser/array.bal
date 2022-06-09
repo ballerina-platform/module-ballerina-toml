@@ -1,11 +1,11 @@
 import toml.lexer;
 
-# Process the rules after '[' or ','.
+# Process the grammar rules after '[' or ','.
 #
 # + state - Current parser state  
 # + tempArray - Recursively constructing array
 # + return - Completed array on success. An error if the grammar rules are not met.
-function array(ParserState state, json[] tempArray = []) returns json[]|lexer:LexicalError|ParsingError {
+function array(ParserState state, json[] tempArray = []) returns json[]|ParsingError {
 
     check checkToken(state, [
         lexer:BASIC_STRING,
@@ -26,7 +26,7 @@ function array(ParserState state, json[] tempArray = []) returns json[]|lexer:Le
     ]);
 
     match state.currentToken.token {
-        lexer:EOL => {
+        lexer:EOL => { // Array spanning multiple lines
             check state.initLexer(generateExpectError(state, lexer:CLOSE_BRACKET, lexer:OPEN_BRACKET));
             return array(state, tempArray);
         }
@@ -45,7 +45,7 @@ function array(ParserState state, json[] tempArray = []) returns json[]|lexer:Le
 # + state - Current parser state  
 # + tempArray - Recursively constructing array
 # + return - Completed array on success. An error if the grammar rules are not met.
-function arrayValue(ParserState state, json[] tempArray = []) returns json[]|lexer:LexicalError|ParsingError {
+function arrayValue(ParserState state, json[] tempArray = []) returns json[]|ParsingError {
     lexer:TOMLToken prevToken;
     state.updateLexerContext(lexer:EXPRESSION_VALUE);
 
@@ -58,14 +58,14 @@ function arrayValue(ParserState state, json[] tempArray = []) returns json[]|lex
     }
 
     match state.currentToken.token {
-        lexer:EOL => {
+        lexer:EOL => { // Array spanning multiple lines
             check state.initLexer(generateGrammarError(state, "Expected ']' or ',' after an array value"));
             return arrayValue(state, tempArray);
         }
-        lexer:CLOSE_BRACKET => {
+        lexer:CLOSE_BRACKET => { // Reaches the end of the array
             return tempArray;
         }
-        lexer:SEPARATOR => {
+        lexer:SEPARATOR => { // Next value of the array
             return array(state, tempArray);
         }
         _ => {
