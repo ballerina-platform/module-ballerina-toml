@@ -16,7 +16,10 @@ type State record {|
 # + indentationPolicy - Number of whitespace for an indent  
 # + allowDottedKeys - If flag is set, write dotted keys instead of standard tables.
 # + return - An error on failure
-public function write(map<json> structure, int indentationPolicy, boolean allowDottedKeys) returns string[]|WritingError {
+public function write(map<json> structure, int indentationPolicy, boolean allowDottedKeys) 
+    returns string[]|WritingError {
+    
+    // Setup the indent whitespace
     string indent = "";
     foreach int i in 1 ... indentationPolicy {
         indent += " ";
@@ -31,7 +34,7 @@ public function write(map<json> structure, int indentationPolicy, boolean allowD
 
     check processStructure(state, structure, "", "");
 
-    // Remove the start of document whitespace if exists.
+    // Remove the whitespace at the start of document if exists.
     if state.output[0].length() == 0 {
         _ = state.output.remove(0);
     }

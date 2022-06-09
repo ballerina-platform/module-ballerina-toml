@@ -1,13 +1,15 @@
 import ballerina/time;
 
-# Constructs the key value pairs for the current table
+# Constructs the key value pairs for the current table.
 #
 # + state - Current state of the Writer  
 # + structure - Current table  
 # + parentTableKey - Current table key  
 # + whitespace - Indentation for the current table
 # + return - An error on failure
-function processStructure(State state, map<json> structure, string parentTableKey, string whitespace) returns WritingError? {
+function processStructure(State state, map<json> structure, string parentTableKey, string whitespace)
+    returns WritingError? {
+
     string[] keys = structure.keys();
 
     // List of both standard and array tables to created at the end.
@@ -17,7 +19,6 @@ function processStructure(State state, map<json> structure, string parentTableKe
     foreach string key in keys {
         json value = structure[key];
 
-        // This structure should be processed at the end of this depth level.
         // Builds both dotted keys or standard tables.
         if value is map<json> {
             check processTable(state, value, constructTableKey(parentTableKey, key), tables, whitespace);
@@ -30,7 +31,6 @@ function processStructure(State state, map<json> structure, string parentTableKe
             continue;
         }
 
-        // This structure should be processed at the end of this depth level.
         // Builds both inline arrays or array tables.
         if value is json[] {
             check processArray(state, key, value, parentTableKey, tables, whitespace);
@@ -40,6 +40,7 @@ function processStructure(State state, map<json> structure, string parentTableKe
         state.output.push(whitespace + key + " = " + check processPrimitiveValue(value));
     }
 
+    // Construct the standard tables and array tables at the tail.
     if tables.length() > 0 {
         string newWhitespace = parentTableKey.length() == 0 ? whitespace : whitespace + state.indent;
         string[] tableKeys = tables.keys();
@@ -66,22 +67,28 @@ function processStructure(State state, map<json> structure, string parentTableKe
 # + value - Value to converted
 # + return - Converted string on success. Else, an error.
 function processPrimitiveValue(json value) returns string|WritingError {
+
+    // Strings are surrounded by double-quotes by default
     if value is string {
         return "\"" + value + "\"";
     }
 
+    // Positive infinity
     if value == 'float:Infinity {
         return "+inf";
     }
 
+    // Negative infinity
     if value == -'float:Infinity {
         return "-inf";
     }
 
+    // Not a number
     if value == 'float:NaN {
         return "nan";
     }
 
+    // Null objects are not allowed
     if value != () {
         return value.toString();
     }
@@ -99,7 +106,9 @@ function processPrimitiveValue(json value) returns string|WritingError {
 # + tables - List of array tables under the current table  
 # + whitespace - Indentation of the current table
 # + return - An error on failure
-function processArray(State state, string key, json[] value, string tableKey, map<json[]|map<json>> tables, string whitespace) returns WritingError? {
+function processArray(State state, string key, json[] value, string tableKey, map<json[]|map<json>> tables,
+    string whitespace) returns WritingError? {
+
     // Check if all the array values are object
     boolean isAllObject = value.reduce(function(boolean assertion, json arrayValue) returns boolean {
         return assertion && arrayValue is map<json>;
@@ -127,7 +136,9 @@ function processArray(State state, string key, json[] value, string tableKey, ma
 # + tables - List of standard tables under the current table  
 # + whitespace - Indentation of the current table
 # + return - An error on failure
-function processTable(State state, map<json> structure, string tableKey, map<json[]|map<json>> tables, string whitespace) returns WritingError? {
+function processTable(State state, map<json> structure, string tableKey, map<json[]|map<json>> tables,
+    string whitespace) returns WritingError? {
+        
     // Check if there are more than one value nested to it.
     if structure.length() == 1 {
         string firstKey = structure.keys()[0];
