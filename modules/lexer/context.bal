@@ -222,7 +222,7 @@ function contextExpressionValue(LexerState state) returns LexerState|LexicalErro
                     state.forward(2);
                     return iterate(state, scanDigit(patternBinary), BINARY);
                 }
-                " "|"#"|"."|","|"]" => { // A decimal cannot start with 0 unless it is the only digit
+                " "|"#"|"."|","|"]"|"\n" => { // A decimal cannot start with 0 unless it is the only digit
                     state.appendToLexeme("0");
                     return state.tokenize(DECIMAL);
                 }
