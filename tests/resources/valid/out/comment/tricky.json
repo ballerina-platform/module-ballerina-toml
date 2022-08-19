@@ -1,0 +1,41 @@
+{
+    "section": {
+        "8": "eight",
+        "one": "11",
+        "two": "22#",
+        "three": "#",
+        "four": "# no comment\n# nor this\n#also not comment",
+        "five": 5.5,
+        "six": 6,
+        "ten": 1000.0,
+        "eleven": 11.1
+    },
+    "hash#tag": {
+        "#!": "hash bang",
+        "arr3": [
+            "#",
+            "#",
+            "###"
+        ],
+        "arr4": [
+            1,
+            2,
+            3,
+            4
+        ],
+        "arr5": [
+            [
+                [
+                    [
+                        [
+                            "#"
+                        ]
+                    ]
+                ]
+            ]
+        ],
+        "tbl1": {
+            "#": "}#"
+        }
+    }
+}

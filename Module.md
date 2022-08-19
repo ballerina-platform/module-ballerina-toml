@@ -1,22 +1,19 @@
-# Ballerina TOML Parser
+# Overview
 
-![Build](https://github.com/nipunayf/module-ballerina-toml/actions/workflows/ci.yml/badge.svg)
-
-Ballerina TOML Parser provides APIs to convert a TOML configuration file to `map<json>`, and vice-versa. 
-Since the parser is following LL(1) grammar, it follows a non-recursive predictive parsing algorithm which operates in a linear time complexity.
+Ballerina TOML Parser provides APIs to convert a TOML configuration file to `map<json>`, and vice-versa. Since the parser is following LL(1) grammar, it follows a non-recursive predictive parsing algorithm which operates in a linear time complexity.
 
 ## Compatibility
 
-| Language  | Version                        |
-| --------- | ------------------------------ |
+| Language | Version |
+| --- | --- |
 | Ballerina | Ballerina 2201.0.0 (Swan Lake) |
-| TOML      | 1.0                            |
+| TOML | 1.0 |
 
 The parser follows the grammar rules particularized in the [TOML specification 1.0](https://toml.io/en/v1.0.0).
 
 ### Parsing a TOML Document
 
- The module supports to parse either a TOML file or a TOML string.
+The module supports to parse either a TOML file or a TOML string.
 
 ```ballerina
 // Parsing a TOML file
@@ -67,12 +64,12 @@ inline.boolean = false
 
 The following options can be set to further format the output TOML file.
 
-| Option                      | Default | Description                                                                                                                                  |
-| --------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `int indentationPolicy`     | `2`     | The number of whitespaces considered to a indent. An indentation is made once a standard or an array table is defined under the current one. |
-| `boolean allowedDottedKeys` | `true`  | If set, dotted keys are used instead of standard tables.                                                                                     |
+| Option | Default | Description |
+| --- | --- | --- |
+| `int indentationPolicy` | `2` | The number of whitespaces considered to a indent. An indentation is made once a standard or an array table is defined under the current one. |
+| `boolean allowedDottedKeys` | `true` | If set, dotted keys are used instead of standard tables. |
 
-Consider the `map<json>` structure of  `{table: key = "value"}`. The output TOML document of this can be diverted based on the `allowedDottedKeys` property as follow.
+Consider the `map<json>` structure of `{table: key = "value"}`. The output TOML document of this can be diverted based on the `allowedDottedKeys` property as follow.
 
 ```toml
 table.key = "value" # allowedDottedKeys = true
@@ -86,18 +83,18 @@ key = "value"
 
 The following TOML primitives are mapped to the Ballerina types as follow.
 
-| TOML                                        | Ballerina                       |
-| ------------------------------------------- | ------------------------------- |
-| Integer                                     | `ballerina.lang.int`            |
-| Float                                       | `ballerina.lang.decimal`        |
-| Infinity                                    | `ballerina.lang.float.Infinity` |
-| NaN                                         | `ballerina.lang.float.NaN`      |
-| Unquoted, Basic and Literal Strings         | `ballerina.lang.string`         |
-| Boolean                                     | `ballerina.lang.boolean`        |
-| Array                                       | `json[]`                        |
-| Table                                       | `map<json>`                     |
-| Offset Date-Time                            | `ballerina.time.Utc`            |
-| Local Date-Time, Local Date, and Local Time | `ballerina.lang.string`         |
+| TOML | Ballerina |
+| --- | --- |
+| Integer | `ballerina.lang.int` |
+| Float | `ballerina.lang.decimal` |
+| Infinity | `ballerina.lang.float.Infinity` |
+| NaN | `ballerina.lang.float.NaN` |
+| Unquoted, Basic and Literal Strings | `ballerina.lang.string` |
+| Boolean | `ballerina.lang.boolean` |
+| Array | `json[]` |
+| Table | `map<json>` |
+| Offset Date-Time | `ballerina.time.Utc` |
+| Local Date-Time, Local Date, and Local Time | `ballerina.lang.string` |
 
 ## Example
 

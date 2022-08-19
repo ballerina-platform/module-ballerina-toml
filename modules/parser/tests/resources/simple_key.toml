@@ -1,0 +1,3 @@
+# full line comment
+first-key = "first-value" # inline comment
+second-key = "second-value"

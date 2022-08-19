@@ -1,0 +1,8 @@
+{
+    "tbl_multiline": {
+        "a": 1,
+        "b": "multiline\n",
+        "c": "and yet\nanother line",
+        "d": 4
+    }
+}
