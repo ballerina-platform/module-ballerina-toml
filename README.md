@@ -1,8 +1,9 @@
 # Ballerina TOML Parser
 
-![Build](https://github.com/nipunayf/module-ballerina-toml/actions/workflows/ci.yml/badge.svg)
+![Build](https://github.com/ballerina-platform/module-ballerina-toml/actions/workflows/ci.yml/badge.svg)
 
 Ballerina TOML Parser provides APIs to convert a TOML configuration file to `map<json>`, and vice-versa. 
+
 Since the parser is following LL(1) grammar, it follows a non-recursive predictive parsing algorithm which operates in a linear time complexity.
 
 ## Compatibility
@@ -20,10 +21,10 @@ The parser follows the grammar rules particularized in the [TOML specification 1
 
 ```ballerina
 // Parsing a TOML file
-map<json>|toml:Error toml = readFile("path/to/file.toml");
+map<json>|toml:Error tomlFile = toml:readFile("path/to/file.toml");
 
 // Parsing a TOML string
-map<json>|toml:Error toml = readString(string
+map<json>|toml:Error tomLString = toml:readString(string
     `bool = true
     int = 1
     float = 1.1`);
@@ -37,33 +38,21 @@ Any `map<json>` structure containing the [supported data types](#Supported-Data-
 
 ```ballerina
 map<json> toml = {
-        "str": "string",
-        "float": 0.01,
-        "inline": {
-            "boolean": false
-        }
-    };
-
-// Covert the TOML content to an array of strings
-string[]|toml:Error stringResult = writeString(toml);
-if result is toml:Error {
-    log:printError("Failed to write the TOML document.", error = result);
-}
+    "str": "string",
+    "float": 0.01,
+    "inline": {
+        "boolean": false
+    }
+};
 
 // Write the TOML content into a file
-toml:Error? fileResult = writeFile("path/to/file.toml", toml);
-if fileResult is toml:Error {
-    log:printError("Failed to write the TOML document.", error = result);
-}
+toml:Error? fileResult = toml:writeFile("path/to/file.toml", toml);
+
+// Covert the TOML content to an array of strings
+string[]|toml:Error stringResult = toml:writeString(toml);
 ```
 
-The respective TOML document of the `map<json>` structure is created as shown as below.
 
-```toml
-str = "string"
-float = 0.01
-inline.boolean = false
-```
 
 The following options can be set to further format the output TOML file.
 
@@ -116,7 +105,7 @@ public function main() returns error? {
     // Read the TOML content into a map<json>
     map<json> result = check toml:readString(string
         `name = "toml"
-        
+
         [version]
         major = 0
         minor = 1

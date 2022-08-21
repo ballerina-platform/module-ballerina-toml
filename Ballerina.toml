@@ -1,13 +1,10 @@
 [package]
-authors = ["Nipuna Fernando"]
-distribution = "2201.0.0"
+org="ballerina"
+name="toml"
+version="1.0.0"
+authors=["Ballerina"]
+keywords=["toml", "parser"]
+repository="https://github.com/ballerina-platform/module-ballerina-toml"
 icon = "icon.png"
-keywords = ["Toml", "Parser"]
-license = ["Apache-2.0"]
-name = "toml"
-org = "nipunayf"
-repository = "https://github.com/nipunayf/ballerina-toml"
-version = "0.1.0"
-
-[build-options]
-observabilityIncluded = true
+license=["Apache-2.0"]
+distribution = "2201.2.0"
