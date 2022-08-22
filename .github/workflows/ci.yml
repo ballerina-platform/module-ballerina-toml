@@ -14,8 +14,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository and submodule
         uses: actions/checkout@v2
+        with:
+          submodules: recursive
 
       - name: Build TOML package
         uses: ballerina-platform/ballerina-action@master
