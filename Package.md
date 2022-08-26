@@ -1,6 +1,4 @@
-# Ballerina TOML Parser
-
-![Build](https://github.com/ballerina-platform/module-ballerina-toml/actions/workflows/ci.yml/badge.svg)
+## Overview
 
 Ballerina TOML Parser provides APIs to convert a TOML configuration file to `map<json>`, and vice-versa. 
 

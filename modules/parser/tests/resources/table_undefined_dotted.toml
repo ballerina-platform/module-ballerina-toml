@@ -1,0 +1,5 @@
+[table]
+outer.inner = 1
+
+[table.outer]
+key = 1

@@ -1,0 +1,30 @@
+name: CI Build
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+    paths-ignore:
+      - README.md
+      - .gitignore
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository and submodule
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Build TOML package
+        uses: ballerina-platform/ballerina-action@master
+        with:
+          args: build
+
+      - name: Run the tests
+        uses: ballerina-platform/ballerina-action@master
+        with:
+          args: test

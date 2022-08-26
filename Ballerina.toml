@@ -1,0 +1,10 @@
+[package]
+org="ballerina"
+name="toml"
+version="1.0.0"
+authors=["Ballerina"]
+keywords=["toml", "parser"]
+repository="https://github.com/ballerina-platform/module-ballerina-toml"
+icon = "icon.png"
+license=["Apache-2.0"]
+distribution = "2201.2.0"

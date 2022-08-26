@@ -1,0 +1,6 @@
+[outer.inner]
+key1 = 1
+key2 = 2
+
+[outer]
+key = 1
