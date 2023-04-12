@@ -1,4 +1,0 @@
-[submodule "tests/resources"]
-	path = tests/resources
-	url = https://github.com/nipunayf/toml-test
-	branch = resources
