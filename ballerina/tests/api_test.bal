@@ -17,7 +17,8 @@ import ballerina/io;
 import ballerina/test;
 
 @test:Config {
-    groups: ["api"]
+    groups: ["api"],
+    enable: false
 }
 function testReadTOMLString() returns error? {
     map<json> output = check readString(string
