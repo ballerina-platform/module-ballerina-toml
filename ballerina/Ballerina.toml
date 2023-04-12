@@ -1,0 +1,10 @@
+[package]
+org = "ballerina"
+name = "yaml"
+version = "0.1.0"
+authors = ["Ballerina"]
+keywords = ["yaml"]
+repository = "https://github.com/ballerina-platform/module-ballerina-yaml"
+icon = "icon.png"
+license = ["Apache-2.0"]
+distribution = "2201.5.0"
