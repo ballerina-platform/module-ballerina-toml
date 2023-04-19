@@ -6,7 +6,7 @@ Ballerina Toml Library
 [![Trivy](https://github.com/ballerina-platform/module-ballerina-toml/actions/workflows/trivy-scan.yml/badge.svg)](https://github.com/ballerina-platform/module-ballerina-toml/actions/workflows/trivy-scan.yml)
 [![GraalVM Check](https://github.com/ballerina-platform/module-ballerina-toml/actions/workflows/build-with-bal-test-native.yml/badge.svg)](https://github.com/ballerina-platform/module-ballerina-toml/actions/workflows/build-with-bal-test-native.yml)
 [![GitHub Last Commit](https://img.shields.io/github/last-commit/ballerina-platform/module-ballerina-toml.svg)](https://github.com/ballerina-platform/module-ballerina-toml/commits/main)
-[![Github issues](https://img.shields.io/github/issues/ballerina-platform/ballerina-standard-library/module/toml.svg?label=Open%20Issues)](https://github.com/ballerina-platform/ballerina-standard-library/labels/module%2Frandom)
+[![Github issues](https://img.shields.io/github/issues/ballerina-platform/ballerina-standard-library/module/toml.svg?label=Open%20Issues)](https://github.com/ballerina-platform/ballerina-standard-library/labels/module%2Ftoml)
 [![codecov](https://codecov.io/gh/ballerina-platform/module-ballerina-toml/branch/main/graph/badge.svg)](https://codecov.io/gh/ballerina-platform/module-ballerina-toml)
 
 This library provides APIs to convert a TOML configuration file to json, and vice-versa.
