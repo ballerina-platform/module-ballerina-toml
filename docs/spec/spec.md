@@ -1,15 +1,15 @@
-# Specification: Ballerina Yaml Library
+# Specification: Ballerina Toml Library
 
-_Owners_: @daneshk @MadhukaHarith92  
-_Reviewers_: @daneshk  
+_Owners_: @shafreenAnfar @MadhukaHarith92  
+_Reviewers_: @shafreenAnfar  
 _Created_: 2023/04/04  
 _Updated_: 2023/04/04  
 _Edition_: Swan Lake
 
 ## Introduction
-This is the specification for the Yaml standard library of [Ballerina language](https://ballerina.io/), which provides APIs to convert a YAML configuration file to json, and vice-versa. The module supports both the functions of read and write either a single YAML document or a YAML stream.
+This is the specification for the Toml standard library of [Ballerina language](https://ballerina.io/), which provides APIs to convert a TOML configuration file to `map<json>`, and vice-versa.
 
-The Yaml library specification has evolved and may continue to evolve in the future. The released versions of the specification can be found under the relevant Github tag.
+Since the parser is following LL(1) grammar, it follows a non-recursive predictive parsing algorithm which operates in a linear time complexity.
 
 If you have any feedback or suggestions about the library, start a discussion via a [GitHub issue](https://github.com/ballerina-platform/ballerina-standard-library/issues) or in the [Discord server](https://discord.gg/ballerinalang). Based on the outcome of the discussion, the specification and implementation can be updated. Community feedback is always welcome. Any accepted proposal, which affects the specification is stored under `/docs/proposals`. Proposals under discussion can be found with the label `type/proposal` in GitHub.
 
@@ -19,13 +19,13 @@ The conforming implementation of the specification is released and included in t
 
 1. [Overview](#1-overview)
 2. [Compatibility](#2-compatibility)
-3. [Parsing a YAML File](#3-parsing-a-yaml-file)
-4. [Writing a YAML File](#4-writing-a-yaml-file)
-5. [YAML Schema and Supported Data Types](#5-yaml-schema-and-supported-data-types)
-6. [Custom YAML Types](#6-custom-yaml-types)
+3. [Parsing a TOML Document](#3-parsing-a-toml-document)
+4. [Writing to a TOML Document](#4-writing-to-a-toml-document)
+5. [Supported Data Types](#5-supported-data-types)
+6. [Example](#6-example)
 
 ## 1. Overview
-This specification elaborates on the functions available in the Yaml library.
+This specification elaborates on the functions available in the Toml library.
 
 Since the parser is following LL(1) grammar, it follows a non-recursive predictive parsing algorithm which operates in a linear time complexity.
 
@@ -34,115 +34,113 @@ Since the parser is following LL(1) grammar, it follows a non-recursive predicti
 | Language  | Version                        |
 | --------- | ------------------------------ |
 | Ballerina | Ballerina 2201.0.0 (Swan Lake) |
-| YAML      | 1.2.2                          |
+| TOML      | 1.0                            |
 
-The parser follows the grammar rules particularized in the [YAML specification 1.2.2](https://yaml.org/spec/1.2.2/).
+The parser follows the grammar rules particularized in the [TOML specification 1.0](https://toml.io/en/v1.0.0).
 
-## 3. Parsing a YAML File
+## 3. Parsing a TOML Document
 
-The read function allows the user to obtain either a YAML document or an array of YAML stream if the `isStream` flag is set.
+The module supports to parse either a TOML file or a TOML string.
 
 ```ballerina
-// Parsing a YAML document
-json|yaml:Error yamlDoc = yaml:readFile("path/to/file.yml");
+// Parsing a TOML file
+map<json>|toml:Error tomlFile = toml:readFile("path/to/file.toml");
 
-// Parsing a YAML stream
-json|yaml:Error yamlDocs = yaml:readFile("path/to/file.yml", isStream = true);
-
-// Parsing a YAML string 
-json|yaml:Error yamlLine = yaml:readString("outer: {inner: value}");
+// Parsing a TOML string
+map<json>|toml:Error tomLString = toml:readString(string
+    `bool = true
+    int = 1
+    float = 1.1`);
 ```
 
-The user can either set the `allowAnchorRedefinition` or `allowMapEntryRedefinition` to let the parser overwrite anchors and map entry keys respectively.
+By default, the package parses offset date time into `time.Utc`. This can be skipped by disabling the `parseOffsetDateTime`.
 
-## 4. Writing a YAML File
+## 4. Writing to a TOML Document
 
-The user can write either a document or a stream using this function.
+Any `map<json>` structure containing the [supported data types](#Supported-Data-Types) can be converted to a TOML document. The package can either convert the document to an array of strings or write to a TOML file.
 
 ```ballerina
-// Writing a YAML document
-check yaml:writeFile("path/to/file.yaml", yamlContent);
+map<json> toml = {
+    "str": "string",
+    "float": 0.01,
+    "inline": {
+        "boolean": false
+    }
+};
 
-// Writing a YAML stream
-check yaml:writeFile("path/to/file.yaml", yamlContent, isStream = true);
+// Write the TOML content into a file
+toml:Error? fileResult = toml:writeFile("path/to/file.toml", toml);
 
-// Writing a YAML string
-json|yaml:Error jsonOutput = yaml:writeString("outer: {inner: value}");
+// Covert the TOML content to an array of strings
+string[]|toml:Error stringResult = toml:writeString(toml);
 ```
 
-By default, the parser attempts to write the YAML scalars in planar style. However, there are some scalars that cause ambiguity against a few control symbols in YAML. In this case to remove the vagueness, the parser will either add  `"` quotes or `'` quotes based on the `useSingleQuotes` flag is set. Further, if the `forceQuotes` flag is set, then all the scalars will be quoted.
 
-The following options can be set to further format the output YAML file.
 
-| Option                  | Default | Description                                                                                         |
-| ----------------------- | ------- | --------------------------------------------------------------------------------------------------- |
-| `int indentationPolicy` | `2`     | The number of whitespaces considered to a indent.                                                   |
-| `int blockLevel`        | `1`     | The maximum depth level for the block-style collections before the flow-style collections are used. |
-| `boolean canonical`     | `false` | If the flag is set, the parser will write the tag along with the node.                              |
+The following options can be set to further format the output TOML file.
 
-## 5. YAML Schema and Supported Data Types
+| Option                      | Default | Description                                                                                                                                  |
+| --------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `int indentationPolicy`     | `2`     | The number of whitespaces considered to a indent. An indentation is made once a standard or an array table is defined under the current one. |
+| `boolean allowedDottedKeys` | `true`  | If set, dotted keys are used instead of standard tables.                                                                                     |
 
-The `Fail Safe Schema` is the most basic schema supported by any YAML document. The corresponding Ballerina data types are listed as shown below.
+Consider the `map<json>` structure of  `{table: key = "value"}`. The output TOML document of this can be diverted based on the `allowedDottedKeys` property as follow.
 
-| YAML Tag | Ballerina Data Type     |
-| -------- | ----------------------- |
-| !!str    | `ballerina.lang.string` |
-| !!seq    | `ballerina.lang.array`  |
-| !!map    | `ballerina.lang.map`    |
+```toml
+table.key = "value" # allowedDottedKeys = true
 
-In addition to the `Fail Safe Schema`, the `JSON Schema` defines the following tags to enable basic JSON support. The `Core Schema` is an extension of the `JSON Schema` that supports the same tags with more human-readable notations.
+# allowedDottedKeys = false
+[table]
+key = "value"
+```
 
-| YAML Tag | Ballerina Data Type      |
-| -------- | ------------------------ |
-| !!null   | `()`                     |
-| !!bool   | `ballerina.lang.boolean` |
-| !!int    | `ballerina.lang.int`     |
-| !!float  | `ballerina.lang.float`   |
+## 5. Supported Data Types
 
-## 6. Custom YAML Types
+The following TOML primitives are mapped to the Ballerina types as follow.
 
-A custom tag support can be added to the YAML parser by writing a record of the type `YAMLType`. All the custom YAML tags must be provided as an array to the `yamlTypes` property in the config. The following code segment demonstrates an example of adding a custom tag to the parser.
+| TOML                                        | Ballerina                       |
+| ------------------------------------------- | ------------------------------- |
+| Integer                                     | `ballerina.lang.int`            |
+| Float                                       | `ballerina.lang.decimal`        |
+| Infinity                                    | `ballerina.lang.float.Infinity` |
+| NaN                                         | `ballerina.lang.float.NaN`      |
+| Unquoted, Basic and Literal Strings         | `ballerina.lang.string`         |
+| Boolean                                     | `ballerina.lang.boolean`        |
+| Array                                       | `json[]`                        |
+| Table                                       | `map<json>`                     |
+| Offset Date-Time                            | `ballerina.time.Utc`            |
+| Local Date-Time, Local Date, and Local Time | `ballerina.lang.string`         |
+
+## 6. Example
+
+The following example illustrates on how a TOML content is converted to a Ballerina record and write it back after processing it.
 
 ```ballerina
-import ballerina/yaml;
+import ballerina/io;
+import nipunayf/toml;
 
-type RGB [int, int, int];
-
-// Validation function to check before constructing the RGB
-function constructRGB(json data) returns json|yaml:SchemaError {
-    RGB|error value = data.cloneWithType();
-
-    if value is error {
-        return error("Invalid shape for RGB");
-    }
-
-    foreach int index in value {
-        if index > 255 || index < 0 {
-            return error("One RGB value must be between 0-255");
-        }
-    }
-
-    return value;
-}
+type Package record {|
+    string name;
+    record {|int major; int minor; int patch;|} 'version;
+|};
 
 public function main() returns error? {
-    yaml:YAMLType rgbType = {
-        tag: "!rgb",
-        ballerinaType: RGB,
-        kind: yaml:SEQUENCE,
-        construct: constructRGB,
-        represent: function(json data) returns string => data.toString()
-    };
+    // Read the TOML content into a map<json>
+    map<json> result = check toml:readString(string
+        `name = "toml"
 
-    RGB color = [256, 12, 32];
-    json balStruct = {color};
+        [version]
+        major = 0
+        minor = 1
+        patch = 3`);
 
-    check yaml:writeFile("rgb.yml", balStruct, canonical = true, yamlTypes = [rgbType]);
+    Package packageToml = check result.fromJsonWithType();
+
+    // Update the version 
+    packageToml.'version.minor += 1;
+    packageToml.'version.patch = 0;
+
+    // Convert map<json> into TOML content
+    io:println(toml:writeString(packageToml));
 }
-```
-
-The parser considers these custom tags before the default tags when resolving. Thus, the output tag is `!rgb` rather than `!seq`.
-
-```yaml
-!!str color: !rgb [!!int 256, !!int 12, !!int 32]
 ```
