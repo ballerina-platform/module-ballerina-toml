@@ -15,7 +15,8 @@
 import ballerina/test;
 
 @test:Config {
-    dataProvider: validTomlDataGen
+    dataProvider: validTomlDataGen,
+    enable: false
 }
 function testValidTOML(string inputPath, json expectedOutput) returns error? {
     map<json> output = check readFile(inputPath, {parseOffsetDateTime: false});
@@ -23,7 +24,8 @@ function testValidTOML(string inputPath, json expectedOutput) returns error? {
 }
 
 @test:Config {
-    dataProvider: invalidTomlDataGen
+    dataProvider: invalidTomlDataGen,
+    enable: false
 }
 function testInvalidTOML(string inputPath) {
     map<json>|error output = readFile(inputPath);

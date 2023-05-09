@@ -1,123 +1,93 @@
-# Ballerina TOML Parser
+Ballerina Toml Library
+===================
 
-![Build](https://github.com/ballerina-platform/module-ballerina-toml/actions/workflows/ci.yml/badge.svg)
+[![Build](https://github.com/ballerina-platform/module-ballerina-toml/actions/workflows/build-timestamped-master.yml/badge.svg)](https://github.com/ballerina-platform/module-ballerina-toml/actions/workflows/build-timestamped-master.yml)
+[![codecov](https://codecov.io/gh/ballerina-platform/module-ballerina-toml/branch/main/graph/badge.svg)](https://codecov.io/gh/ballerina-platform/module-ballerina-toml)
+[![Trivy](https://github.com/ballerina-platform/module-ballerina-toml/actions/workflows/trivy-scan.yml/badge.svg)](https://github.com/ballerina-platform/module-ballerina-toml/actions/workflows/trivy-scan.yml)
+[![GraalVM Check](https://github.com/ballerina-platform/module-ballerina-toml/actions/workflows/build-with-bal-test-native.yml/badge.svg)](https://github.com/ballerina-platform/module-ballerina-toml/actions/workflows/build-with-bal-test-native.yml)
+[![GitHub Last Commit](https://img.shields.io/github/last-commit/ballerina-platform/module-ballerina-toml.svg)](https://github.com/ballerina-platform/module-ballerina-toml/commits/main)
+[![Github issues](https://img.shields.io/github/issues/ballerina-platform/ballerina-standard-library/module/toml.svg?label=Open%20Issues)](https://github.com/ballerina-platform/ballerina-standard-library/labels/module%2Ftoml)
+[![codecov](https://codecov.io/gh/ballerina-platform/module-ballerina-toml/branch/main/graph/badge.svg)](https://codecov.io/gh/ballerina-platform/module-ballerina-toml)
 
-Ballerina TOML Parser provides APIs to convert a TOML configuration file to `map<json>`, and vice-versa. 
+This library provides APIs to convert a TOML configuration file to json, and vice-versa.
 
 Since the parser is following LL(1) grammar, it follows a non-recursive predictive parsing algorithm which operates in a linear time complexity.
 
-## Compatibility
+## Issues and projects
 
-| Language  | Version                        |
-| --------- | ------------------------------ |
-| Ballerina | Ballerina 2201.0.0 (Swan Lake) |
-| TOML      | 1.0                            |
+The **Issues** and **Projects** tabs are disabled for this repository as this is part of the Ballerina Standard Library. To report bugs, request new features, start new discussions, view project boards, etc., go to the Ballerina Standard Library [parent repository](https://github.com/ballerina-platform/ballerina-standard-library).
 
-The parser follows the grammar rules particularized in the [TOML specification 1.0](https://toml.io/en/v1.0.0).
+This repository contains only the source code of the package.
 
-### Parsing a TOML Document
+## Build from the source
 
- The module supports to parse either a TOML file or a TOML string.
+### Set up the prerequisites
 
-```ballerina
-// Parsing a TOML file
-map<json>|toml:Error tomlFile = toml:readFile("path/to/file.toml");
+1. Download and install Java SE Development Kit (JDK) version 11 (from one of the following locations).
+    * [Oracle](https://www.oracle.com/java/technologies/javase-jdk11-downloads.html)
 
-// Parsing a TOML string
-map<json>|toml:Error tomLString = toml:readString(string
-    `bool = true
-    int = 1
-    float = 1.1`);
-```
+    * [OpenJDK](https://adoptium.net/)
 
-By default, the package parses offset date time into `time.Utc`. This can be skipped by disabling the `parseOffsetDateTime`.
+      > **Note:** Set the JAVA_HOME environment variable to the path name of the directory into which you installed JDK.
 
-### Writing to a TOML Document
+2. Export your Github Personal access token with the read package permissions as follows.
 
-Any `map<json>` structure containing the [supported data types](#Supported-Data-Types) can be converted to a TOML document. The package can either convert the document to an array of strings or write to a TOML file.
+              export packageUser=<Username>
+              export packagePAT=<Personal access token>
 
-```ballerina
-map<json> toml = {
-    "str": "string",
-    "float": 0.01,
-    "inline": {
-        "boolean": false
-    }
-};
+### Build the source
 
-// Write the TOML content into a file
-toml:Error? fileResult = toml:writeFile("path/to/file.toml", toml);
+Execute the commands below to build from source.
 
-// Covert the TOML content to an array of strings
-string[]|toml:Error stringResult = toml:writeString(toml);
-```
+1. To build the library:
+   ```    
+   ./gradlew clean build
+   ```
 
+2. To run the integration tests:
+   ```
+   ./gradlew clean test
+   ```
+3. To build the module without the tests:
+   ```
+   ./gradlew clean build -x test
+   ```
+4. To debug module implementation:
+   ```
+   ./gradlew clean build -Pdebug=<port>
+   ./gradlew clean test -Pdebug=<port>
+   ```
+5. To debug the module with Ballerina language:
+   ```
+   ./gradlew clean build -PbalJavaDebug=<port>
+   ./gradlew clean test -PbalJavaDebug=<port>
+   ```
+6. Publish ZIP artifact to the local `.m2` repository:
+   ```
+   ./gradlew clean build publishToMavenLocal
+   ```
+7. Publish the generated artifacts to the local Ballerina central repository:
+   ```
+   ./gradlew clean build -PpublishToLocalCentral=true
+   ```
+8. Publish the generated artifacts to the Ballerina central repository:
+   ```
+   ./gradlew clean build -PpublishToCentral=true
+   ```
 
+## Contribute to Ballerina
 
-The following options can be set to further format the output TOML file.
+As an open source project, Ballerina welcomes contributions from the community.
 
-| Option                      | Default | Description                                                                                                                                  |
-| --------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `int indentationPolicy`     | `2`     | The number of whitespaces considered to a indent. An indentation is made once a standard or an array table is defined under the current one. |
-| `boolean allowedDottedKeys` | `true`  | If set, dotted keys are used instead of standard tables.                                                                                     |
+For more information, go to the [contribution guidelines](https://github.com/ballerina-platform/ballerina-lang/blob/master/CONTRIBUTING.md).
 
-Consider the `map<json>` structure of  `{table: key = "value"}`. The output TOML document of this can be diverted based on the `allowedDottedKeys` property as follow.
+## Code of conduct
 
-```toml
-table.key = "value" # allowedDottedKeys = true
+All contributors are encouraged to read the [Ballerina Code of Conduct](https://ballerina.io/code-of-conduct).
 
-# allowedDottedKeys = false
-[table]
-key = "value"
-```
+## Useful links
 
-## Supported Data Types
-
-The following TOML primitives are mapped to the Ballerina types as follow.
-
-| TOML                                        | Ballerina                       |
-| ------------------------------------------- | ------------------------------- |
-| Integer                                     | `ballerina.lang.int`            |
-| Float                                       | `ballerina.lang.decimal`        |
-| Infinity                                    | `ballerina.lang.float.Infinity` |
-| NaN                                         | `ballerina.lang.float.NaN`      |
-| Unquoted, Basic and Literal Strings         | `ballerina.lang.string`         |
-| Boolean                                     | `ballerina.lang.boolean`        |
-| Array                                       | `json[]`                        |
-| Table                                       | `map<json>`                     |
-| Offset Date-Time                            | `ballerina.time.Utc`            |
-| Local Date-Time, Local Date, and Local Time | `ballerina.lang.string`         |
-
-## Example
-
-The following example illustrates on how a TOML content is converted to a Ballerina record and write it back after processing it.
-
-```ballerina
-import ballerina/io;
-import nipunayf/toml;
-
-type Package record {|
-    string name;
-    record {|int major; int minor; int patch;|} 'version;
-|};
-
-public function main() returns error? {
-    // Read the TOML content into a map<json>
-    map<json> result = check toml:readString(string
-        `name = "toml"
-
-        [version]
-        major = 0
-        minor = 1
-        patch = 3`);
-
-    Package packageToml = check result.fromJsonWithType();
-
-    // Update the version 
-    packageToml.'version.minor += 1;
-    packageToml.'version.patch = 0;
-
-    // Convert map<json> into TOML content
-    io:println(toml:writeString(packageToml));
-}
-```
+* Chat live with us via our [Discord server](https://discord.gg/ballerinalang).
+* Post all technical questions on Stack Overflow with the [#ballerina](https://stackoverflow.com/questions/tagged/ballerina) tag.
+* For more information go to the [`toml` library](https://lib.ballerina.io/ballerina/toml/latest).
+* For example demonstrations of the usage, go to [Ballerina By Examples](https://ballerina.io/swan-lake/learn/by-example/).

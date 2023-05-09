@@ -19,7 +19,7 @@
 # + successToken - Token to be returned on successful traverse of the characters
 # + message - Message to display if the end delimiter is not shown
 # + return - Tokenized TOML token on success, Else, an lexical error.
-function iterate(LexerState state, function (LexerState state) returns boolean|LexicalError process,
+function iterate(LexerState state, function (LexerState) returns boolean|LexicalError process,
                     TOMLToken successToken,
                     string message = "") returns LexerState|LexicalError {
 

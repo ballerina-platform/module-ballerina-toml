@@ -1,10 +1,35 @@
-## Overview
+# Specification: Ballerina Toml Library
 
-Ballerina TOML Parser provides APIs to convert a TOML configuration file to `map<json>`, and vice-versa. 
+_Owners_: @shafreenAnfar @MadhukaHarith92  
+_Reviewers_: @shafreenAnfar  
+_Created_: 2023/04/04  
+_Updated_: 2023/04/04  
+_Edition_: Swan Lake
+
+## Introduction
+This is the specification for the Toml standard library of [Ballerina language](https://ballerina.io/), which provides APIs to convert a TOML configuration file to `map<json>`, and vice-versa.
 
 Since the parser is following LL(1) grammar, it follows a non-recursive predictive parsing algorithm which operates in a linear time complexity.
 
-## Compatibility
+If you have any feedback or suggestions about the library, start a discussion via a [GitHub issue](https://github.com/ballerina-platform/ballerina-standard-library/issues) or in the [Discord server](https://discord.gg/ballerinalang). Based on the outcome of the discussion, the specification and implementation can be updated. Community feedback is always welcome. Any accepted proposal, which affects the specification is stored under `/docs/proposals`. Proposals under discussion can be found with the label `type/proposal` in GitHub.
+
+The conforming implementation of the specification is released and included in the distribution. Any deviation from the specification is considered a bug.
+
+## Contents
+
+1. [Overview](#1-overview)
+2. [Compatibility](#2-compatibility)
+3. [Parsing a TOML Document](#3-parsing-a-toml-document)
+4. [Writing to a TOML Document](#4-writing-to-a-toml-document)
+5. [Supported Data Types](#5-supported-data-types)
+6. [Example](#6-example)
+
+## 1. Overview
+This specification elaborates on the functions available in the Toml library.
+
+Since the parser is following LL(1) grammar, it follows a non-recursive predictive parsing algorithm which operates in a linear time complexity.
+
+## 2. Compatibility
 
 | Language  | Version                        |
 | --------- | ------------------------------ |
@@ -13,9 +38,9 @@ Since the parser is following LL(1) grammar, it follows a non-recursive predicti
 
 The parser follows the grammar rules particularized in the [TOML specification 1.0](https://toml.io/en/v1.0.0).
 
-### Parsing a TOML Document
+## 3. Parsing a TOML Document
 
- The module supports to parse either a TOML file or a TOML string.
+The module supports to parse either a TOML file or a TOML string.
 
 ```ballerina
 // Parsing a TOML file
@@ -30,7 +55,7 @@ map<json>|toml:Error tomLString = toml:readString(string
 
 By default, the package parses offset date time into `time.Utc`. This can be skipped by disabling the `parseOffsetDateTime`.
 
-### Writing to a TOML Document
+## 4. Writing to a TOML Document
 
 Any `map<json>` structure containing the [supported data types](#Supported-Data-Types) can be converted to a TOML document. The package can either convert the document to an array of strings or write to a TOML file.
 
@@ -69,7 +94,7 @@ table.key = "value" # allowedDottedKeys = true
 key = "value"
 ```
 
-## Supported Data Types
+## 5. Supported Data Types
 
 The following TOML primitives are mapped to the Ballerina types as follow.
 
@@ -86,7 +111,7 @@ The following TOML primitives are mapped to the Ballerina types as follow.
 | Offset Date-Time                            | `ballerina.time.Utc`            |
 | Local Date-Time, Local Date, and Local Time | `ballerina.lang.string`         |
 
-## Example
+## 6. Example
 
 The following example illustrates on how a TOML content is converted to a Ballerina record and write it back after processing it.
 
