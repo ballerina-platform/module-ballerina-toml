@@ -35,7 +35,7 @@ final readonly & map<string> escapedCharMap = {
 #
 # + state - The lexer state for the next token
 # + return - If success, returns a token, else returns a Lexical Error
-public function scan(LexerState state) returns LexerState|LexicalError {
+public isolated function scan(LexerState state) returns LexerState|LexicalError {
 
     // Generate EOL token 
     if state.peek() == () {

@@ -61,13 +61,13 @@ class ParserState {
 
     lexer:LexerState lexerState = new ();
 
-    function init(string[] inputLines, boolean parseOffsetDateTime) {
+    isolated function init(string[] inputLines, boolean parseOffsetDateTime) {
         self.lines = inputLines;
         self.numLines = inputLines.length();
         self.parseOffsetDateTime = parseOffsetDateTime;
     }
 
-    function updateLexerContext(lexer:Context context) {
+    isolated function updateLexerContext(lexer:Context context) {
         self.lexerState.context = context;
     }
 
@@ -75,7 +75,7 @@ class ParserState {
     #
     # + err - Error to be returned on failure
     # + return - An error if it fails to initialize  
-    function initLexer(GrammarError err) returns ParsingError? {
+    isolated function initLexer(GrammarError err) returns ParsingError? {
         self.lineIndex += 1;
         string line;
         if self.lexerState.isNewLine {
@@ -92,7 +92,7 @@ class ParserState {
     # Add a table key to the respective array if possible.
     #
     # + tableKey - Table key to be added.
-    function addTableKey(string tableKey) {
+    isolated function addTableKey(string tableKey) {
         // Array table keys are maintained separately
         if self.isArrayTable {
             if self.definedArrayTableKeys.indexOf(tableKey) == () {
@@ -118,7 +118,7 @@ class ParserState {
     }
 
     # The current key is added to the table keys, so it cannot be redefined.
-    function reserveKey() {
+    isolated function reserveKey() {
         if !self.isArrayTable {
             self.addTableKey(self.currentTableKey.length() == 0 ? self.bufferedKey : self.currentTableKey + "." + self.bufferedKey);
             self.bufferedKey = "";

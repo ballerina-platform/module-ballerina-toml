@@ -21,7 +21,7 @@ import toml.lexer;
 # + state - Current parser state
 # + structure - The structure for the previous key. Null if there is no value.
 # + return - Returns the structure after assigning the value.
-function keyValue(ParserState state, map<json> structure) returns map<json>|ParsingError {
+isolated function keyValue(ParserState state, map<json> structure) returns map<json>|ParsingError {
     // Validate the first key
     check verifyKey(state, structure);
     [string, map<json>][] dottedTableStack = [[state.currentToken.value, structure]];
@@ -102,7 +102,7 @@ function keyValue(ParserState state, map<json> structure) returns map<json>|Pars
 #
 # + state - Current parser state
 # + return - If success, returns the formatted data value. Else, an error.
-function dataValue(ParserState state) returns json|ParsingError {
+isolated function dataValue(ParserState state) returns json|ParsingError {
     json returnData;
     match state.currentToken.token {
         lexer:MULTILINE_BASIC_STRING_DELIMITER => {
@@ -159,7 +159,7 @@ function dataValue(ParserState state) returns json|ParsingError {
 # + state - Current parser state
 # + numberSystem - Number system of the value
 # + return - Processed integer. Error if there is a string.
-function processInteger(ParserState state, int numberSystem) returns int|ParsingError {
+isolated function processInteger(ParserState state, int numberSystem) returns int|ParsingError {
     int value = 0;
     int power = 1;
     int length = state.currentToken.value.length() - 1;
@@ -174,7 +174,7 @@ function processInteger(ParserState state, int numberSystem) returns int|Parsing
 #
 # + state - Current parser state
 # + return - An error on empty digits
-function checkEmptyInteger(ParserState state) returns GrammarError? {
+isolated function checkEmptyInteger(ParserState state) returns GrammarError? {
     if state.currentToken.value.length() == 0 {
         return generateGrammarError(state, "Digits cannot be empty");
     }

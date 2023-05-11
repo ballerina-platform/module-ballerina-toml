@@ -227,7 +227,7 @@ function scanUnquotedKey(LexerState state) returns boolean|LexicalError {
 #
 # + pattern - Pattern of the number system  
 # + return - Generates a function which checks the lexemes for the given number system.
-function scanDigit(function (string:Char char) returns boolean pattern)
+isolated function scanDigit(function (string:Char char) returns boolean pattern)
     returns function (LexerState state) returns boolean|LexicalError {
     return function(LexerState state) returns boolean|LexicalError {
 

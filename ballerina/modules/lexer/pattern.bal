@@ -18,13 +18,13 @@ function patternBinary(string:Char char) returns boolean
 function patternOctal(string:Char char) returns boolean
     => char is "0"|"1"|"2"|"3"|"4"|"5"|"6"|"7";
 
-function patternDecimal(string:Char char) returns boolean
+isolated function patternDecimal(string:Char char) returns boolean
     => char is "0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9";
 
 function patternHexadecimal(string:Char char) returns boolean
     => char is "0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9"|"A"|"B"|"C"|"D"|"E"|"F"|"a"|"b"|"c"|"d"|"e"|"f";
 
-function patternUnquotedString(string:Char char) returns boolean {
+isolated function patternUnquotedString(string:Char char) returns boolean {
     int codePoint = char.toCodePointInt();
 
     return (codePoint >= 97 && codePoint <= 122)

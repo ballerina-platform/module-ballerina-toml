@@ -22,7 +22,7 @@ import ballerina/time;
 # + prevValue - The prefixed value to the current token 
 # + fractional - Flag is set when processing the fractional segment
 # + return - Parsing error if occurred
-function number(ParserState state, string prevValue, boolean fractional = false) returns json|ParsingError {
+isolated function number(ParserState state, string prevValue, boolean fractional = false) returns json|ParsingError {
     string valueBuffer = prevValue + state.currentToken.value;
     check checkToken(state);
 
@@ -73,7 +73,7 @@ function number(ParserState state, string prevValue, boolean fractional = false)
 # + state - Current parser state  
 # + prevValue - The prefixed value to the current token 
 # + return - An error if the grammar rules are not met.  
-function date(ParserState state, string prevValue) returns json|ParsingError {
+isolated function date(ParserState state, string prevValue) returns json|ParsingError {
     string valueBuffer = prevValue;
 
     // Validate the year
@@ -131,7 +131,7 @@ function date(ParserState state, string prevValue) returns json|ParsingError {
 # + prevValue - The prefixed value to the current token 
 # + datePrefixed - True if there is a date before the time
 # + return - Returns the formatted time on success. Else, an parsing error.
-function time(ParserState state, string hours, string prevValue, boolean datePrefixed = false) returns json|ParsingError {
+isolated function time(ParserState state, string hours, string prevValue, boolean datePrefixed = false) returns json|ParsingError {
     // Validate hours
     check checkTime(state, hours, 0, 24, "hours");
 
@@ -181,7 +181,7 @@ function time(ParserState state, string hours, string prevValue, boolean datePre
 # + prevValue - The prefixed value to the current token 
 # + datePrefixed - True if there is a date before the time
 # + return - UTC object representing the time on success. Else, an parsing error.
-function timeOffset(ParserState state, string prevValue, boolean datePrefixed) returns json|ParsingError {
+isolated function timeOffset(ParserState state, string prevValue, boolean datePrefixed) returns json|ParsingError {
     string valueBuffer = prevValue;
 
     match state.currentToken.token {
@@ -219,7 +219,7 @@ function timeOffset(ParserState state, string prevValue, boolean datePrefixed) r
 # + upperBound - Maximum acceptable value
 # + valueName - Name of the time component
 # + return - Returns an error if the requirements are not met.
-function checkTime(ParserState state, string value, int lowerBound, int upperBound, string valueName) returns ParsingError? {
+isolated function checkTime(ParserState state, string value, int lowerBound, int upperBound, string valueName) returns ParsingError? {
     // Expected the time digits to be 2.
     if value.length() != 2 {
         return generateGrammarError(state, string `Expected number of digits in '${valueName}' to be 2`);
@@ -237,7 +237,7 @@ function checkTime(ParserState state, string value, int lowerBound, int upperBou
 # + numDigits - Required number of digits to the component. 
 # + valueName - Name of the date component.
 # + return - Returns the value in integer. Else, an parsing error.
-function checkDate(ParserState state, string value, int numDigits, string valueName) returns int|ParsingError {
+isolated function checkDate(ParserState state, string value, int numDigits, string valueName) returns int|ParsingError {
     if value.length() != numDigits {
         return generateGrammarError(state, string `Expected number of digits in ${valueName} to be ${numDigits.toString()}`);
     }
@@ -249,7 +249,7 @@ function checkDate(ParserState state, string value, int numDigits, string valueN
 # + state - Current parser state
 # + inputTime - The offset date time as a string
 # + return - Converted date time as a string or a time object
-function getODT(ParserState state, string inputTime) returns json|ParsingError {
+isolated function getODT(ParserState state, string inputTime) returns json|ParsingError {
     if state.parseOffsetDateTime {
         return check processTypeCastingError(state, time:utcFromString(inputTime));
     }

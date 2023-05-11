@@ -36,7 +36,7 @@ public type ReadErrorDetails record {|
 # + state - Current lexer state  
 # + context - Context of the lexeme being scanned
 # + return - Generated error message
-function generateInvalidCharacterError(LexerState state, string context) returns LexicalError {
+isolated function generateInvalidCharacterError(LexerState state, string context) returns LexicalError {
     string? currentChar = state.peek();
     string message = string `Invalid character '${currentChar ?: "<end-of-line>"}' for a '${context}'`;
     return error(
@@ -48,7 +48,7 @@ function generateInvalidCharacterError(LexerState state, string context) returns
     );
 }
 
-function generateLexicalError(LexerState state, string message) returns LexicalError =>
+isolated function generateLexicalError(LexerState state, string message) returns LexicalError =>
     error(
         message + ".",
         line = state.row(),
