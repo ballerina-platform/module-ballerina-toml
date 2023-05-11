@@ -18,7 +18,7 @@ import ballerina/file;
 #
 # + fileName - Path to the file
 # + return - An error on failure
-function openFile(string fileName) returns FileError? {
+isolated function openFile(string fileName) returns FileError? {
     // Check if the given fileName is not directory
     if check file:test(fileName, file:IS_DIR) {
         return error("Cannot write to a directory");

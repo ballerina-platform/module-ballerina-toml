@@ -21,7 +21,7 @@ import ballerina/time;
 # + parentTableKey - Current table key  
 # + whitespace - Indentation for the current table
 # + return - An error on failure
-function processStructure(State state, map<json> structure, string parentTableKey, string whitespace)
+isolated function processStructure(State state, map<json> structure, string parentTableKey, string whitespace)
     returns WritingError? {
 
     string[] keys = structure.keys();
@@ -80,7 +80,7 @@ function processStructure(State state, map<json> structure, string parentTableKe
 #
 # + value - Value to converted
 # + return - Converted string on success. Else, an error.
-function processPrimitiveValue(json value) returns string|WritingError {
+isolated function processPrimitiveValue(json value) returns string|WritingError {
 
     // Strings are surrounded by double-quotes by default
     if value is string {
@@ -120,11 +120,11 @@ function processPrimitiveValue(json value) returns string|WritingError {
 # + tables - List of array tables under the current table  
 # + whitespace - Indentation of the current table
 # + return - An error on failure
-function processArray(State state, string key, json[] value, string tableKey, map<json[]|map<json>> tables,
+isolated function processArray(State state, string key, json[] value, string tableKey, map<json[]|map<json>> tables,
     string whitespace) returns WritingError? {
 
     // Check if all the array values are object
-    boolean isAllObject = value.reduce(function(boolean assertion, json arrayValue) returns boolean {
+    boolean isAllObject = value.reduce(isolated function(boolean assertion, json arrayValue) returns boolean {
         return assertion && arrayValue is map<json>;
     }, true);
 
@@ -136,8 +136,10 @@ function processArray(State state, string key, json[] value, string tableKey, ma
 
     // Construct an inline array
     state.output.push(key + " = [");
-    value.forEach(arrayValue =>
-        state.output.push(whitespace + state.indent + check processPrimitiveValue(arrayValue) + ","));
+
+    foreach var item in value {
+        state.output.push(whitespace + state.indent + check processPrimitiveValue(item) + ",");
+    }
     state.output.push("]");
 }
 
@@ -150,7 +152,7 @@ function processArray(State state, string key, json[] value, string tableKey, ma
 # + tables - List of standard tables under the current table  
 # + whitespace - Indentation of the current table
 # + return - An error on failure
-function processTable(State state, map<json> structure, string tableKey, map<json[]|map<json>> tables,
+isolated function processTable(State state, map<json> structure, string tableKey, map<json[]|map<json>> tables,
     string whitespace) returns WritingError? {
         
     // Check if there are more than one value nested to it.
@@ -177,6 +179,6 @@ function processTable(State state, map<json> structure, string tableKey, map<jso
 # + parentKey - Key of the parent table
 # + currentKey - Key of the current table
 # + return - Dotted key representing the current table
-function constructTableKey(string parentKey, string currentKey) returns string {
+isolated function constructTableKey(string parentKey, string currentKey) returns string {
     return parentKey == "" ? currentKey : parentKey + "." + currentKey;
 }
