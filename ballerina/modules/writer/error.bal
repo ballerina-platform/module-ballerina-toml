@@ -19,4 +19,4 @@ public type WritingError distinct error;
 #
 # + message - Error message
 # + return - Constructed Writing error message
-function generateError(string message) returns WritingError => error(message);
+isolated function generateError(string message) returns WritingError => error(message);
