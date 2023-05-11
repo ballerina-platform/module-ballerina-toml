@@ -16,7 +16,7 @@
 #
 # + state - Current lexer state
 # + return - Tokenized TOML key token. Else, an error on failure.
-function contextExpressionKey(LexerState state) returns LexerState|LexicalError {
+isolated function contextExpressionKey(LexerState state) returns LexerState|LexicalError {
     // Check for line breaks when reading a string
     if state.peek() == "\n" {
         state.isNewLine = true;
@@ -84,7 +84,7 @@ function contextExpressionKey(LexerState state) returns LexerState|LexicalError 
 #
 # + state - Current lexer state
 # + return - Tokenized multiline basic string token. Else, an error on failure.
-function contextMultilineBasicString(LexerState state) returns LexerState|LexicalError {
+isolated function contextMultilineBasicString(LexerState state) returns LexerState|LexicalError {
     // Scan for multiline basic string delimiter
     if state.peek() == "\"" && state.peek(1) == "\"" && state.peek(2) == "\"" {
         state.forward(2);
@@ -104,7 +104,7 @@ function contextMultilineBasicString(LexerState state) returns LexerState|Lexica
 #
 # + state - Current lexer state
 # + return - Tokenized multiline literal string token. Else, an error on failure.
-function contextMultilineLiteralString(LexerState state) returns LexerState|LexicalError {
+isolated function contextMultilineLiteralString(LexerState state) returns LexerState|LexicalError {
     // Scan for multiline literal string delimiter
     if state.peek() == "'" && state.peek(1) == "'" && state.peek(2) == "'" {
         state.forward(2);
@@ -119,7 +119,7 @@ function contextMultilineLiteralString(LexerState state) returns LexerState|Lexi
 #
 # + state - Current lexer state
 # + return - Tokenized date time token. Else, an error on failure.
-function contextDateTime(LexerState state) returns LexerState|LexicalError {
+isolated function contextDateTime(LexerState state) returns LexerState|LexicalError {
     match state.peek() {
         "#" => { // Ignore comments
             state.forward(-1);
@@ -162,7 +162,7 @@ function contextDateTime(LexerState state) returns LexerState|LexicalError {
 #
 # + state - Current lexer state
 # + return - Tokenized TOML value token. Else, an error on failure.
-function contextExpressionValue(LexerState state) returns LexerState|LexicalError {
+isolated function contextExpressionValue(LexerState state) returns LexerState|LexicalError {
     match state.peek() {
         " "|"\t" => { // Ignore whitespace
             state.forward();

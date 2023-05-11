@@ -19,7 +19,7 @@
 # + successToken - Token to be returned on successful traverse of the characters
 # + message - Message to display if the end delimiter is not shown
 # + return - Tokenized TOML token on success, Else, an lexical error.
-function iterate(LexerState state, function (LexerState) returns boolean|LexicalError process,
+isolated function iterate(LexerState state, function (LexerState) returns boolean|LexicalError process,
                     TOMLToken successToken,
                     string message = "") returns LexerState|LexicalError {
 
@@ -42,7 +42,7 @@ function iterate(LexerState state, function (LexerState) returns boolean|Lexical
 # + chars - Expected keyword
 # + successToken - Output token if succeed
 # + return - Tokenized TOML token on success. Else, returns a lexical error.
-function tokensInSequence(LexerState state, string chars, TOMLToken successToken) returns LexerState|LexicalError {
+isolated function tokensInSequence(LexerState state, string chars, TOMLToken successToken) returns LexerState|LexicalError {
     // Check if the characters for a keyword in order
     foreach string char in chars {
         if !checkCharacter(state, char) {
@@ -60,7 +60,7 @@ function tokensInSequence(LexerState state, string chars, TOMLToken successToken
 # + state - Current lexer state  
 # + expectedCharacters - Expected characters at the current index
 # + return - True if the assertion is true. Else, an lexical error
-function checkCharacter(LexerState state, string|string[] expectedCharacters) returns boolean {
+isolated function checkCharacter(LexerState state, string|string[] expectedCharacters) returns boolean {
     if expectedCharacters is string {
         return expectedCharacters == state.peek();
     } else if expectedCharacters.indexOf(state.peek() ?: "") == () {

@@ -20,7 +20,7 @@ import toml.lexer;
 # + inputLines - TOML lines to be parsed.  
 # + parseOffsetDateTime - Converts ODT to Ballerina time:Utc
 # + return - Map object of the TOML document on success. Else, an parsing error.
-public function parse(string[] inputLines, boolean parseOffsetDateTime) returns map<json>|ParsingError {
+public isolated function parse(string[] inputLines, boolean parseOffsetDateTime) returns map<json>|ParsingError {
     
     // Initialize the state 
     ParserState state = new (inputLines, parseOffsetDateTime);

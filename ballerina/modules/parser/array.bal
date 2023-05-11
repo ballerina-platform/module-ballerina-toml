@@ -19,7 +19,7 @@ import toml.lexer;
 # + state - Current parser state  
 # + tempArray - Recursively constructing array
 # + return - Completed array on success. An error if the grammar rules are not met.
-function array(ParserState state, json[] tempArray = []) returns json[]|ParsingError {
+isolated function array(ParserState state, json[] tempArray = []) returns json[]|ParsingError {
 
     check checkToken(state, [
         lexer:BASIC_STRING,
@@ -59,7 +59,7 @@ function array(ParserState state, json[] tempArray = []) returns json[]|ParsingE
 # + state - Current parser state  
 # + tempArray - Recursively constructing array
 # + return - Completed array on success. An error if the grammar rules are not met.
-function arrayValue(ParserState state, json[] tempArray = []) returns json[]|ParsingError {
+isolated function arrayValue(ParserState state, json[] tempArray = []) returns json[]|ParsingError {
     lexer:TOMLToken prevToken;
     state.updateLexerContext(lexer:EXPRESSION_VALUE);
 

@@ -22,7 +22,7 @@ import toml.lexer;
 # + expectedTokens - Predicted token or tokens
 # + customMessage - Error message to be displayed if the expected token not found  
 # + return - Parsing error on failure
-function checkToken(ParserState state, lexer:TOMLToken|lexer:TOMLToken[] expectedTokens = lexer:DUMMY, 
+isolated function checkToken(ParserState state, lexer:TOMLToken|lexer:TOMLToken[] expectedTokens = lexer:DUMMY, 
     string customMessage = "") returns ParsingError? {
 
     lexer:TOMLToken prevToken = state.currentToken.token;
@@ -57,7 +57,7 @@ function checkToken(ParserState state, lexer:TOMLToken|lexer:TOMLToken[] expecte
 # + state - Current parser state
 # + structure - Structure to which the changes are made.
 # + return - Constructed final toml object on success. Else, a parsing error.
-function buildTOMLObject(ParserState state, map<json> structure) returns map<json>|ParsingError {
+isolated function buildTOMLObject(ParserState state, map<json> structure) returns map<json>|ParsingError {
     // Under the root table
     if state.keyStack.length() == 0 {
         return state.currentStructure;
@@ -116,7 +116,7 @@ function buildTOMLObject(ParserState state, map<json> structure) returns map<jso
 # + state - Current parser state
 # + value - Value to be type casted.
 # + return - Value as a Ballerina data type  
-function processTypeCastingError(ParserState state, json|error value) returns json|ConversionError {
+isolated function processTypeCastingError(ParserState state, json|error value) returns json|ConversionError {
     // Check if the type casting has any errors
     if value is error {
         return error(

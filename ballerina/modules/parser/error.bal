@@ -30,12 +30,12 @@ public type ConversionError distinct error<lexer:ReadErrorDetails>;
 # + expectedTokens - Expected tokens for the grammar production  
 # + beforeToken - Token before the current one
 # + return - Formatted error message
-function generateExpectError(ParserState state,
+isolated function generateExpectError(ParserState state,
     lexer:TOMLToken|lexer:TOMLToken[]|string expectedTokens, lexer:TOMLToken beforeToken) returns GrammarError {
 
     string expectedTokensMessage;
     if expectedTokens is lexer:TOMLToken[] { // If multiple tokens
-        string tempMessage = expectedTokens.reduce(function(string message, lexer:TOMLToken token) returns string {
+        string tempMessage = expectedTokens.reduce(isolated function(string message, lexer:TOMLToken token) returns string {
             return message + " '" + token + "' or";
         }, "");
         expectedTokensMessage = tempMessage.substring(0, tempMessage.length() - 3);
@@ -55,10 +55,10 @@ function generateExpectError(ParserState state,
 # + value - Any value name. Commonly used to indicate keys.  
 # + valueType - Possible types - key, table, value
 # + return - Formatted error message
-function generateDuplicateError(ParserState state, string value, string valueType = "key") returns GrammarError
+isolated function generateDuplicateError(ParserState state, string value, string valueType = "key") returns GrammarError
     => generateGrammarError(state, string `Duplicate ${valueType} exists for '${value}'`);
 
-function generateGrammarError(ParserState state, string message,
+isolated function generateGrammarError(ParserState state, string message,
     json? expected = (), json? context = ()) returns GrammarError
         => error(
             message + ".",

@@ -21,7 +21,7 @@ import toml.parser;
 # + tomlString - TOML content
 # + config - Configuration for reading a TOML file
 # + return - TOML map object on success. Else, returns an error
-public function readString(string tomlString, *ReadConfig config) returns map<json>|Error {
+public isolated function readString(string tomlString, *ReadConfig config) returns map<json>|Error {
     string[] lines = [tomlString];
     return check parser:parse(lines, config.parseOffsetDateTime);
 }
