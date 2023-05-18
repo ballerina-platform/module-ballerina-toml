@@ -117,7 +117,7 @@ The following example illustrates how TOML content is converted to a Ballerina r
 
 ```ballerina
 import ballerina/io;
-import nipunayf/toml;
+import ballerina/toml;
 
 type Package record {|
     string name;
