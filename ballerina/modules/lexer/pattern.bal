@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function patternBinary(string:Char char) returns boolean
+isolated function patternBinary(string:Char char) returns boolean
     => char is "0"|"1";
 
-function patternOctal(string:Char char) returns boolean
+isolated function patternOctal(string:Char char) returns boolean
     => char is "0"|"1"|"2"|"3"|"4"|"5"|"6"|"7";
 
 isolated function patternDecimal(string:Char char) returns boolean
     => char is "0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9";
 
-function patternHexadecimal(string:Char char) returns boolean
+isolated function patternHexadecimal(string:Char char) returns boolean
     => char is "0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9"|"A"|"B"|"C"|"D"|"E"|"F"|"a"|"b"|"c"|"d"|"e"|"f";
 
 isolated function patternUnquotedString(string:Char char) returns boolean {
@@ -33,7 +33,7 @@ isolated function patternUnquotedString(string:Char char) returns boolean {
         || char is "-"|"_";
 }
 
-function patternBasicString(string:Char char) returns boolean {
+isolated function patternBasicString(string:Char char) returns boolean {
     int codePoint = char.toCodePointInt();
 
     return (codePoint >= 35 && codePoint <= 91)
@@ -43,7 +43,7 @@ function patternBasicString(string:Char char) returns boolean {
         || codePoint is 9|32|33|144;
 }
 
-function patternLiteralString(string:Char char) returns boolean {
+isolated function patternLiteralString(string:Char char) returns boolean {
     int codePoint = char.toCodePointInt();
 
     return (codePoint >= 9 && codePoint <= 38)
