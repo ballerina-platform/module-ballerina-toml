@@ -16,7 +16,7 @@
 #
 # + state - Current lexer state
 # + return - True if the end of the string, An error message for an invalid character.
-function scanLiteralString(LexerState state) returns boolean|LexicalError {
+isolated function scanLiteralString(LexerState state) returns boolean|LexicalError {
     if patternLiteralString(state.currentChar()) {
         state.appendToLexeme(state.currentChar());
         return false;
@@ -31,7 +31,7 @@ function scanLiteralString(LexerState state) returns boolean|LexicalError {
 #
 # + state - Current lexer state
 # + return - True if the end of the string, An error message for an invalid character.
-function scanMultilineLiteralString(LexerState state) returns boolean|LexicalError {
+isolated function scanMultilineLiteralString(LexerState state) returns boolean|LexicalError {
     if !patternLiteralString(state.currentChar()) {
         if checkCharacter(state, "'") {
             if state.peek(1) == "'" && state.peek(2) == "'" {
@@ -65,7 +65,7 @@ function scanMultilineLiteralString(LexerState state) returns boolean|LexicalErr
 #
 # + state - Current lexer state
 # + return - True if the end of the string, An error message for an invalid character.
-function scanBasicString(LexerState state) returns LexicalError|boolean {
+isolated function scanBasicString(LexerState state) returns LexicalError|boolean {
     if patternBasicString(state.currentChar()) {
         state.appendToLexeme(state.currentChar());
         return false;
@@ -89,7 +89,7 @@ function scanBasicString(LexerState state) returns LexicalError|boolean {
 #
 # + state - Current lexer state
 # + return - True if the end of the string, An error message for an invalid character.
-function scanMultilineBasicString(LexerState state) returns boolean|LexicalError {
+isolated function scanMultilineBasicString(LexerState state) returns boolean|LexicalError {
     if !patternBasicString(state.currentChar()) {
         // Process the escape symbol
         if checkCharacter(state, "\\") {
@@ -141,7 +141,7 @@ function scanMultilineBasicString(LexerState state) returns boolean|LexicalError
 #
 # + state - Current lexer state
 # + return - An error on failure
-function scanEscapedCharacter(LexerState state) returns LexicalError? {
+isolated function scanEscapedCharacter(LexerState state) returns LexicalError? {
     string currentChar;
 
     // Check if the character is empty
@@ -173,7 +173,7 @@ function scanEscapedCharacter(LexerState state) returns LexicalError? {
 # + escapedChar - Escaped character before the scanDigits  
 # + length - Number of scanDigits
 # + return - An error on failure
-function scanUnicodeEscapedCharacter(LexerState state, string escapedChar, int length) returns LexicalError? {
+isolated function scanUnicodeEscapedCharacter(LexerState state, string escapedChar, int length) returns LexicalError? {
 
     // Check if the required scanDigits do not overflow the current line.
     if state.line.length() < length + state.index {
@@ -208,7 +208,7 @@ function scanUnicodeEscapedCharacter(LexerState state, string escapedChar, int l
 #
 # + state - Current lexer state
 # + return - True if the end of the key, An error message for an invalid character.
-function scanUnquotedKey(LexerState state) returns boolean|LexicalError {
+isolated function scanUnquotedKey(LexerState state) returns boolean|LexicalError {
     if patternUnquotedString(state.currentChar()) {
         state.appendToLexeme(state.currentChar());
         return false;
@@ -227,9 +227,9 @@ function scanUnquotedKey(LexerState state) returns boolean|LexicalError {
 #
 # + pattern - Pattern of the number system  
 # + return - Generates a function which checks the lexemes for the given number system.
-isolated function scanDigit(function (string:Char char) returns boolean pattern)
-    returns function (LexerState state) returns boolean|LexicalError {
-    return function(LexerState state) returns boolean|LexicalError {
+isolated function scanDigit(isolated function (string:Char char) returns boolean pattern)
+    returns isolated function (LexerState state) returns boolean|LexicalError {
+    return isolated function(LexerState state) returns boolean|LexicalError {
 
         if pattern(state.currentChar()) {
             state.appendToLexeme(state.currentChar());
@@ -270,7 +270,7 @@ isolated function scanDigit(function (string:Char char) returns boolean pattern)
 #
 # + state - Current lexer state
 # + return - Return Value Description
-function scanDecimal(LexerState state) returns boolean|LexicalError {
+isolated function scanDecimal(LexerState state) returns boolean|LexicalError {
     function (LexerState) returns boolean|LexicalError scanDecimalDigit = scanDigit(patternDecimal);
     boolean|LexicalError digitOutput = scanDecimalDigit(state);
 
