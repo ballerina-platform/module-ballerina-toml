@@ -14,7 +14,6 @@
 
 import ballerina/file;
 import ballerina/io;
-import ballerina/regex;
 
 function validTomlDataGen() returns map<[string, json]>|error {
     file:MetaData[] data = check file:readDir("tests/resources/valid/in");
@@ -24,7 +23,7 @@ function validTomlDataGen() returns map<[string, json]>|error {
         file:MetaData[] testFiles = check file:readDir(item.absPath);
         foreach file:MetaData testFile in testFiles {
             string relativePath = check getRelativePath(testFile.absPath);
-            string replacedDir = regex:replaceFirst(relativePath, "in", "out");
+            string replacedDir = re`in`.replace(relativePath, "out");
             string replacedExtension = replacedDir.substring(0, replacedDir.length() - 4) + "json";
 
             json expectedOutput = check io:fileReadJson(replacedExtension);
