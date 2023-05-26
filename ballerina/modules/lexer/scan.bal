@@ -271,7 +271,7 @@ isolated function scanDigit(isolated function (string:Char char) returns boolean
 # + state - Current lexer state
 # + return - Return Value Description
 isolated function scanDecimal(LexerState state) returns boolean|LexicalError {
-    function (LexerState) returns boolean|LexicalError scanDecimalDigit = scanDigit(patternDecimal);
+    isolated function (LexerState) returns boolean|LexicalError scanDecimalDigit = scanDigit(patternDecimal);
     boolean|LexicalError digitOutput = scanDecimalDigit(state);
 
     if digitOutput is boolean {
