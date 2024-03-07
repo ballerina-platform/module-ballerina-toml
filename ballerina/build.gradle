@@ -106,7 +106,6 @@ publishing {
 
 task cloneTestRepo {
     doLast {
-        def tempDir = new File("${project.buildDir}/tempTestRepo")
         def testResourcesDir = new File("${project.projectDir}/tests/resources")
         if (!testResourcesDir.exists()) {
             testResourcesDir.mkdirs()
