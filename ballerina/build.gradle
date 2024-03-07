@@ -104,6 +104,30 @@ publishing {
     }
 }
 
+task cloneTestRepo {
+    doLast {
+        def tempDir = new File("${project.buildDir}/tempTestRepo")
+        def testResourcesDir = new File("${project.projectDir}/tests/resources")
+        if (!testResourcesDir.exists()) {
+            testResourcesDir.mkdirs()
+        }
+        exec {
+            workingDir testResourcesDir.parentFile
+            commandLine 'git', 'clone', 'https://github.com/nipunayf/toml-test.git', testResourcesDir.name, '-b', 'resources'
+        }
+    }
+}
+
+task cleanupTestRepo {
+    doLast {
+        def testResourcesDir = new File("${project.projectDir}/tests/resources")
+        testResourcesDir.deleteDir()
+    }
+}
+
+test.finalizedBy cleanupTestRepo
+test.dependsOn cloneTestRepo
+
 updateTomlFiles.dependsOn copyStdlibs
 
 build.dependsOn "generatePomFileForMavenPublication"
