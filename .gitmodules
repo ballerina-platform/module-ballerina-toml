@@ -1,0 +1,4 @@
+[submodule "ballerina/tests/resources"]
+	path = ballerina/tests/resources
+	url = https://github.com/nipunayf/toml-test
+	branch = resources
