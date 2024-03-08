@@ -104,6 +104,15 @@ publishing {
     }
 }
 
+task checkAndUpdateSubmodule {
+    doLast {
+        def initCommand = ['git', 'submodule', 'update', '--init', '--recursive']
+        initCommand.execute(null, projectDir).waitFor()
+        println "Submodule initialized successfully."
+    }
+}
+
+test.dependsOn checkAndUpdateSubmodule
 updateTomlFiles.dependsOn copyStdlibs
 
 build.dependsOn "generatePomFileForMavenPublication"
