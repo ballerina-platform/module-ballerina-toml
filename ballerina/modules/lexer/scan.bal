@@ -236,7 +236,7 @@ isolated function scanDigit(isolated function (string:Char char) returns boolean
             return false;
         }
 
-        if checkCharacter(state, [" ", "#", "\t", "\n"]) {
+        if checkCharacter(state, [" ", "#", "\t"]) || state.isNewLine(state.peek()) {
             state.forward(-1);
             return true;
         }

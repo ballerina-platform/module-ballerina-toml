@@ -18,7 +18,7 @@
 # + return - Tokenized TOML key token. Else, an error on failure.
 isolated function contextExpressionKey(LexerState state) returns LexerState|LexicalError {
     // Check for line breaks when reading a string
-    if state.peek() == "\n" {
+    if state.isNewLine(state.peek()) {
         return state.tokenize(EOL);
     }
 
@@ -119,12 +119,14 @@ isolated function contextMultilineLiteralString(LexerState state) returns LexerS
 # + state - Current lexer state
 # + return - Tokenized date time token. Else, an error on failure.
 isolated function contextDateTime(LexerState state) returns LexerState|LexicalError {
+    // Check for line breaks when reading from string
+    if state.isNewLine(state.peek()) {
+        return state.tokenize(EOL);
+    }
+
     match state.peek() {
         "#" => { // Ignore comments
             state.forward(-1);
-            return state.tokenize(EOL);
-        }
-        "\n" => { // Check for line breaks when reading from string
             return state.tokenize(EOL);
         }
         ":" => { // Check for time separator
@@ -161,13 +163,15 @@ isolated function contextDateTime(LexerState state) returns LexerState|LexicalEr
 # + state - Current lexer state
 # + return - Tokenized TOML value token. Else, an error on failure.
 isolated function contextExpressionValue(LexerState state) returns LexerState|LexicalError {
+    // Check for line breaks when reading from string
+    if state.isNewLine(state.peek()) {
+        return state.tokenize(EOL);
+    }
+
     match state.peek() {
         " "|"\t" => { // Ignore whitespace
             state.forward();
             return scan(state);
-        }
-        "\n" => { // Check for line breaks when reading from string
-            return state.tokenize(EOL);
         }
         "#" => { // Ignore comments
             state.forward(-1);
@@ -220,6 +224,11 @@ isolated function contextExpressionValue(LexerState state) returns LexerState|Le
                 return iterate(state, scanDecimal, DECIMAL);
             }
 
+            if state.isNewLine(peekValue) {
+                state.appendToLexeme("0");
+                return state.tokenize(DECIMAL);
+            }
+
             match peekValue {
                 "x" => { // Check for hexadecimal numbers
                     state.forward(2);
@@ -233,7 +242,7 @@ isolated function contextExpressionValue(LexerState state) returns LexerState|Le
                     state.forward(2);
                     return iterate(state, scanDigit(patternBinary), BINARY);
                 }
-                " "|"#"|"."|","|"]"|"\n" => { // A decimal cannot start with 0 unless it is the only digit
+                " "|"#"|"."|","|"]" => { // A decimal cannot start with 0 unless it is the only digit
                     state.appendToLexeme("0");
                     return state.tokenize(DECIMAL);
                 }

@@ -85,4 +85,11 @@ public class LexerState {
             value: lexemeBuffer
         };
     }
+
+    # Check if the current character is a new line. 
+    # This should be replaced by the os module once it supports an API: #4931.
+    # 
+    # + char - character to be checked
+    # + return - True if the current character is a new line
+    public isolated function isNewLine(string? char) returns boolean => char == "\n" || char == "\r\n";
 }
