@@ -22,7 +22,9 @@ import toml.parser;
 # + config - Configuration for reading a TOML file
 # + return - TOML map object on success. Else, returns an error
 public isolated function readString(string tomlString, *ReadConfig config) returns map<json>|Error {
-    string[] lines = [tomlString];
+    io:ReadableByteChannel byteChannel = check io:createReadableChannel(tomlString.toBytes());
+    io:ReadableCharacterChannel charChannel = new (byteChannel, io:DEFAULT_ENCODING);
+    string[] lines = check charChannel.readAllLines();
     return check parser:parse(lines, config.parseOffsetDateTime);
 }
 

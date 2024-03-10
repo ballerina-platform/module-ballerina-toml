@@ -19,7 +19,6 @@
 isolated function contextExpressionKey(LexerState state) returns LexerState|LexicalError {
     // Check for line breaks when reading a string
     if state.peek() == "\n" {
-        state.isNewLine = true;
         return state.tokenize(EOL);
     }
 
@@ -126,7 +125,6 @@ isolated function contextDateTime(LexerState state) returns LexerState|LexicalEr
             return state.tokenize(EOL);
         }
         "\n" => { // Check for line breaks when reading from string
-            state.isNewLine = true;
             return state.tokenize(EOL);
         }
         ":" => { // Check for time separator
@@ -169,7 +167,6 @@ isolated function contextExpressionValue(LexerState state) returns LexerState|Le
             return scan(state);
         }
         "\n" => { // Check for line breaks when reading from string
-            state.isNewLine = true;
             return state.tokenize(EOL);
         }
         "#" => { // Ignore comments

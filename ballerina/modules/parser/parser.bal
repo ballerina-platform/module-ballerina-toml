@@ -26,7 +26,7 @@ public isolated function parse(string[] inputLines, boolean parseOffsetDateTime)
     ParserState state = new (inputLines, parseOffsetDateTime);
 
     // Iterating each line of the document
-    while state.lineIndex < state.numLines - 1 || state.lexerState.isNewLine {
+    while state.lineIndex < state.numLines - 1 {
         check state.initLexer(generateGrammarError(state, "Cannot open the TOML document"));
         check checkToken(state);
 
