@@ -13,19 +13,45 @@
 // limitations under the License.
 
 import ballerina/test;
+import ballerina/io;
 
 @test:Config {
     dataProvider: validTomlDataGen
 }
-function testValidTOML(string inputPath, json expectedOutput) returns error? {
+function testValidTomlForReadFile(string inputPath, json expectedOutput) returns error? {
     map<json> output = check readFile(inputPath, {parseOffsetDateTime: false});
+    test:assertEquals(output, expectedOutput);
+}
+
+@test:Config {
+    dataProvider: validTomlDataGen
+}
+function testValidTomlForReadString(string inputPath, json expectedOutput) returns error? {
+    map<json> output = check readString(check readStringFromFile(inputPath), {parseOffsetDateTime: false});
     test:assertEquals(output, expectedOutput);
 }
 
 @test:Config {
     dataProvider: invalidTomlDataGen
 }
-function testInvalidTOML(string inputPath) {
+function testInvalidTomlForReadFile(string inputPath) {
     map<json>|error output = readFile(inputPath);
     test:assertTrue(output is error);
+}
+
+@test:Config {
+    dataProvider: invalidTomlDataGen
+}
+function testInvalidTomlForReadString(string inputPath) returns error? {
+    string|error tomlContent = readStringFromFile(inputPath);
+    if tomlContent is string {
+        map<json>|error output = readString(tomlContent);
+        test:assertTrue(output is error);
+    }
+}
+
+function readStringFromFile(string filePath) returns string|error {
+    io:ReadableByteChannel byteChannel = check io:openReadableFile(filePath);
+    (byte[] & readonly) readBytes = check byteChannel.readAll();
+    return string:fromBytes(readBytes);
 }

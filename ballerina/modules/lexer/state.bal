@@ -29,8 +29,6 @@ public class LexerState {
     # Output TOML token
     TOMLToken token = DUMMY;
 
-    public boolean isNewLine = false;
-
     public isolated function row() returns int => self.lineNumber + 1;
 
     public isolated function column() returns int => self.index + 1;
@@ -45,7 +43,6 @@ public class LexerState {
         self.index = 0;
         self.line = line;
         self.lineNumber = lineNumber;
-        self.isNewLine = false;
     }
 
     # Increment the index of the column by k indexes
@@ -88,4 +85,11 @@ public class LexerState {
             value: lexemeBuffer
         };
     }
+
+    # Check if the current character is a new line. 
+    # This should be replaced by the os module once it supports an API: #4931.
+    # 
+    # + char - character to be checked
+    # + return - True if the current character is a new line
+    public isolated function isNewLine(string? char) returns boolean => char == "\n" || char == "\r\n";
 }

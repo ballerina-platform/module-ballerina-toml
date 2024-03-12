@@ -77,15 +77,10 @@ class ParserState {
     # + return - An error if it fails to initialize  
     isolated function initLexer(GrammarError err) returns ParsingError? {
         self.lineIndex += 1;
-        string line;
-        if self.lexerState.isNewLine {
-            line = self.lexerState.line.substring(self.lexerState.index);
-        } else {
-            if self.lineIndex >= self.numLines {
-                return err;
-            }
-            line = self.lines[self.lineIndex];
+        if self.lineIndex >= self.numLines {
+            return err;
         }
+        string line = self.lines[self.lineIndex];
         self.lexerState.setLine(line, self.lineIndex);
     }
 
