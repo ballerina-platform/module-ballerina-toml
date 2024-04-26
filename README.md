@@ -15,7 +15,7 @@ Since the parser is following LL(1) grammar, it follows a non-recursive predicti
 
 ## Issues and projects
 
-The **Issues** and **Projects** tabs are disabled for this repository as this is part of the Ballerina Standard Library. To report bugs, request new features, start new discussions, view project boards, etc., go to the Ballerina Standard Library [parent repository](https://github.com/ballerina-platform/ballerina-library).
+The **Issues** and **Projects** tabs are disabled for this repository as this is part of the Ballerina Library. To report bugs, request new features, start new discussions, view project boards, etc., go to the Ballerina Library [parent repository](https://github.com/ballerina-platform/ballerina-library).
 
 This repository contains only the source code of the package.
 

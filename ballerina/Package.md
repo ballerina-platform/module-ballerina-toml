@@ -6,7 +6,7 @@ Since the parser is following LL(1) grammar, it follows a non-recursive predicti
 
 ## Report issues
 
-To report bugs, request new features, start new discussions, view project boards, etc., go to the [Ballerina standard library parent repository](https://github.com/ballerina-platform/ballerina-library).
+To report bugs, request new features, start new discussions, view project boards, etc., go to the [Ballerina library parent repository](https://github.com/ballerina-platform/ballerina-library).
 
 ## Useful links
 
