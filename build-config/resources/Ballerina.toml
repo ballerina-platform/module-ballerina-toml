@@ -7,4 +7,4 @@ keywords = ["toml"]
 repository = "https://github.com/ballerina-platform/module-ballerina-toml"
 icon = "icon.png"
 license = ["Apache-2.0"]
-distribution = "2201.10.0-20241007-143200-6b69ca80"
+distribution = "2201.11.0"
