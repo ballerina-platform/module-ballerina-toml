@@ -14,10 +14,14 @@ pluginManagement {
         id "de.undercouch.download" version "${downloadPluginVersion}"
         id "net.researchgate.release" version "${releasePluginVersion}"
     }
+    repositories {
+        mavenLocal()
+        gradlePluginPortal()
+    }
 }
 
 plugins {
-    id "com.gradle.enterprise" version "3.13.2"
+    id "com.gradle.develocity" version "3.19.2"
 }
 
 include ':checkstyle'
@@ -26,9 +30,9 @@ include ':toml-ballerina'
 project(':checkstyle').projectDir = file("build-config${File.separator}checkstyle")
 project(':toml-ballerina').projectDir = file('ballerina')
 
-gradleEnterprise {
+develocity {
     buildScan {
-        termsOfServiceUrl = 'https://gradle.com/terms-of-service'
-        termsOfServiceAgree = 'yes'
+        termsOfUseUrl = 'https://gradle.com/terms-of-service'
+        termsOfUseAgree = 'yes'
     }
 }
