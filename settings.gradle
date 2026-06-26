@@ -15,7 +15,6 @@ pluginManagement {
         id "net.researchgate.release" version "${releasePluginVersion}"
     }
     repositories {
-        mavenLocal()
         gradlePluginPortal()
     }
 }
