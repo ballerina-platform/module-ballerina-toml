@@ -1,5 +1,4 @@
-Ballerina Toml Library
-===================
+# Ballerina Toml Library
 
 [![Build](https://github.com/ballerina-platform/module-ballerina-toml/actions/workflows/build-timestamped-master.yml/badge.svg)](https://github.com/ballerina-platform/module-ballerina-toml/actions/workflows/build-timestamped-master.yml)
 [![codecov](https://codecov.io/gh/ballerina-platform/module-ballerina-toml/branch/main/graph/badge.svg)](https://codecov.io/gh/ballerina-platform/module-ballerina-toml)
@@ -9,9 +8,9 @@ Ballerina Toml Library
 [![Github issues](https://img.shields.io/github/issues/ballerina-platform/ballerina-library/module/toml.svg?label=Open%20Issues)](https://github.com/ballerina-platform/ballerina-library/labels/module%2Ftoml)
 [![codecov](https://codecov.io/gh/ballerina-platform/module-ballerina-toml/branch/main/graph/badge.svg)](https://codecov.io/gh/ballerina-platform/module-ballerina-toml)
 
-This library provides APIs to convert a TOML configuration file to json, and vice-versa.
+## Overview
 
-Since the parser is following LL(1) grammar, it follows a non-recursive predictive parsing algorithm which operates in a linear time complexity.
+This module provides APIs to convert a TOML configuration file to `map<json>`, and vice-versa, using a non-recursive, linear-time LL(1) parser.
 
 ## Issues and projects
 
@@ -77,7 +76,7 @@ Execute the commands below to build from source.
 
 ## Contribute to Ballerina
 
-As an open source project, Ballerina welcomes contributions from the community.
+As an open-source project, Ballerina welcomes contributions from the community.
 
 For more information, go to the [contribution guidelines](https://github.com/ballerina-platform/ballerina-lang/blob/master/CONTRIBUTING.md).
 
