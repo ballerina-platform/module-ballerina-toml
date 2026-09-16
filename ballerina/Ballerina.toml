@@ -1,9 +1,9 @@
 [package]
 org = "ballerina"
 name = "toml"
-version = "0.8.0"
+version = "0.8.1"
 authors = ["Ballerina"]
-keywords = ["toml"]
+keywords = ["toml", "Type/Library", "Area/Built-in", "Area/Storage & File Management", "Name/Toml"]
 repository = "https://github.com/ballerina-platform/module-ballerina-toml"
 icon = "icon.png"
 license = ["Apache-2.0"]
