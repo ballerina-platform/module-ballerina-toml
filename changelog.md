@@ -1,6 +1,6 @@
 # Change Log
 This file contains all the notable changes done to the Ballerina TOML package through the releases.
-## [Unreleased]
+## [0.8.1] - 2026-10-02
 
 ### Changed
 
