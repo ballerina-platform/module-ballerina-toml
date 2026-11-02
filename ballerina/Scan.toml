@@ -1,0 +1,4 @@
+# False positive: ballerina:14 matches identifiers containing 'token' (TOMLToken, tokenBuffer, tokenConsumed, expectedTokens) in the TOML lexer/parser.
+# These are lexical tokens, not secrets.
+[rule]
+exclude = ["ballerina:14"]

@@ -1,6 +1,11 @@
 # Change Log
 This file contains all the notable changes done to the Ballerina TOML package through the releases.
-## [Unreleased]
+## [0.8.2] - 2026-10-16
+
+### Changed
+- [[#9301] Regroup standard library packages under new Area categories](https://github.com/ballerina-platform/ballerina-library/issues/9301)
+
+## [0.8.1] - 2026-10-02
 
 ### Changed
 
